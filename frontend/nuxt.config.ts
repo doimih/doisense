@@ -1,7 +1,7 @@
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   app: {
-    baseURL: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense",
+    baseURL: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense/",
     head: {
       title: "Doisense",
       meta: [{ charset: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" }],
@@ -9,11 +9,11 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      appBaseUrl: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense",
+      appBaseUrl: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense/",
       apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000/api",
     },
   },
-  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "nuxt-i18n"],
+  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n"],
   i18n: {
     locales: [
       { code: "ro", iso: "ro-RO", name: "Română", file: "ro.json" },

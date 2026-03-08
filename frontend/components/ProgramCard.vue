@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-const { localePath } = useLocalePath()
+const localePath = useLocalePath()
 defineProps<{
   program: { id: number; title: string; description: string; is_premium: boolean }
 }>()

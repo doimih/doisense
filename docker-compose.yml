@@ -1,6 +1,9 @@
 # Doisense – doar serviciile acestui proiect.
 # Traefik rulează pe host; acest compose adaugă doar rute pentru doisense (labels).
 # Nu modificați configurația globală Traefik a serverului.
+#
+# IMPORTANT: Ca Traefik să vadă containerele, frontend și backend trebuie pe același
+# network cu Traefik. Setează TRAEFIK_NETWORK în .env (ex: traefik_default).
 
 services:
   db:
@@ -29,6 +32,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    networks:
+      - default
+      - traefik
     environment:
       DATABASE_URL: postgres://doisense:doisense@db:5432/doisense
       REDIS_URL: redis://redis:6379/0
@@ -47,8 +53,10 @@ services:
     labels:
       # Rute Traefik doar pentru doisense – nu afectează alte proiecte
       - "traefik.enable=true"
-      - "traefik.http.routers.doisense-api.rule=PathPrefix(`/doisense/api`)"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"
+      - "traefik.http.routers.doisense-api.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/api`)"
       - "traefik.http.routers.doisense-api.entrypoints=websecure"
+      - "traefik.http.routers.doisense-api.tls=true"
       - "traefik.http.routers.doisense-api.service=doisense-api"
       - "traefik.http.services.doisense-api.loadbalancer.server.port=8000"
       # Strip prefix ca backend-ul să primească /api/...
@@ -60,17 +68,26 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NUXT_PUBLIC_APP_BASE_URL: /doisense
+        NUXT_PUBLIC_APP_BASE_URL: /doisense/
+    networks:
+      - default
+      - traefik
     environment:
-      NUXT_PUBLIC_APP_BASE_URL: /doisense
+      NUXT_PUBLIC_APP_BASE_URL: /doisense/
       NUXT_PUBLIC_API_BASE: https://projects.doimih.net/doisense/api
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.doisense-web.rule=PathPrefix(`/doisense`)"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"
+      - "traefik.http.routers.doisense-web.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense`)"
       - "traefik.http.routers.doisense-web.entrypoints=websecure"
+      - "traefik.http.routers.doisense-web.tls=true"
       - "traefik.http.routers.doisense-web.service=doisense-web"
       - "traefik.http.services.doisense-web.loadbalancer.server.port=3000"
       # Nu strip prefix – Nuxt servește cu baseURL /doisense
 
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
 volumes:
   doisense_pgdata:

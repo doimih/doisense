@@ -46,6 +46,11 @@ Set în `.env` sau în mediu: `NUXT_PUBLIC_APP_BASE_URL=/doisense`, `NUXT_PUBLIC
 
 ## Docker (producție / staging)
 
+**Pe server:** ca Traefik să routeze traficul la Doisense, containerele trebuie pe același Docker network cu Traefik. Dacă network-ul se numește altfel (ex. `traefik_default`), editează la final din `docker-compose.yml` secțiunea `networks` și pune acel nume. Dacă nu există niciun network Traefik, creează unul și conectează și stack-ul Traefik la el:
+```bash
+docker network create traefik
+```
+
 ```bash
 docker compose up -d --build
 ```

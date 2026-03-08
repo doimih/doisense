@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-const { localePath } = useLocalePath()
+const localePath = useLocalePath()
 const authStore = useAuthStore()
 const router = useRouter()
 

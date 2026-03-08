@@ -32,6 +32,16 @@
           <option value="pl">Polski</option>
         </select>
       </div>
+      <label class="block text-sm text-stone-700">
+        <input v-model="acceptedLegal" type="checkbox" class="mr-2 align-middle" />
+        <span class="align-middle">
+          {{ legalText.prefix }}
+          <NuxtLink :to="localePath('/legal/terms')" class="text-amber-600 hover:underline">{{ legalText.terms }}</NuxtLink>
+          {{ legalText.and }}
+          <NuxtLink :to="localePath('/legal/privacy')" class="text-amber-600 hover:underline">{{ legalText.privacy }}</NuxtLink>
+          {{ legalText.suffix }}
+        </span>
+      </label>
       <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
       <button
         type="submit"
@@ -50,18 +60,48 @@
 </template>
 
 <script setup lang="ts">
-const { localePath } = useLocalePath()
+const localePath = useLocalePath()
 const authStore = useAuthStore()
 const router = useRouter()
+const { locale } = useI18n()
 
 const email = ref('')
 const password = ref('')
 const language = ref('en')
+const acceptedLegal = ref(false)
 const error = ref('')
 const loading = ref(false)
 
+const isRo = computed(() => locale.value.startsWith('ro'))
+
+const legalText = computed(() => {
+  if (isRo.value) {
+    return {
+      prefix: 'Am citit și accept',
+      terms: 'Termenii și condițiile',
+      and: 'și',
+      privacy: 'Politica de confidențialitate',
+      suffix: '.',
+      validation: 'Trebuie să accepți termenii și politica de confidențialitate.',
+    }
+  }
+
+  return {
+    prefix: 'I have read and accept the',
+    terms: 'Terms and Conditions',
+    and: 'and',
+    privacy: 'Privacy Policy',
+    suffix: '.',
+    validation: 'You must accept the terms and privacy policy.',
+  }
+})
+
 async function register() {
   error.value = ''
+  if (!acceptedLegal.value) {
+    error.value = legalText.value.validation
+    return
+  }
   loading.value = true
   try {
     await authStore.register(email.value, password.value, language.value)
