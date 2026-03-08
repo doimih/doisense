@@ -1,7 +1,30 @@
 export function useApi() {
   const config = useRuntimeConfig()
   const authStore = useAuthStore()
-  const base = config.public.apiBase as string
+  const rawBase = config.public.apiBase as string
+  const appBase = (config.public.appBaseUrl as string) || '/'
+
+  function normalizeBase(base: string): string {
+    const appPrefix = appBase.endsWith('/') ? appBase.slice(0, -1) : appBase
+    if (!appPrefix || appPrefix === '/') return base
+
+    // If env accidentally points to /api, align it with mounted app prefix (ex: /doisense/api).
+    if (base === '/api') return `${appPrefix}/api`
+
+    try {
+      const parsed = new URL(base)
+      if (parsed.pathname === '/api') {
+        parsed.pathname = `${appPrefix}/api`
+        return parsed.toString().replace(/\/$/, '')
+      }
+    } catch {
+      return base
+    }
+
+    return base
+  }
+
+  const base = normalizeBase(rawBase)
 
   async function getAccessToken(): Promise<string | null> {
     await authStore.hydrate()

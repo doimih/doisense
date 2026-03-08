@@ -5,6 +5,7 @@ export interface User {
   email: string
   language: string
   is_premium: boolean
+  is_superuser: boolean
   created_at: string
 }
 
@@ -50,6 +51,16 @@ export const useAuthStore = defineStore('auth', {
       const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/login`, {
         method: 'POST',
         body: { email, password },
+      })
+      this.setUser(res.user)
+      this.setTokens(res.access, res.refresh)
+    },
+    async loginWithSocial(provider: 'google' | 'apple', idToken: string, language: string) {
+      const config = useRuntimeConfig()
+      const base = config.public.apiBase as string
+      const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/social`, {
+        method: 'POST',
+        body: { provider, id_token: idToken, language },
       })
       this.setUser(res.user)
       this.setTokens(res.access, res.refresh)

@@ -1,3 +1,5 @@
+import { defineNuxtConfig } from "nuxt/config";
+
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   app: {
@@ -11,17 +13,29 @@ export default defineNuxtConfig({
     public: {
       appBaseUrl: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense/",
       apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000/api",
+      googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+      appleClientId: process.env.NUXT_PUBLIC_APPLE_CLIENT_ID || "",
+      appleRedirectUri: process.env.NUXT_PUBLIC_APPLE_REDIRECT_URI || "",
     },
   },
-  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n"],
+  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content", "nuxt-studio"],
+  studio: {
+    repository: {
+      provider: "github",
+      owner: "doimih",
+      repo: "doisense",
+      branch: "main",
+    },
+  },
   i18n: {
+    restructureDir: "",
     locales: [
-      { code: "ro", iso: "ro-RO", name: "Română", file: "ro.json" },
-      { code: "en", iso: "en-US", name: "English", file: "en.json" },
-      { code: "de", iso: "de-DE", name: "Deutsch", file: "de.json" },
-      { code: "it", iso: "it-IT", name: "Italiano", file: "it.json" },
-      { code: "es", iso: "es-ES", name: "Español", file: "es.json" },
-      { code: "pl", iso: "pl-PL", name: "Polski", file: "pl.json" },
+      { code: "ro", language: "ro-RO", name: "Română", file: "ro.json" },
+      { code: "en", language: "en-US", name: "English", file: "en.json" },
+      { code: "de", language: "de-DE", name: "Deutsch", file: "de.json" },
+      { code: "it", language: "it-IT", name: "Italiano", file: "it.json" },
+      { code: "es", language: "es-ES", name: "Español", file: "es.json" },
+      { code: "pl", language: "pl-PL", name: "Polski", file: "pl.json" },
     ],
     langDir: "locales",
     defaultLocale: "en",

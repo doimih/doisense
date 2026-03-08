@@ -2,8 +2,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 ARG NUXT_PUBLIC_APP_BASE_URL=/doisense/
 ENV NUXT_PUBLIC_APP_BASE_URL=${NUXT_PUBLIC_APP_BASE_URL}
 RUN npm run build

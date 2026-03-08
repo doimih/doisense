@@ -1,0 +1,21 @@
+# LLMs.txt for Doisense
+
+Project: Doisense
+Base URL: https://projects.doimih.net/doisense/
+
+Public sections:
+- /doisense/
+- /doisense/features
+- /doisense/pricing
+- /doisense/about
+- /doisense/contact
+- /doisense/legal/privacy
+- /doisense/legal/terms
+- /doisense/legal/cookies
+- /doisense/legal/gdpr
+
+Search:
+- /doisense/search
+
+CMS:
+- /doisense/cms/home

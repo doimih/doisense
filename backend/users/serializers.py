@@ -32,8 +32,18 @@ class UserLoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 
+class SocialLoginSerializer(serializers.Serializer):
+    provider = serializers.ChoiceField(choices=["google", "apple"])
+    id_token = serializers.CharField(write_only=True)
+    language = serializers.CharField(max_length=2, default="en", required=False)
+
+    def validate_language(self, value):
+        validate_language(value)
+        return value
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "language", "is_premium", "created_at")
-        read_only_fields = ("id", "email", "is_premium", "created_at")
+        fields = ("id", "email", "language", "is_premium", "is_superuser", "created_at")
+        read_only_fields = ("id", "email", "is_premium", "is_superuser", "created_at")

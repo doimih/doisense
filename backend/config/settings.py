@@ -45,6 +45,21 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    }
+]
+
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
@@ -116,3 +131,7 @@ AI_CHAT_RATE_LIMIT = env.int("AI_CHAT_RATE_LIMIT", default=20)  # per minute
 
 # Supported languages (must match frontend i18n)
 SUPPORTED_LANGUAGES = ["ro", "en", "de", "it", "es", "pl"]
+
+# Social login
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")
+APPLE_CLIENT_ID = env("APPLE_CLIENT_ID", default="")

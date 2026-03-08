@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-3xl mx-auto">
-    <h1 class="text-2xl font-bold text-stone-800 mb-4">{{ $t('nav.chat') }}</h1>
+  <div class="space-y-4">
+    <h1 class="text-3xl font-bold text-stone-900">{{ $t('nav.chat') }}</h1>
     <ChatWindow />
   </div>
 </template>

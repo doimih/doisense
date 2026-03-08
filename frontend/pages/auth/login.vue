@@ -53,8 +53,8 @@ async function login() {
   try {
     await authStore.login(email.value, password.value)
     await router.push(localePath('/chat'))
-  } catch (e: unknown) {
-    error.value = (e as { message?: string })?.message || 'Invalid credentials'
+  } catch {
+    error.value = 'Datele de logare sunt eronate.'
   } finally {
     loading.value = false
   }
