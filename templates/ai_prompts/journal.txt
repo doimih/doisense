@@ -1,0 +1,1 @@
+Based on the user's journal entry, offer a brief, supportive reflection. Use their language. Keep it under 3 sentences.

@@ -1,0 +1,50 @@
+{
+  "landing": {
+    "title": "Doisense",
+    "subtitle": "Twój towarzysz dobrego samopoczucia. Dziennik, czat z AI i programy prowadzone."
+  },
+  "nav": {
+    "chat": "Czat",
+    "journal": "Dziennik",
+    "programs": "Programy prowadzone",
+    "profile": "Profil"
+  },
+  "auth": {
+    "login": "Zaloguj",
+    "register": "Zarejestruj się",
+    "logout": "Wyloguj",
+    "email": "Email",
+    "password": "Hasło",
+    "language": "Język",
+    "noAccount": "Nie masz konta? Zarejestruj się",
+    "hasAccount": "Masz konto? Zaloguj się"
+  },
+  "chat": {
+    "placeholder": "Wpisz wiadomość...",
+    "send": "Wyślij"
+  },
+  "journal": {
+    "contentPlaceholder": "Napisz swoje myśli...",
+    "save": "Zapisz",
+    "saved": "Zapisano."
+  },
+  "programs": {
+    "noDescription": "Brak opisu.",
+    "premium": "Premium",
+    "view": "Zobacz program",
+    "notFound": "Program lub dzień nie znaleziony."
+  },
+  "profile": {
+    "premium": "Premium",
+    "upgrade": "Przejdź na Premium"
+  },
+  "footer": {
+    "copyright": "© Doisense. Wszelkie prawa zastrzeżone."
+  },
+  "common": {
+    "loading": "Ładowanie",
+    "back": "Wstecz",
+    "yes": "Tak",
+    "no": "Nie"
+  }
+}

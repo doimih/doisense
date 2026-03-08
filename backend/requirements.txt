@@ -1,0 +1,16 @@
+Django>=5.0,<6
+djangorestframework>=3.14,<4
+djangorestframework-simplejwt>=5.3,<6
+django-cors-headers>=4.3,<5
+psycopg[binary]>=3.1,<4
+redis>=5.0,<6
+gunicorn>=21,<23
+stripe>=8,<9
+openai>=1.0,<2
+anthropic>=0.18,<1
+django-environ>=0.11,<1
+django-redis>=5.4,<6
+pytest>=7,<8
+pytest-django>=4.5,<5
+black>=24,<25
+ruff>=0.1,<0.2

@@ -1,0 +1,50 @@
+{
+  "landing": {
+    "title": "Doisense",
+    "subtitle": "Il tuo compagno di benessere. Diario, chat con AI e programmi guidati."
+  },
+  "nav": {
+    "chat": "Chat",
+    "journal": "Diario",
+    "programs": "Programmi guidati",
+    "profile": "Profilo"
+  },
+  "auth": {
+    "login": "Accedi",
+    "register": "Registrati",
+    "logout": "Esci",
+    "email": "Email",
+    "password": "Password",
+    "language": "Lingua",
+    "noAccount": "Non hai un account? Registrati",
+    "hasAccount": "Hai già un account? Accedi"
+  },
+  "chat": {
+    "placeholder": "Scrivi il tuo messaggio...",
+    "send": "Invia"
+  },
+  "journal": {
+    "contentPlaceholder": "Scrivi i tuoi pensieri...",
+    "save": "Salva",
+    "saved": "Salvato."
+  },
+  "programs": {
+    "noDescription": "Nessuna descrizione.",
+    "premium": "Premium",
+    "view": "Vedi programma",
+    "notFound": "Programma o giorno non trovato."
+  },
+  "profile": {
+    "premium": "Premium",
+    "upgrade": "Passa a Premium"
+  },
+  "footer": {
+    "copyright": "© Doisense. Tutti i diritti riservati."
+  },
+  "common": {
+    "loading": "Caricamento",
+    "back": "Indietro",
+    "yes": "Sì",
+    "no": "No"
+  }
+}

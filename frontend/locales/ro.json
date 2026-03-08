@@ -1,0 +1,50 @@
+{
+  "landing": {
+    "title": "Doisense",
+    "subtitle": "Companionul tău de wellbeing. Jurnal, conversații cu AI și programe ghidate."
+  },
+  "nav": {
+    "chat": "Chat",
+    "journal": "Jurnal",
+    "programs": "Programe ghidate",
+    "profile": "Profil"
+  },
+  "auth": {
+    "login": "Autentificare",
+    "register": "Înregistrare",
+    "logout": "Deconectare",
+    "email": "Email",
+    "password": "Parolă",
+    "language": "Limbă",
+    "noAccount": "Nu ai cont? Înregistrează-te",
+    "hasAccount": "Ai deja cont? Autentifică-te"
+  },
+  "chat": {
+    "placeholder": "Scrie mesajul tău...",
+    "send": "Trimite"
+  },
+  "journal": {
+    "contentPlaceholder": "Scrie gândurile aici...",
+    "save": "Salvează",
+    "saved": "Salvat."
+  },
+  "programs": {
+    "noDescription": "Fără descriere.",
+    "premium": "Premium",
+    "view": "Vezi programul",
+    "notFound": "Programul sau ziua nu a fost găsită."
+  },
+  "profile": {
+    "premium": "Premium",
+    "upgrade": "Treci la Premium"
+  },
+  "footer": {
+    "copyright": "© Doisense. Toate drepturile rezervate."
+  },
+  "common": {
+    "loading": "Se încarcă",
+    "back": "Înapoi",
+    "yes": "Da",
+    "no": "Nu"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "landing": {
+    "title": "Doisense",
+    "subtitle": "Your wellbeing companion. Journal, chat with AI, and follow guided programs."
+  },
+  "nav": {
+    "chat": "Chat",
+    "journal": "Journal",
+    "programs": "Guided Programs",
+    "profile": "Profile"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "language": "Language",
+    "noAccount": "Don't have an account? Sign up",
+    "hasAccount": "Already have an account? Log in"
+  },
+  "chat": {
+    "placeholder": "Type your message...",
+    "send": "Send"
+  },
+  "journal": {
+    "contentPlaceholder": "Write your thoughts here...",
+    "save": "Save",
+    "saved": "Saved."
+  },
+  "programs": {
+    "noDescription": "No description.",
+    "premium": "Premium",
+    "view": "View program",
+    "notFound": "Program or day not found."
+  },
+  "profile": {
+    "premium": "Premium",
+    "upgrade": "Upgrade to Premium"
+  },
+  "footer": {
+    "copyright": "© Doisense. All rights reserved."
+  },
+  "common": {
+    "loading": "Loading",
+    "back": "Back",
+    "yes": "Yes",
+    "no": "No"
+  }
+}

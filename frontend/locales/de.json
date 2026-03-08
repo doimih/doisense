@@ -1,0 +1,50 @@
+{
+  "landing": {
+    "title": "Doisense",
+    "subtitle": "Dein Wohlfühl-Begleiter. Tagebuch, KI-Chat und geführte Programme."
+  },
+  "nav": {
+    "chat": "Chat",
+    "journal": "Tagebuch",
+    "programs": "Geführte Programme",
+    "profile": "Profil"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "language": "Sprache",
+    "noAccount": "Noch kein Konto? Registrieren",
+    "hasAccount": "Bereits Konto? Anmelden"
+  },
+  "chat": {
+    "placeholder": "Nachricht eingeben...",
+    "send": "Senden"
+  },
+  "journal": {
+    "contentPlaceholder": "Schreibe deine Gedanken...",
+    "save": "Speichern",
+    "saved": "Gespeichert."
+  },
+  "programs": {
+    "noDescription": "Keine Beschreibung.",
+    "premium": "Premium",
+    "view": "Programm ansehen",
+    "notFound": "Programm oder Tag nicht gefunden."
+  },
+  "profile": {
+    "premium": "Premium",
+    "upgrade": "Auf Premium upgraden"
+  },
+  "footer": {
+    "copyright": "© Doisense. Alle Rechte vorbehalten."
+  },
+  "common": {
+    "loading": "Laden",
+    "back": "Zurück",
+    "yes": "Ja",
+    "no": "Nein"
+  }
+}

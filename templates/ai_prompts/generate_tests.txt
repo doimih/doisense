@@ -1,0 +1,1 @@
+Creează teste unit pentru acest controller/component. Folosește Jest (frontend) sau pytest (backend). Acoperire minim 80%. Include cazuri limită și erori.

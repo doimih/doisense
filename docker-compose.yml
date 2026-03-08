@@ -1,0 +1,76 @@
+# Doisense – doar serviciile acestui proiect.
+# Traefik rulează pe host; acest compose adaugă doar rute pentru doisense (labels).
+# Nu modificați configurația globală Traefik a serverului.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: doisense
+      POSTGRES_PASSWORD: doisense
+      POSTGRES_DB: doisense
+    volumes:
+      - doisense_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U doisense"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://doisense:doisense@db:5432/doisense
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,backend,projects.doimih.net}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://projects.doimih.net}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://projects.doimih.net}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRICE_ID_PREMIUM: ${STRIPE_PRICE_ID_PREMIUM}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    labels:
+      # Rute Traefik doar pentru doisense – nu afectează alte proiecte
+      - "traefik.enable=true"
+      - "traefik.http.routers.doisense-api.rule=PathPrefix(`/doisense/api`)"
+      - "traefik.http.routers.doisense-api.entrypoints=websecure"
+      - "traefik.http.routers.doisense-api.service=doisense-api"
+      - "traefik.http.services.doisense-api.loadbalancer.server.port=8000"
+      # Strip prefix ca backend-ul să primească /api/...
+      - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=/doisense"
+      - "traefik.http.routers.doisense-api.middlewares=doisense-api-stripprefix@docker"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NUXT_PUBLIC_APP_BASE_URL: /doisense
+    environment:
+      NUXT_PUBLIC_APP_BASE_URL: /doisense
+      NUXT_PUBLIC_API_BASE: https://projects.doimih.net/doisense/api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.doisense-web.rule=PathPrefix(`/doisense`)"
+      - "traefik.http.routers.doisense-web.entrypoints=websecure"
+      - "traefik.http.routers.doisense-web.service=doisense-web"
+      - "traefik.http.services.doisense-web.loadbalancer.server.port=3000"
+      # Nu strip prefix – Nuxt servește cu baseURL /doisense
+
+volumes:
+  doisense_pgdata:
