@@ -74,7 +74,18 @@ Astfel, chat-ul și alte funcții pot folosi un profil mereu proaspăt, personal
 - Rule: `PathPrefix(/doisense)` pentru frontend, `PathPrefix(/doisense/api)` pentru backend.
 - Frontend folosește `baseURL: /doisense` (Nuxt runtimeConfig).
 
-## 7. Securitate
+## 7. Backoffice admin (Unfold)
+
+- **Django Admin + Unfold** pentru operare non-tehnica.
+- **CMS Pages** pentru continut static multi-limba (cu publish/menu controls).
+- **System Configuration singleton** pentru runtime settings (limbi, SMTP, OAuth, Stripe, AI), organizat pe tab-uri.
+- **Dashboard callback** custom pentru analytics in admin (KPI, evolutie utilizatori/jurnal, conversie premium).
+
+Regula operationala SMTP:
+
+- setarile `EMAIL_USE_TLS` si `EMAIL_USE_SSL` nu pot fi active simultan.
+
+## 8. Securitate
 
 - JWT în httpOnly cookies sau header Authorization.
 - CORS restricționat la domeniul aplicației.

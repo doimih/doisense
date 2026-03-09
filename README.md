@@ -73,6 +73,27 @@ Variabile de mediu (în `.env` sau în compose):
 - **Lint backend:** `ruff check . && black --check .`
 - **Lint frontend:** `npm run lint`
 
+## Admin (Unfold)
+
+Backoffice-ul este configurat cu Unfold si include functii de operare pentru continut, configurare si monitorizare:
+
+- **CMS Pages**: pagini statice administrabile din Django Admin (slug, limba, publish, afisare in header/footer, ordonare meniu).
+- **System Configuration**: configurare singleton impartita pe tab-uri:
+	- `Localization`
+	- `Contact & Email`
+	- `OAuth`
+	- `Stripe`
+	- `AI`
+- **Email test din admin**: buton `Send test email` in pagina de configurare SMTP.
+- **Dashboard analytics**: KPI + grafice in dashboard-ul admin cu filtre de perioada (`7/30/90 zile`) si chart separat pentru conversie premium.
+
+### Nota SMTP (important)
+
+`EMAIL_USE_TLS` si `EMAIL_USE_SSL` sunt mutual exclusive. In `System Configuration -> Contact & Email` activeaza doar una dintre optiuni:
+
+- `TLS=true`, `SSL=false` pentru port `587`
+- `TLS=false`, `SSL=true` pentru port `465`
+
 ## AI – actualizare automată profile
 
 AI scanează textele clienților din DB (jurnal), structurează informația și actualizează singur profilele utilizatorilor (preferred_tone, sensitivities, communication_style, emotional_baseline, keywords), indiferent de limbă/țară.

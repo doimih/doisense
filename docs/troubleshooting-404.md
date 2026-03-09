@@ -102,3 +102,22 @@ curl -s http://localhost:8080/api/http/routers | grep doisense
 | Test fără Traefik       | `curl http://localhost:3000/doisense/` și `curl http://localhost:8000/api/` |
 
 După ce corectezi network-ul și eventual entrypoint-ul, repornește `docker compose up -d` și reîncearcă **https://projects.doimih.net/doisense**.
+
+---
+
+## 6. Eroare la "Send test email" in admin
+
+Daca vezi mesajul:
+
+`EMAIL_USE_TLS/EMAIL_USE_SSL are mutually exclusive`
+
+inseamna ca in `System Configuration -> Contact & Email` sunt bifate ambele optiuni SMTP.
+
+### Solutie
+
+Activeaza doar una dintre ele:
+
+- port `587`: `TLS=true`, `SSL=false`
+- port `465`: `TLS=false`, `SSL=true`
+
+Salveaza configurarea si ruleaza din nou butonul `Send test email`.
