@@ -1,17 +1,5 @@
 <template>
   <div class="space-y-12 py-8">
-    <template v-if="hasCmsContent && cmsPage">
-      <section class="relative overflow-hidden rounded-2xl border border-stone-200 bg-gradient-to-br from-amber-50 via-white to-stone-50 p-8 md:p-12">
-        <div class="absolute -top-10 -right-10 h-48 w-48 rounded-full bg-amber-200/40 blur-2xl" />
-        <div class="absolute -bottom-16 -left-10 h-56 w-56 rounded-full bg-stone-300/30 blur-2xl" />
-        <div class="relative max-w-4xl">
-          <h1 class="text-4xl md:text-5xl font-bold text-stone-900 leading-tight">{{ cmsPage.title }}</h1>
-          <div class="cms-home-content mt-6 text-stone-700" v-html="cmsPage.content" />
-        </div>
-      </section>
-    </template>
-
-    <template v-else>
     <section class="relative overflow-hidden rounded-2xl border border-stone-200 bg-gradient-to-br from-amber-50 via-white to-stone-50 p-8 md:p-12">
       <div class="absolute -top-10 -right-10 h-48 w-48 rounded-full bg-amber-200/40 blur-2xl" />
       <div class="absolute -bottom-16 -left-10 h-56 w-56 rounded-full bg-stone-300/30 blur-2xl" />
@@ -54,7 +42,7 @@
     </section>
 
     <section class="grid gap-4 md:grid-cols-3">
-      <article v-for="card in text.cards" :key="card.title" class="bg-white border border-stone-200 rounded-xl px-5 py-[70px]">
+      <article v-for="card in homeCards" :key="card.title" class="bg-white border border-stone-200 rounded-xl px-5 py-[70px]">
         <h2 class="mb-2 text-[19px] font-semibold text-stone-900">{{ card.title }}</h2>
         <p class="text-[15px] text-stone-600">{{ card.description }}</p>
       </article>
@@ -71,7 +59,6 @@
         <p class="mt-1 text-[15px] text-stone-600">{{ link.description }}</p>
       </NuxtLink>
     </section>
-    </template>
 
   </div>
 </template>
@@ -80,7 +67,7 @@
 const localePath = useLocalePath()
 const authStore = useAuthStore()
 const { locale } = useI18n()
-const { cmsPage, hasCmsContent } = useCmsStaticPage('home')
+const { cmsPage } = useCmsStaticPage('home')
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
   return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
@@ -262,43 +249,64 @@ const homeCopy: Record<string, {
 }
 
 const text = computed(() => homeCopy[localeCode.value] || homeCopy.en)
-const seoTitle = computed(() => (hasCmsContent.value && cmsPage.value?.title?.trim()) ? cmsPage.value.title : text.value.seoTitle)
-const seoDescription = computed(() => {
-  if (hasCmsContent.value && cmsPage.value?.content?.trim()) {
-    return cmsPage.value.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180) || text.value.seoDescription
+
+type HomeCard = { title: string; description: string }
+
+function stripHtml(value: string) {
+  return value
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function extractCardsFromCms(html: string): HomeCard[] {
+  if (!html?.trim()) return []
+
+  const cards: HomeCard[] = []
+
+  // Recommended format in CMS: table rows => Title | Description
+  const rowMatches = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)]
+  for (const row of rowMatches) {
+    const columns = [...row[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((col) => stripHtml(col[1]))
+    if (columns.length >= 2 && columns[0] && columns[1]) {
+      cards.push({ title: columns[0], description: columns[1] })
+    }
   }
-  return text.value.seoDescription
+
+  if (cards.length) return cards
+
+  // Fallback format: heading + first paragraph after heading.
+  const headingMatches = [...html.matchAll(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi)]
+  for (let i = 0; i < headingMatches.length; i += 1) {
+    const heading = stripHtml(headingMatches[i][1])
+    const start = headingMatches[i].index ?? 0
+    const end = i + 1 < headingMatches.length ? (headingMatches[i + 1].index ?? html.length) : html.length
+    const chunk = html.slice(start, end)
+    const paragraphMatch = chunk.match(/<p[^>]*>([\s\S]*?)<\/p>/i)
+    const paragraph = paragraphMatch ? stripHtml(paragraphMatch[1]) : ""
+
+    if (heading && paragraph) {
+      cards.push({ title: heading, description: paragraph })
+    }
+  }
+
+  return cards
+}
+
+const homeCards = computed(() => {
+  const parsed = extractCardsFromCms(cmsPage.value?.content || "")
+  return parsed.length ? parsed : text.value.cards
 })
+
+const seoTitle = computed(() => text.value.seoTitle)
+const seoDescription = computed(() => text.value.seoDescription)
 
 usePublicSeo({
   title: seoTitle,
   description: seoDescription,
 })
 </script>
-
-<style scoped>
-.cms-home-content :deep(h2) {
-  margin: 0.75rem 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1c1917;
-}
-
-.cms-home-content :deep(h3) {
-  margin: 0.75rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1c1917;
-}
-
-.cms-home-content :deep(p) {
-  margin: 0.5rem 0;
-  line-height: 1.7;
-}
-
-.cms-home-content :deep(ul) {
-  margin: 0.75rem 0;
-  padding-left: 1.1rem;
-  list-style: disc;
-}
-</style>

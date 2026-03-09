@@ -94,6 +94,10 @@ class CMSPageAdminForm(forms.ModelForm):
         for language in self.languages:
             self.fields[f"title_{language}"].label = f"Title ({language.upper()})"
             self.fields[f"content_{language}"].label = f"Content ({language.upper()})"
+            self.fields[f"content_{language}"].help_text = (
+                "For Home slug: cards are read from this content. "
+                "Use a table with 2 columns (Title | Description), one row per card."
+            )
             self.fields[f"content_{language}"].widget = CKEditor5Widget(
                 config_name=config_name,
                 attrs={"style": f"min-height: {editor_height}px;"},
