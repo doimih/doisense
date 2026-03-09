@@ -161,7 +161,19 @@ CMS_EDITOR_UPLOAD_URL = "/doisense/ro/admin/core/cmspage/upload-image/"
 
 CKEDITOR_5_CONFIGS = {
     "simple": {
-        "toolbar": ["bold", "italic", "link", "bulletedList", "numberedList", "undo", "redo"],
+        "toolbar": [
+            "bold",
+            "italic",
+            "link",
+            "bulletedList",
+            "numberedList",
+            "imageUpload",
+            "undo",
+            "redo",
+        ],
+        "image": {
+            "toolbar": ["imageTextAlternative"],
+        },
         "simpleUpload": {
             "uploadUrl": CMS_EDITOR_UPLOAD_URL,
         },
@@ -180,11 +192,16 @@ CKEDITOR_5_CONFIGS = {
             "bulletedList",
             "numberedList",
             "|",
+            "imageUpload",
+            "|",
             "insertTable",
             "|",
             "undo",
             "redo",
         ],
+        "image": {
+            "toolbar": ["imageTextAlternative"],
+        },
         "simpleUpload": {
             "uploadUrl": CMS_EDITOR_UPLOAD_URL,
         },
