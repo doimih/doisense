@@ -41,12 +41,6 @@
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="text-stone-600 hover:text-stone-900">
           {{ $t('nav.profile') }}
         </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/cms/home')" class="text-stone-600 hover:text-stone-900">
-          CMS
-        </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/cms/editor')" class="text-stone-600 hover:text-stone-900">
-          CMS Editor
-        </NuxtLink>
         <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" class="text-stone-600 hover:text-stone-900">
           {{ $t('nav.admin') }}
         </a>
@@ -108,8 +102,6 @@
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/cms/home')" class="block text-stone-700" @click="mobileOpen = false">CMS</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/cms/editor')" class="block text-stone-700" @click="mobileOpen = false">CMS Editor</NuxtLink>
       <div class="pt-2">
         <p class="mb-1 text-xs text-stone-500">{{ $t('auth.language') }}</p>
         <div class="relative inline-block">
