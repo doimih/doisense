@@ -7,23 +7,23 @@
         <p><span class="font-medium">{{ $t('auth.email') }}:</span> {{ authStore.user.email }}</p>
         <span class="inline-flex items-center gap-2 rounded-full border border-stone-200 px-3 py-1 text-xs font-medium text-stone-700">
           <span class="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-          {{ authStore.user.membership_tier === 'premium' ? 'Membru Premium' : 'Membru Normal' }}
+          {{ authStore.user.membership_tier === 'premium' ? text.membershipPremium : text.membershipStandard }}
         </span>
       </div>
 
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">Prenume</label>
+          <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.firstName }}</label>
           <input v-model="firstName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">Nume</label>
+          <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.lastName }}</label>
           <input v-model="lastName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
         </div>
       </div>
 
       <div>
-        <label class="mb-1 block text-sm font-medium text-stone-700">Telefon contact</label>
+        <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.phone }}</label>
         <input
           v-model="phoneContact"
           type="tel"
@@ -43,27 +43,22 @@
         </div>
       </div>
 
-      <div>
-        <label class="mb-1 block text-sm font-medium text-stone-700">Zona fiscala</label>
-        <input v-model="taxRegion" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
-      </div>
-
       <div class="rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-700">
-        <p class="font-medium text-stone-800">Card salvat</p>
+        <p class="font-medium text-stone-800">{{ text.savedCard }}</p>
         <p v-if="cardLoading" class="mt-1">{{ $t('common.loading') }}</p>
         <template v-else-if="savedCard?.has_saved_card && savedCard.card">
           <p class="mt-1">{{ savedCard.card.brand?.toUpperCase() }} •••• {{ savedCard.card.last4 }}</p>
-          <p>Expira: {{ savedCard.card.exp_month }}/{{ savedCard.card.exp_year }}</p>
+          <p>{{ text.expires }}: {{ savedCard.card.exp_month }}/{{ savedCard.card.exp_year }}</p>
           <button
             type="button"
             :disabled="billingPortalLoading"
             class="mt-3 inline-flex px-3 py-1.5 rounded-md border border-stone-300 hover:bg-white disabled:opacity-50"
             @click="openBillingPortal"
           >
-            {{ billingPortalLoading ? $t('common.loading') : 'Gestioneaza cardul' }}
+            {{ billingPortalLoading ? $t('common.loading') : text.manageCard }}
           </button>
         </template>
-        <p v-else class="mt-1">Nu exista card salvat inca.</p>
+        <p v-else class="mt-1">{{ text.noCard }}</p>
       </div>
 
       <p v-if="saveError" class="text-sm text-red-600">{{ saveError }}</p>
@@ -75,7 +70,7 @@
         class="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 disabled:opacity-50"
         @click="saveProfile"
       >
-        {{ saveLoading ? $t('common.loading') : 'Salveaza profilul' }}
+        {{ saveLoading ? $t('common.loading') : text.saveProfile }}
       </button>
 
       <p><span class="font-medium">{{ $t('profile.premium') }}:</span> {{ authStore.user.is_premium ? $t('common.yes') : $t('common.no') }}</p>
@@ -89,10 +84,10 @@
       </button>
 
       <div class="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-4">
-        <h2 class="text-base font-semibold text-stone-800">Schimbare parola</h2>
+        <h2 class="text-base font-semibold text-stone-800">{{ text.passwordChange }}</h2>
 
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">Parola curenta</label>
+          <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.currentPassword }}</label>
           <input
             v-model="currentPassword"
             type="password"
@@ -102,7 +97,7 @@
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">Parola noua</label>
+            <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.newPassword }}</label>
             <input
               v-model="newPassword"
               type="password"
@@ -110,7 +105,7 @@
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">Confirmare parola noua</label>
+            <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.confirmNewPassword }}</label>
             <input
               v-model="newPasswordConfirm"
               type="password"
@@ -128,7 +123,7 @@
           class="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 disabled:opacity-50"
           @click="changePassword"
         >
-          {{ passwordLoading ? $t('common.loading') : 'Schimba parola' }}
+          {{ passwordLoading ? $t('common.loading') : text.changePassword }}
         </button>
       </div>
     </div>
@@ -140,6 +135,7 @@ definePageMeta({ middleware: 'auth' })
 
 const authStore = useAuthStore()
 const { fetchApi } = useApi()
+const { locale } = useI18n()
 const checkoutLoading = ref(false)
 const saveLoading = ref(false)
 const cardLoading = ref(false)
@@ -164,7 +160,80 @@ const dialCodeOptions = [
 const firstName = ref(authStore.user?.first_name || '')
 const lastName = ref(authStore.user?.last_name || '')
 const phoneContact = ref(authStore.user?.phone_contact || '')
-const taxRegion = ref(authStore.user?.tax_region || '')
+
+const localeCode = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+})
+
+const profileCopy: Record<string, {
+  membershipPremium: string
+  membershipStandard: string
+  firstName: string
+  lastName: string
+  phone: string
+  savedCard: string
+  expires: string
+  manageCard: string
+  noCard: string
+  saveProfile: string
+  passwordChange: string
+  currentPassword: string
+  newPassword: string
+  confirmNewPassword: string
+  changePassword: string
+  saveSuccess: string
+  saveError: string
+  passwordSuccess: string
+  passwordError: string
+  seoTitle: string
+  seoDescription: string
+}> = {
+  ro: {
+    membershipPremium: 'Membru Premium', membershipStandard: 'Membru Standard', firstName: 'Prenume', lastName: 'Nume', phone: 'Telefon contact',
+    savedCard: 'Card salvat', expires: 'Expira', manageCard: 'Gestioneaza cardul', noCard: 'Nu exista card salvat inca.', saveProfile: 'Salveaza profilul',
+    passwordChange: 'Schimbare parola', currentPassword: 'Parola curenta', newPassword: 'Parola noua', confirmNewPassword: 'Confirmare parola noua', changePassword: 'Schimba parola',
+    saveSuccess: 'Profilul a fost actualizat.', saveError: 'Nu am putut salva profilul.', passwordSuccess: 'Parola a fost schimbata cu succes.', passwordError: 'Nu am putut schimba parola.',
+    seoTitle: 'Profil utilizator - Doisense', seoDescription: 'Panou de cont pentru utilizatori autentificati Doisense.',
+  },
+  en: {
+    membershipPremium: 'Premium member', membershipStandard: 'Standard member', firstName: 'First name', lastName: 'Last name', phone: 'Contact phone',
+    savedCard: 'Saved card', expires: 'Expires', manageCard: 'Manage card', noCard: 'No saved card yet.', saveProfile: 'Save profile',
+    passwordChange: 'Change password', currentPassword: 'Current password', newPassword: 'New password', confirmNewPassword: 'Confirm new password', changePassword: 'Change password',
+    saveSuccess: 'Profile updated.', saveError: 'Could not save profile.', passwordSuccess: 'Password changed successfully.', passwordError: 'Could not change password.',
+    seoTitle: 'User profile - Doisense', seoDescription: 'Account dashboard for authenticated Doisense users.',
+  },
+  de: {
+    membershipPremium: 'Premium-Mitglied', membershipStandard: 'Standard-Mitglied', firstName: 'Vorname', lastName: 'Nachname', phone: 'Kontakttelefon',
+    savedCard: 'Gespeicherte Karte', expires: 'Ablauf', manageCard: 'Karte verwalten', noCard: 'Noch keine Karte gespeichert.', saveProfile: 'Profil speichern',
+    passwordChange: 'Passwort ändern', currentPassword: 'Aktuelles Passwort', newPassword: 'Neues Passwort', confirmNewPassword: 'Neues Passwort bestätigen', changePassword: 'Passwort ändern',
+    saveSuccess: 'Profil wurde aktualisiert.', saveError: 'Profil konnte nicht gespeichert werden.', passwordSuccess: 'Passwort erfolgreich geändert.', passwordError: 'Passwort konnte nicht geändert werden.',
+    seoTitle: 'Benutzerprofil - Doisense', seoDescription: 'Kontodashboard für angemeldete Doisense-Nutzer.',
+  },
+  it: {
+    membershipPremium: 'Membro Premium', membershipStandard: 'Membro Standard', firstName: 'Nome', lastName: 'Cognome', phone: 'Telefono di contatto',
+    savedCard: 'Carta salvata', expires: 'Scadenza', manageCard: 'Gestisci carta', noCard: 'Nessuna carta salvata.', saveProfile: 'Salva profilo',
+    passwordChange: 'Cambia password', currentPassword: 'Password attuale', newPassword: 'Nuova password', confirmNewPassword: 'Conferma nuova password', changePassword: 'Cambia password',
+    saveSuccess: 'Profilo aggiornato.', saveError: 'Impossibile salvare il profilo.', passwordSuccess: 'Password cambiata con successo.', passwordError: 'Impossibile cambiare la password.',
+    seoTitle: 'Profilo utente - Doisense', seoDescription: 'Pannello account per utenti autenticati Doisense.',
+  },
+  es: {
+    membershipPremium: 'Miembro Premium', membershipStandard: 'Miembro Standard', firstName: 'Nombre', lastName: 'Apellido', phone: 'Telefono de contacto',
+    savedCard: 'Tarjeta guardada', expires: 'Caduca', manageCard: 'Gestionar tarjeta', noCard: 'Aun no hay tarjeta guardada.', saveProfile: 'Guardar perfil',
+    passwordChange: 'Cambiar contraseña', currentPassword: 'Contraseña actual', newPassword: 'Nueva contraseña', confirmNewPassword: 'Confirmar nueva contraseña', changePassword: 'Cambiar contraseña',
+    saveSuccess: 'Perfil actualizado.', saveError: 'No se pudo guardar el perfil.', passwordSuccess: 'Contraseña cambiada correctamente.', passwordError: 'No se pudo cambiar la contraseña.',
+    seoTitle: 'Perfil de usuario - Doisense', seoDescription: 'Panel de cuenta para usuarios autenticados de Doisense.',
+  },
+  pl: {
+    membershipPremium: 'Czlonek Premium', membershipStandard: 'Czlonek Standard', firstName: 'Imie', lastName: 'Nazwisko', phone: 'Telefon kontaktowy',
+    savedCard: 'Zapisana karta', expires: 'Wazna do', manageCard: 'Zarzadzaj karta', noCard: 'Brak zapisanej karty.', saveProfile: 'Zapisz profil',
+    passwordChange: 'Zmiana hasla', currentPassword: 'Aktualne haslo', newPassword: 'Nowe haslo', confirmNewPassword: 'Potwierdz nowe haslo', changePassword: 'Zmien haslo',
+    saveSuccess: 'Profil zaktualizowany.', saveError: 'Nie udalo sie zapisac profilu.', passwordSuccess: 'Haslo zostalo zmienione.', passwordError: 'Nie udalo sie zmienic hasla.',
+    seoTitle: 'Profil uzytkownika - Doisense', seoDescription: 'Panel konta dla zalogowanych uzytkownikow Doisense.',
+  },
+}
+
+const text = computed(() => profileCopy[localeCode.value] || profileCopy.en)
 
 const currentPassword = ref('')
 const newPassword = ref('')
@@ -214,8 +283,8 @@ function setPhoneDialCode(code: string) {
 }
 
 usePublicSeo({
-  title: 'Profil utilizator - Doisense',
-  description: 'Panou de cont pentru utilizatori autentificati Doisense.',
+  title: computed(() => text.value.seoTitle),
+  description: computed(() => text.value.seoDescription),
   noindex: true,
 })
 
@@ -225,7 +294,6 @@ watch(
     firstName.value = user?.first_name || ''
     lastName.value = user?.last_name || ''
     phoneContact.value = user?.phone_contact || ''
-    taxRegion.value = user?.tax_region || ''
     ensurePhonePrefix()
   },
   { immediate: true },
@@ -255,14 +323,12 @@ async function saveProfile() {
       first_name: string
       last_name: string
       phone_contact: string
-      tax_region: string
     }>('/me', {
       method: 'PATCH',
       body: {
         first_name: firstName.value,
         last_name: lastName.value,
         phone_contact: phoneContact.value,
-        tax_region: taxRegion.value,
       },
     })
 
@@ -272,12 +338,11 @@ async function saveProfile() {
         first_name: updated.first_name,
         last_name: updated.last_name,
         phone_contact: updated.phone_contact,
-        tax_region: updated.tax_region,
       })
     }
-    saveSuccess.value = 'Profilul a fost actualizat.'
+    saveSuccess.value = text.value.saveSuccess
   } catch {
-    saveError.value = 'Nu am putut salva profilul.'
+    saveError.value = text.value.saveError
   } finally {
     saveLoading.value = false
   }
@@ -325,9 +390,9 @@ async function changePassword() {
     currentPassword.value = ''
     newPassword.value = ''
     newPasswordConfirm.value = ''
-    passwordSuccess.value = 'Parola a fost schimbata cu succes.'
+    passwordSuccess.value = text.value.passwordSuccess
   } catch (error: any) {
-    passwordError.value = error?.data?.detail || 'Nu am putut schimba parola.'
+    passwordError.value = error?.data?.detail || text.value.passwordError
   } finally {
     passwordLoading.value = false
   }

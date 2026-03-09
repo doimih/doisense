@@ -26,7 +26,11 @@
             <li><NuxtLink :to="localePath('/legal/privacy')" class="text-stone-400 hover:text-stone-100">{{ $t('footer.privacy') }}</NuxtLink></li>
             <li><NuxtLink :to="localePath('/legal/terms')" class="text-stone-400 hover:text-stone-100">{{ $t('footer.terms') }}</NuxtLink></li>
             <li><NuxtLink :to="localePath('/legal/cookies')" class="text-stone-400 hover:text-stone-100">{{ $t('footer.cookies') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/legal/gdpr')" class="text-stone-400 hover:text-stone-100">{{ $t('footer.gdpr') }}</NuxtLink></li>
+            <li>
+              <button type="button" class="text-stone-400 hover:text-stone-100" @click="openModal">
+                {{ $t('footer.gdpr') }}
+              </button>
+            </li>
           </ul>
         </div>
 
@@ -61,4 +65,5 @@
 import { useLocalePath } from '#imports'
 
 const localePath = useLocalePath()
+const { openModal } = useGdprConsent()
 </script>

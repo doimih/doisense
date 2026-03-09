@@ -50,15 +50,6 @@
           <option value="pl">Polski</option>
         </select>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-stone-700 mb-1">{{ $t('auth.taxRegion') }}</label>
-        <input
-          v-model="taxRegion"
-          type="text"
-          :placeholder="$t('auth.taxRegionPlaceholder')"
-          class="w-full px-3 py-2 border border-stone-300 rounded-lg"
-        />
-      </div>
       <label class="block text-sm text-stone-700">
         <input v-model="acceptedLegal" type="checkbox" class="mr-2 align-middle" />
         <span class="align-middle">
@@ -97,7 +88,6 @@ const password = ref('')
 const language = ref('en')
 const firstName = ref('')
 const lastName = ref('')
-const taxRegion = ref('')
 const acceptedLegal = ref(false)
 const error = ref('')
 const loading = ref(false)
@@ -132,7 +122,6 @@ async function register() {
       language.value,
       firstName.value,
       lastName.value,
-      taxRegion.value,
     )
     success.value = res.detail || t('auth.registerSuccess')
   } catch (e: unknown) {

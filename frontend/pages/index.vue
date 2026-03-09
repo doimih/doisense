@@ -42,9 +42,9 @@
     </section>
 
     <section class="grid gap-4 md:grid-cols-3">
-      <article v-for="card in text.cards" :key="card.title" class="bg-white border border-stone-200 rounded-xl p-5">
-        <h2 class="font-semibold text-stone-900 mb-2">{{ card.title }}</h2>
-        <p class="text-sm text-stone-600">{{ card.description }}</p>
+      <article v-for="card in text.cards" :key="card.title" class="bg-white border border-stone-200 rounded-xl px-5 py-[70px]">
+        <h2 class="mb-2 text-[19px] font-semibold text-stone-900">{{ card.title }}</h2>
+        <p class="text-[15px] text-stone-600">{{ card.description }}</p>
       </article>
     </section>
 
@@ -53,10 +53,10 @@
         v-for="link in text.quickLinks"
         :key="link.to"
         :to="localePath(link.to)"
-        class="bg-white border border-stone-200 rounded-xl p-4 hover:bg-stone-50 transition"
+        class="bg-white border border-stone-200 rounded-xl px-4 py-[66px] transition hover:bg-stone-50"
       >
-        <h3 class="font-semibold text-stone-900">{{ link.title }}</h3>
-        <p class="text-sm text-stone-600 mt-1">{{ link.description }}</p>
+        <h3 class="text-[19px] font-semibold text-stone-900">{{ link.title }}</h3>
+        <p class="mt-1 text-[15px] text-stone-600">{{ link.description }}</p>
       </NuxtLink>
     </section>
 
@@ -67,7 +67,7 @@
         <NuxtLink :to="localePath('/legal/privacy')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20">{{ text.privacy }}</NuxtLink>
         <NuxtLink :to="localePath('/legal/terms')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20">{{ text.terms }}</NuxtLink>
         <NuxtLink :to="localePath('/legal/cookies')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20">{{ text.cookies }}</NuxtLink>
-        <NuxtLink :to="localePath('/legal/gdpr')" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700">{{ text.gdprRights }}</NuxtLink>
+        <button type="button" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700" @click="openModal">{{ text.gdprRights }}</button>
       </div>
     </section>
   </div>
@@ -76,6 +76,7 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
 const authStore = useAuthStore()
+const { openModal } = useGdprConsent()
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()

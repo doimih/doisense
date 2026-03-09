@@ -263,10 +263,6 @@
             <option value="pl">Polski</option>
           </select>
         </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.taxRegion') }}</label>
-          <input v-model="registerTaxRegion" type="text" :placeholder="$t('auth.taxRegionPlaceholder')" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
-        </div>
         <p v-if="authError" class="text-sm text-red-600">{{ authError }}</p>
         <p v-if="authSuccess" class="text-sm text-emerald-700">{{ authSuccess }}</p>
         <button
@@ -322,7 +318,6 @@ const registerPassword = ref('')
 const registerLanguage = ref('en')
 const registerFirstName = ref('')
 const registerLastName = ref('')
-const registerTaxRegion = ref('')
 
 function openAuthModal() {
   showAuthModal.value = true
@@ -476,7 +471,6 @@ async function submitRegister() {
       registerLanguage.value,
       registerFirstName.value,
       registerLastName.value,
-      registerTaxRegion.value,
     )
     authSuccess.value = res.detail || t('auth.registerSuccess')
   } catch (e: unknown) {

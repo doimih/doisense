@@ -3,7 +3,7 @@
     <template v-if="hasCmsContent && cmsPage">
       <h1 class="text-4xl font-bold text-stone-900 text-center">{{ cmsPage.title }}</h1>
       <section class="bg-white border border-stone-200 rounded-xl p-5 max-w-4xl mx-auto">
-        <p class="text-stone-700 text-sm leading-7 whitespace-pre-line">{{ cmsPage.content }}</p>
+        <div class="cms-pricing-content text-stone-700 text-sm leading-7" v-html="cmsPage.content" />
       </section>
     </template>
 
@@ -148,3 +148,29 @@ usePublicSeo({
   description: seoDescription,
 })
 </script>
+
+<style scoped>
+.cms-pricing-content :deep(h2) {
+  margin: 0.75rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1c1917;
+}
+
+.cms-pricing-content :deep(h3) {
+  margin: 0.75rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1c1917;
+}
+
+.cms-pricing-content :deep(p) {
+  margin: 0.5rem 0;
+}
+
+.cms-pricing-content :deep(ul) {
+  margin: 0.75rem 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+</style>

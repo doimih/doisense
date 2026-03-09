@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('doisense_user', JSON.stringify(user))
       }
     },
-    async register(email: string, password: string, language: string, firstName = '', lastName = '', taxRegion = '') {
+    async register(email: string, password: string, language: string, firstName = '', lastName = '') {
       const config = useRuntimeConfig()
       const base = config.public.apiBase as string
       return $fetch<{ detail: string }>(`${base}/auth/register`, {
@@ -38,7 +38,6 @@ export const useAuthStore = defineStore('auth', {
           language,
           first_name: firstName,
           last_name: lastName,
-          tax_region: taxRegion,
         },
       })
     },
