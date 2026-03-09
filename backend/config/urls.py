@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.static import serve
 
-admin.site.site_url = "https://projects.doimih.net/doisense/ro"
+admin.site.site_url = "https://projects.doimih.net/doisense"
 
 urlpatterns = [
     re_path(r"^doisense/ro/admin/static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),

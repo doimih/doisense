@@ -47,6 +47,7 @@ UNFOLD = {
     "SITE_TITLE": "Doisense Admin",
     "SITE_HEADER": "Doisense",
     "SITE_SYMBOL": "dashboard",
+    "SITE_URL": env("ADMIN_SITE_URL", default="https://projects.doimih.net/doisense"),
     "SHOW_HISTORY": True,
     "STYLES": [
         f"{ADMIN_STATIC_URL}admin/css/unfold_custom_fields.css",
