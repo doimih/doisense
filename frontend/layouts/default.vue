@@ -5,6 +5,7 @@
       <slot />
     </main>
     <Footer />
+    <GdprFloatingButton />
     <GdprConsentModal />
   </div>
 </template>

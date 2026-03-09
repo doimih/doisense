@@ -60,23 +60,12 @@
       </NuxtLink>
     </section>
 
-    <section class="bg-stone-900 text-white rounded-2xl p-6 md:p-8">
-      <h2 class="text-2xl font-semibold">{{ text.gdprTitle }}</h2>
-      <p class="text-stone-200 mt-2">{{ text.gdprSubtitle }}</p>
-      <div class="mt-5 flex flex-wrap gap-3">
-        <NuxtLink :to="localePath('/legal/privacy')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20">{{ text.privacy }}</NuxtLink>
-        <NuxtLink :to="localePath('/legal/terms')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20">{{ text.terms }}</NuxtLink>
-        <NuxtLink :to="localePath('/legal/cookies')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20">{{ text.cookies }}</NuxtLink>
-        <button type="button" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700" @click="openModal">{{ text.gdprRights }}</button>
-      </div>
-    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 const localePath = useLocalePath()
 const authStore = useAuthStore()
-const { openModal } = useGdprConsent()
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
