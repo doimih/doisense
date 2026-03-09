@@ -4,6 +4,12 @@
     "subtitle": "Companionul tău de wellbeing. Jurnal, conversații cu AI și programe ghidate."
   },
   "nav": {
+    "features": "Funcționalități",
+    "pricing": "Prețuri",
+    "about": "Despre",
+    "contact": "Contact",
+    "search": "Căutare",
+    "admin": "Admin",
     "chat": "Chat",
     "journal": "Jurnal",
     "programs": "Programe ghidate",
@@ -16,8 +22,36 @@
     "email": "Email",
     "password": "Parolă",
     "language": "Limbă",
+    "recover": "Recuperare parola",
+    "recoverAction": "Trimite link de recuperare",
+    "recoverSetTitle": "Seteaza parola noua",
+    "recoverSetAction": "Salveaza parola",
+    "recoverBack": "Inapoi la login",
+    "recoverSent": "Daca emailul exista, am trimis linkul de recuperare.",
+    "recoverError": "Nu am putut procesa cererea acum.",
+    "recoverDone": "Parola a fost schimbata. Te poti loga acum.",
+    "recoverInvalid": "Link invalid/expirat sau parola invalida.",
     "noAccount": "Nu ai cont? Înregistrează-te",
-    "hasAccount": "Ai deja cont? Autentifică-te"
+    "hasAccount": "Ai deja cont? Autentifică-te",
+    "accountTitle": "Contul tău",
+    "firstName": "Prenume",
+    "lastName": "Nume",
+    "taxRegion": "Zona fiscala",
+    "taxRegionPlaceholder": "ex: RO",
+    "googleNotConfigured": "Login-ul cu Google nu este configurat.",
+    "googleLoginFailed": "Nu am putut finaliza login-ul cu Google.",
+    "appleNotConfigured": "Login-ul cu Apple nu este configurat.",
+    "appleLoginFailed": "Nu am putut finaliza login-ul cu Apple.",
+    "loginFailed": "Datele de logare sunt eronate.",
+    "registerSuccess": "Cont creat. Verifica emailul pentru activare.",
+    "registerFailed": "Nu am putut crea contul. Verifica datele si incearca din nou.",
+    "legalAcceptPrefix": "Am citit si accept",
+    "termsAndConditions": "Termenii si conditiile",
+    "and": "si",
+    "privacyPolicy": "Politica de confidentialitate",
+    "mustAcceptLegal": "Trebuie sa accepti termenii si politica de confidentialitate.",
+    "loginSeoDescription": "Autentificare in contul Doisense.",
+    "registerSeoDescription": "Creeaza un cont Doisense."
   },
   "chat": {
     "placeholder": "Scrie mesajul tău...",
@@ -39,12 +73,37 @@
     "upgrade": "Treci la Premium"
   },
   "footer": {
-    "copyright": "© Doisense. Toate drepturile rezervate."
+    "copyright": "© Doisense. Toate drepturile rezervate.",
+    "resources": "Resurse",
+    "helpCenter": "Centru ajutor",
+    "docs": "Documentație",
+    "features": "Funcționalități",
+    "company": "Companie",
+    "privacy": "Confidențialitate",
+    "terms": "Termeni",
+    "cookies": "Cookie-uri",
+    "gdpr": "GDPR",
+    "newsletterTitle": "Abonează-te la newsletter",
+    "newsletterPlaceholder": "Introdu emailul",
+    "subscribe": "Abonare",
+    "builtWithNuxt": "Construit cu Nuxt"
   },
   "common": {
     "loading": "Se încarcă",
     "back": "Înapoi",
     "yes": "Da",
     "no": "Nu"
+  },
+  "search": {
+    "title": "Căutare completă",
+    "subtitle": "Caută în programe, întrebări de jurnal și pagini CMS.",
+    "placeholder": "Scrie cel puțin 2 caractere",
+    "action": "Caută",
+    "programs": "Programe",
+    "journalQuestions": "Întrebări jurnal",
+    "cmsPages": "Pagini CMS",
+    "failed": "Căutarea a eșuat.",
+    "seoTitle": "Căutare Doisense",
+    "seoDescription": "Utilitar de căutare pentru utilizatori autentificați în Doisense."
   }
 }

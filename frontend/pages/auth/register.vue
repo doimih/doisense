@@ -2,6 +2,24 @@
   <div class="max-w-md mx-auto py-12">
     <h1 class="text-2xl font-bold text-stone-800 mb-6">{{ $t('auth.register') }}</h1>
     <form @submit.prevent="register" class="space-y-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label class="block text-sm font-medium text-stone-700 mb-1">{{ $t('auth.firstName') }}</label>
+          <input
+            v-model="firstName"
+            type="text"
+            class="w-full px-3 py-2 border border-stone-300 rounded-lg"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-stone-700 mb-1">{{ $t('auth.lastName') }}</label>
+          <input
+            v-model="lastName"
+            type="text"
+            class="w-full px-3 py-2 border border-stone-300 rounded-lg"
+          />
+        </div>
+      </div>
       <div>
         <label class="block text-sm font-medium text-stone-700 mb-1">{{ $t('auth.email') }}</label>
         <input
@@ -32,6 +50,15 @@
           <option value="pl">Polski</option>
         </select>
       </div>
+      <div>
+        <label class="block text-sm font-medium text-stone-700 mb-1">{{ $t('auth.taxRegion') }}</label>
+        <input
+          v-model="taxRegion"
+          type="text"
+          :placeholder="$t('auth.taxRegionPlaceholder')"
+          class="w-full px-3 py-2 border border-stone-300 rounded-lg"
+        />
+      </div>
       <label class="block text-sm text-stone-700">
         <input v-model="acceptedLegal" type="checkbox" class="mr-2 align-middle" />
         <span class="align-middle">
@@ -43,9 +70,10 @@
         </span>
       </label>
       <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
+      <p v-if="success" class="text-emerald-700 text-sm">{{ success }}</p>
       <button
         type="submit"
-        :disabled="loading"
+        :disabled="loading || success"
         class="w-full py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
       >
         {{ loading ? $t('common.loading') : $t('auth.register') }}
@@ -62,39 +90,33 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
 const authStore = useAuthStore()
-const router = useRouter()
-const { locale } = useI18n()
+const { t } = useI18n()
 
 const email = ref('')
 const password = ref('')
 const language = ref('en')
+const firstName = ref('')
+const lastName = ref('')
+const taxRegion = ref('')
 const acceptedLegal = ref(false)
 const error = ref('')
 const loading = ref(false)
+const success = ref('')
 
-const isRo = computed(() => locale.value.startsWith('ro'))
-
-const legalText = computed(() => {
-  if (isRo.value) {
-    return {
-      prefix: 'Am citit și accept',
-      terms: 'Termenii și condițiile',
-      and: 'și',
-      privacy: 'Politica de confidențialitate',
-      suffix: '.',
-      validation: 'Trebuie să accepți termenii și politica de confidențialitate.',
-    }
-  }
-
-  return {
-    prefix: 'I have read and accept the',
-    terms: 'Terms and Conditions',
-    and: 'and',
-    privacy: 'Privacy Policy',
-    suffix: '.',
-    validation: 'You must accept the terms and privacy policy.',
-  }
+usePublicSeo({
+  title: computed(() => `${t('auth.register')} - Doisense`),
+  description: computed(() => t('auth.registerSeoDescription')),
+  noindex: true,
 })
+
+const legalText = computed(() => ({
+  prefix: t('auth.legalAcceptPrefix'),
+  terms: t('auth.termsAndConditions'),
+  and: t('auth.and'),
+  privacy: t('auth.privacyPolicy'),
+  suffix: '.',
+  validation: t('auth.mustAcceptLegal'),
+}))
 
 async function register() {
   error.value = ''
@@ -104,10 +126,19 @@ async function register() {
   }
   loading.value = true
   try {
-    await authStore.register(email.value, password.value, language.value)
-    await router.push(localePath('/chat'))
+    const res = await authStore.register(
+      email.value,
+      password.value,
+      language.value,
+      firstName.value,
+      lastName.value,
+      taxRegion.value,
+    )
+    success.value = res.detail || t('auth.registerSuccess')
   } catch (e: unknown) {
-    error.value = (e as { message?: string })?.message || 'Registration failed'
+    error.value = (e as { data?: { detail?: string }; message?: string })?.data?.detail
+      || (e as { message?: string })?.message
+      || t('auth.registerFailed')
   } finally {
     loading.value = false
   }

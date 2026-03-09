@@ -77,38 +77,55 @@
 const localePath = useLocalePath()
 const authStore = useAuthStore()
 const { locale } = useI18n()
+const localeCode = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+})
 
-const isRo = computed(() => locale.value.startsWith('ro'))
-
-const text = computed(() => {
-  if (isRo.value) {
-    return {
-      heroBadge: 'Wellbeing + AI + GDPR',
-      heroTitle: 'Prima platformă ta pentru wellbeing digital, construită responsabil',
-      heroSubtitle: 'Doisense îți oferă jurnal ghidat, chat AI contextual și programe structurate, cu pagini legale complete și control asupra datelor.',
-      primaryCta: 'Creează cont',
-      secondaryCta: 'Vezi funcționalitățile',
-      cards: [
-        { title: 'Experiență ghidată', description: 'Flux clar de la onboarding la progres zilnic.' },
-        { title: 'Design pentru încredere', description: 'Informații explicite despre date, securitate și drepturi.' },
-        { title: 'Scalabil pentru produs', description: 'Pagini publice importante gata pentru creștere.' },
-      ],
-      quickLinks: [
-        { to: '/features', title: 'Features', description: 'Tot ce poate face platforma.' },
-        { to: '/pricing', title: 'Pricing', description: 'Planuri free și premium.' },
-        { to: '/about', title: 'About', description: 'Misiune, valori și context produs.' },
-        { to: '/contact', title: 'Contact', description: 'Suport și canale de comunicare.' },
-      ],
-      gdprTitle: 'GDPR în tot sistemul',
-      gdprSubtitle: 'Am inclus pagini dedicate pentru confidențialitate, termeni, cookie-uri și drepturile utilizatorului.',
-      privacy: 'Privacy Policy',
-      terms: 'Terms',
-      cookies: 'Cookies',
-      gdprRights: 'GDPR Rights',
-    }
-  }
-
-  return {
+const homeCopy: Record<string, {
+  heroBadge: string
+  heroTitle: string
+  heroSubtitle: string
+  primaryCta: string
+  secondaryCta: string
+  cards: Array<{ title: string; description: string }>
+  quickLinks: Array<{ to: '/features' | '/pricing' | '/about' | '/contact'; title: string; description: string }>
+  gdprTitle: string
+  gdprSubtitle: string
+  privacy: string
+  terms: string
+  cookies: string
+  gdprRights: string
+  seoTitle: string
+  seoDescription: string
+}> = {
+  ro: {
+    heroBadge: 'Wellbeing + AI + GDPR',
+    heroTitle: 'Platformă de wellbeing digital, construită responsabil',
+    heroSubtitle: 'Doisense îți oferă jurnal ghidat, chat AI contextual și programe structurate, cu pagini legale complete și control asupra datelor.',
+    primaryCta: 'Creează cont',
+    secondaryCta: 'Vezi funcționalitățile',
+    cards: [
+      { title: 'Experiență ghidată', description: 'Flux clar de la onboarding la progres zilnic.' },
+      { title: 'Design pentru încredere', description: 'Informații explicite despre date, securitate și drepturi.' },
+      { title: 'Scalabil pentru produs', description: 'Pagini publice importante gata pentru creștere.' },
+    ],
+    quickLinks: [
+      { to: '/features', title: 'Funcționalități', description: 'Tot ce poate face platforma.' },
+      { to: '/pricing', title: 'Prețuri', description: 'Planuri free și premium.' },
+      { to: '/about', title: 'Despre', description: 'Misiune, valori și context produs.' },
+      { to: '/contact', title: 'Contact', description: 'Suport și canale de comunicare.' },
+    ],
+    gdprTitle: 'GDPR în tot sistemul',
+    gdprSubtitle: 'Pagini dedicate pentru confidențialitate, termeni, cookie-uri și drepturile utilizatorului.',
+    privacy: 'Politica de confidențialitate',
+    terms: 'Termeni',
+    cookies: 'Cookie-uri',
+    gdprRights: 'Drepturi GDPR',
+    seoTitle: 'Doisense - Wellbeing digital cu AI si jurnal ghidat',
+    seoDescription: 'Platforma Doisense ofera jurnal ghidat, chat AI contextual, programe structurate si pagini legale complete pentru transparenta si conformitate.',
+  },
+  en: {
     heroBadge: 'Wellbeing + AI + GDPR',
     heroTitle: 'Your digital wellbeing platform, built responsibly',
     heroSubtitle: 'Doisense provides guided journaling, contextual AI chat, and structured programs with complete legal pages and user data control.',
@@ -131,6 +148,121 @@ const text = computed(() => {
     terms: 'Terms',
     cookies: 'Cookies',
     gdprRights: 'GDPR Rights',
-  }
+    seoTitle: 'Doisense - Digital wellbeing with AI and guided journaling',
+    seoDescription: 'Doisense provides guided journaling, contextual AI chat, structured programs, and complete legal pages for transparent compliance.',
+  },
+  de: {
+    heroBadge: 'Wellbeing + AI + DSGVO',
+    heroTitle: 'Digitale Wellbeing-Plattform, verantwortungsvoll gebaut',
+    heroSubtitle: 'Doisense bietet geführtes Tagebuch, kontextbezogenen KI-Chat und strukturierte Programme mit klaren rechtlichen Seiten.',
+    primaryCta: 'Konto erstellen',
+    secondaryCta: 'Funktionen ansehen',
+    cards: [
+      { title: 'Geführte Erfahrung', description: 'Klarer Ablauf von Onboarding bis täglichem Fortschritt.' },
+      { title: 'Vertrauensdesign', description: 'Klare Infos zu Daten, Sicherheit und Rechten.' },
+      { title: 'Skalierbar', description: 'Wichtige öffentliche Seiten für Wachstum bereit.' },
+    ],
+    quickLinks: [
+      { to: '/features', title: 'Funktionen', description: 'Was die Plattform leisten kann.' },
+      { to: '/pricing', title: 'Preise', description: 'Free- und Premium-Pläne.' },
+      { to: '/about', title: 'Über uns', description: 'Mission, Werte und Produktkontext.' },
+      { to: '/contact', title: 'Kontakt', description: 'Support und Kommunikationskanäle.' },
+    ],
+    gdprTitle: 'DSGVO im gesamten System',
+    gdprSubtitle: 'Dedizierte Seiten für Datenschutz, Bedingungen, Cookies und Nutzerrechte.',
+    privacy: 'Datenschutz',
+    terms: 'Bedingungen',
+    cookies: 'Cookies',
+    gdprRights: 'DSGVO-Rechte',
+    seoTitle: 'Doisense - Digitales Wellbeing mit KI und Tagebuch',
+    seoDescription: 'Doisense bietet geführtes Tagebuch, KI-Chat, strukturierte Programme und vollständige rechtliche Seiten.',
+  },
+  it: {
+    heroBadge: 'Wellbeing + AI + GDPR',
+    heroTitle: 'Piattaforma di benessere digitale costruita con responsabilità',
+    heroSubtitle: 'Doisense offre diario guidato, chat AI contestuale e programmi strutturati con pagine legali complete.',
+    primaryCta: 'Crea account',
+    secondaryCta: 'Scopri le funzionalità',
+    cards: [
+      { title: 'Esperienza guidata', description: 'Flusso chiaro dall’onboarding al progresso quotidiano.' },
+      { title: 'Design affidabile', description: 'Informazioni chiare su dati, sicurezza e diritti.' },
+      { title: 'Scalabilità prodotto', description: 'Pagine pubbliche chiave pronte per crescere.' },
+    ],
+    quickLinks: [
+      { to: '/features', title: 'Funzionalità', description: 'Cosa può fare la piattaforma.' },
+      { to: '/pricing', title: 'Prezzi', description: 'Piani free e premium.' },
+      { to: '/about', title: 'Chi siamo', description: 'Missione, valori e contesto prodotto.' },
+      { to: '/contact', title: 'Contatto', description: 'Supporto e canali di comunicazione.' },
+    ],
+    gdprTitle: 'GDPR in tutto il sistema',
+    gdprSubtitle: 'Pagine dedicate per privacy, termini, cookie e diritti utente.',
+    privacy: 'Privacy',
+    terms: 'Termini',
+    cookies: 'Cookie',
+    gdprRights: 'Diritti GDPR',
+    seoTitle: 'Doisense - Benessere digitale con AI e diario guidato',
+    seoDescription: 'Doisense offre diario guidato, chat AI contestuale, programmi strutturati e pagine legali complete.',
+  },
+  es: {
+    heroBadge: 'Wellbeing + AI + GDPR',
+    heroTitle: 'Tu plataforma de bienestar digital, construida con responsabilidad',
+    heroSubtitle: 'Doisense ofrece diario guiado, chat AI contextual y programas estructurados con páginas legales completas.',
+    primaryCta: 'Crear cuenta',
+    secondaryCta: 'Ver funciones',
+    cards: [
+      { title: 'Experiencia guiada', description: 'Flujo claro desde onboarding hasta progreso diario.' },
+      { title: 'Diseño de confianza', description: 'Información clara sobre datos, seguridad y derechos.' },
+      { title: 'Escalabilidad', description: 'Páginas públicas clave preparadas para crecer.' },
+    ],
+    quickLinks: [
+      { to: '/features', title: 'Funciones', description: 'Todo lo que la plataforma puede hacer.' },
+      { to: '/pricing', title: 'Precios', description: 'Planes free y premium.' },
+      { to: '/about', title: 'Acerca de', description: 'Misión, valores y contexto del producto.' },
+      { to: '/contact', title: 'Contacto', description: 'Soporte y canales de comunicación.' },
+    ],
+    gdprTitle: 'GDPR en todo el sistema',
+    gdprSubtitle: 'Páginas dedicadas para privacidad, términos, cookies y derechos del usuario.',
+    privacy: 'Política de privacidad',
+    terms: 'Términos',
+    cookies: 'Cookies',
+    gdprRights: 'Derechos GDPR',
+    seoTitle: 'Doisense - Bienestar digital con AI y diario guiado',
+    seoDescription: 'Doisense ofrece diario guiado, chat AI contextual, programas estructurados y páginas legales completas.',
+  },
+  pl: {
+    heroBadge: 'Wellbeing + AI + GDPR',
+    heroTitle: 'Twoja platforma wellbeing, zbudowana odpowiedzialnie',
+    heroSubtitle: 'Doisense oferuje dziennik prowadzony, kontekstowy chat AI i programy strukturalne z kompletnymi stronami prawnymi.',
+    primaryCta: 'Utwórz konto',
+    secondaryCta: 'Zobacz funkcje',
+    cards: [
+      { title: 'Prowadzone doświadczenie', description: 'Jasny przepływ od onboardingu do codziennego postępu.' },
+      { title: 'Projekt oparty na zaufaniu', description: 'Czytelne informacje o danych, bezpieczeństwie i prawach.' },
+      { title: 'Gotowość na skalę', description: 'Kluczowe strony publiczne gotowe na rozwój.' },
+    ],
+    quickLinks: [
+      { to: '/features', title: 'Funkcje', description: 'Co potrafi platforma.' },
+      { to: '/pricing', title: 'Cennik', description: 'Plany free i premium.' },
+      { to: '/about', title: 'O nas', description: 'Misja, wartości i kontekst produktu.' },
+      { to: '/contact', title: 'Kontakt', description: 'Wsparcie i kanały komunikacji.' },
+    ],
+    gdprTitle: 'GDPR w całym systemie',
+    gdprSubtitle: 'Dedykowane strony dotyczące prywatności, regulaminu, cookies i praw użytkownika.',
+    privacy: 'Polityka prywatności',
+    terms: 'Regulamin',
+    cookies: 'Cookies',
+    gdprRights: 'Prawa GDPR',
+    seoTitle: 'Doisense - Cyfrowy wellbeing z AI i dziennikiem',
+    seoDescription: 'Doisense zapewnia dziennik prowadzony, chat AI, programy strukturalne i kompletne strony prawne.',
+  },
+}
+
+const text = computed(() => homeCopy[localeCode.value] || homeCopy.en)
+const seoTitle = computed(() => text.value.seoTitle)
+const seoDescription = computed(() => text.value.seoDescription)
+
+usePublicSeo({
+  title: seoTitle,
+  description: seoDescription,
 })
 </script>

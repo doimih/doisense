@@ -1,0 +1,108 @@
+{% extends "admin/base.html" %}
+
+{% load i18n unfold %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_("Django site admin") }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col gap-6">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">
+                Analytics Overview
+            </h1>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    {% for filter in period_filters %}
+                        <a
+                            href="{{ filter.url }}"
+                            class="rounded-full border px-3 py-1 text-xs font-medium transition {% if filter.active %}border-amber-700 bg-amber-700 text-white{% else %}border-stone-300 text-stone-700 hover:border-stone-500{% endif %}"
+                        >
+                            {{ filter.label }}
+                        </a>
+                    {% endfor %}
+                </div>
+                <span class="text-xs text-base-500">Updated: {{ analytics.generated_at }}</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {% component "unfold/components/card.html" with title="Total users" icon="group" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.total_users }}</p>
+                <p class="text-xs text-base-500 mt-2">+{{ analytics.new_users_30d }} in last 30 days</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Premium users" icon="workspace_premium" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.premium_users }}</p>
+                <p class="text-xs text-base-500 mt-2">{{ analytics.premium_rate }}% conversion</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Premium conversion (period)" icon="auto_graph" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.premium_conversion_period }}%</p>
+                <p class="text-xs text-base-500 mt-2">Based on users created in selected period</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Active subscriptions" icon="credit_card" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.active_subscriptions }}</p>
+                <p class="text-xs text-base-500 mt-2">Status active or trialing</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Active users (7d)" icon="monitoring" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.active_users_7d }}</p>
+                <p class="text-xs text-base-500 mt-2">Users with journal or AI activity</p>
+            {% endcomponent %}
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            {% component "unfold/components/card.html" with title="New users (selected period)" class="xl:col-span-2" %}
+                {% include "unfold/components/chart/line.html" with data=user_chart_data options=chart_options height=200 %}
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Top languages" %}
+                <div class="flex flex-col gap-4">
+                    {% for item in language_progress %}
+                        {% include "unfold/components/progress.html" with title=item.title description=item.description value=item.value %}
+                    {% empty %}
+                        <p class="text-sm text-base-500">No user data yet.</p>
+                    {% endfor %}
+                </div>
+            {% endcomponent %}
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            {% component "unfold/components/card.html" with title="Journal entries (selected period)" class="xl:col-span-2" %}
+                {% include "unfold/components/chart/bar.html" with data=journal_chart_data options=chart_options height=200 %}
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Content activity" %}
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <p class="text-xs text-base-500">Journal entries</p>
+                        <p class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.journal_entries }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-base-500">AI logs</p>
+                        <p class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.ai_logs }}</p>
+                    </div>
+                </div>
+            {% endcomponent %}
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+            {% component "unfold/components/card.html" with title="Premium conversion trend (cumulative)" %}
+                {% include "unfold/components/chart/line.html" with data=conversion_chart_data options=conversion_chart_options height=220 %}
+            {% endcomponent %}
+        </div>
+
+        <div class="flex flex-col lg:flex-row lg:gap-8">
+            <div class="grow">
+                {% include "unfold/helpers/app_list_default.html" %}
+            </div>
+
+            {% include "unfold/helpers/history.html" %}
+        </div>
+    </div>
+{% endblock %}

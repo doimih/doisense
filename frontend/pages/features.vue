@@ -45,35 +45,46 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
 const { locale } = useI18n()
+const localeCode = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+})
 
-const isRo = computed(() => locale.value.startsWith('ro'))
-
-const text = computed(() => {
-  if (isRo.value) {
-    return {
-      badge: 'Platformă completă',
-      title: 'Funcționalități gândite pentru wellbeing real',
-      subtitle: 'Doisense combină jurnalul ghidat, conversațiile AI și planurile de progres într-o singură experiență.',
-      featureCards: [
-        { title: 'Jurnal ghidat zilnic', description: 'Întrebări dinamice și salvare rapidă pentru obiceiuri sănătoase de reflecție.' },
-        { title: 'Chat AI contextual', description: 'Asistentul folosește istoricul tău pentru răspunsuri mai relevante și mai empatice.' },
-        { title: 'Programe structurate', description: 'Planuri pe zile și pași mici, urmărite direct în contul tău.' },
-        { title: 'Profil personal adaptiv', description: 'Preferințele și tonul conversației se ajustează pe baza datelor tale.' },
-        { title: 'Flux premium simplu', description: 'Upgrade rapid și transparent pentru funcțiile avansate.' },
-        { title: 'Arhitectură scalabilă', description: 'Frontend Nuxt, backend Django, PostgreSQL și Redis pentru stabilitate.' },
-      ],
-      gdprTitle: 'Conformitate GDPR în produs',
-      gdprItems: [
-        'Transparență: vezi ce date colectăm și de ce.',
-        'Control: poți solicita acces, rectificare sau ștergere.',
-        'Minimizare: păstrăm doar datele necesare funcționalităților.',
-        'Securitate: separare pe servicii și bune practici de deployment.',
-      ],
-      gdprAction: 'Vezi pagina GDPR',
-    }
-  }
-
-  return {
+const featuresCopy: Record<string, {
+  badge: string
+  title: string
+  subtitle: string
+  featureCards: Array<{ title: string; description: string }>
+  gdprTitle: string
+  gdprItems: string[]
+  gdprAction: string
+  seoTitle: string
+  seoDescription: string
+}> = {
+  ro: {
+    badge: 'Platformă completă',
+    title: 'Funcționalități gândite pentru wellbeing real',
+    subtitle: 'Doisense combină jurnalul ghidat, conversațiile AI și planurile de progres într-o singură experiență.',
+    featureCards: [
+      { title: 'Jurnal ghidat zilnic', description: 'Întrebări dinamice și salvare rapidă pentru obiceiuri sănătoase de reflecție.' },
+      { title: 'Chat AI contextual', description: 'Asistentul folosește istoricul tău pentru răspunsuri mai relevante și mai empatice.' },
+      { title: 'Programe structurate', description: 'Planuri pe zile și pași mici, urmărite direct în contul tău.' },
+      { title: 'Profil personal adaptiv', description: 'Preferințele și tonul conversației se ajustează pe baza datelor tale.' },
+      { title: 'Flux premium simplu', description: 'Upgrade rapid și transparent pentru funcțiile avansate.' },
+      { title: 'Arhitectură scalabilă', description: 'Frontend Nuxt, backend Django, PostgreSQL și Redis pentru stabilitate.' },
+    ],
+    gdprTitle: 'Conformitate GDPR în produs',
+    gdprItems: [
+      'Transparență: vezi ce date colectăm și de ce.',
+      'Control: poți solicita acces, rectificare sau ștergere.',
+      'Minimizare: păstrăm doar datele necesare funcționalităților.',
+      'Securitate: separare pe servicii și bune practici de deployment.',
+    ],
+    gdprAction: 'Vezi pagina GDPR',
+    seoTitle: 'Functionalitati Doisense - Jurnal, AI chat, programe',
+    seoDescription: 'Explorează funcționalitățile principale Doisense: jurnal ghidat, chat AI contextual, programe structurate și conformitate GDPR.',
+  },
+  en: {
     badge: 'All-in-one platform',
     title: 'Features designed for practical wellbeing',
     subtitle: 'Doisense combines guided journaling, AI conversations, and progress plans in one coherent flow.',
@@ -93,6 +104,109 @@ const text = computed(() => {
       'Security: service separation and deployment best practices.',
     ],
     gdprAction: 'Read the GDPR page',
-  }
+    seoTitle: 'Doisense Features - Journaling, AI chat, programs',
+    seoDescription: 'Explore key Doisense features: guided journaling, contextual AI chat, structured programs, and GDPR compliance.',
+  },
+  de: {
+    badge: 'Alles-in-einem',
+    title: 'Funktionen für echtes Wellbeing',
+    subtitle: 'Doisense verbindet geführtes Tagebuch, KI-Dialoge und Fortschrittspläne in einem klaren Ablauf.',
+    featureCards: [
+      { title: 'Tägliches Tagebuch', description: 'Dynamische Fragen und schnelles Speichern für gesunde Routinen.' },
+      { title: 'Kontextbezogener KI-Chat', description: 'Antworten werden auf deinen Verlauf und Kontext abgestimmt.' },
+      { title: 'Strukturierte Programme', description: 'Tagespläne mit kleinen Schritten direkt im Konto.' },
+      { title: 'Adaptives Profil', description: 'Ton und Präferenzen passen sich deiner Nutzung an.' },
+      { title: 'Einfaches Premium', description: 'Transparenter Upgrade-Pfad für erweiterte Funktionen.' },
+      { title: 'Skalierbare Architektur', description: 'Nuxt, Django, PostgreSQL und Redis für Stabilität.' },
+    ],
+    gdprTitle: 'DSGVO im Produkt',
+    gdprItems: [
+      'Transparenz: welche Daten wir sammeln und warum.',
+      'Kontrolle: Auskunft, Berichtigung und Löschung.',
+      'Datenminimierung: nur notwendige Daten für Kernfunktionen.',
+      'Sicherheit: Service-Trennung und Best Practices.',
+    ],
+    gdprAction: 'DSGVO-Seite ansehen',
+    seoTitle: 'Doisense Funktionen - Tagebuch, KI-Chat, Programme',
+    seoDescription: 'Entdecke die wichtigsten Doisense-Funktionen mit geführtem Tagebuch, KI-Chat und DSGVO-Konformität.',
+  },
+  it: {
+    badge: 'Piattaforma completa',
+    title: 'Funzionalità pensate per il benessere reale',
+    subtitle: 'Doisense unisce diario guidato, conversazioni AI e piani di progresso in un unico flusso.',
+    featureCards: [
+      { title: 'Diario guidato quotidiano', description: 'Prompt dinamici e salvataggio rapido per creare routine sane.' },
+      { title: 'Chat AI contestuale', description: 'Risposte più pertinenti grazie al tuo contesto personale.' },
+      { title: 'Programmi strutturati', description: 'Piani giorno per giorno con azioni pratiche.' },
+      { title: 'Profilo adattivo', description: 'Tono e preferenze evolvono in base al tuo utilizzo.' },
+      { title: 'Premium semplice', description: 'Upgrade trasparente alle funzioni avanzate.' },
+      { title: 'Architettura scalabile', description: 'Nuxt, Django, PostgreSQL e Redis per affidabilità.' },
+    ],
+    gdprTitle: 'GDPR integrato nel prodotto',
+    gdprItems: [
+      'Trasparenza: cosa raccogliamo e perché.',
+      'Controllo: accesso, rettifica o cancellazione.',
+      'Minimizzazione: salviamo solo i dati necessari.',
+      'Sicurezza: separazione servizi e best practice.',
+    ],
+    gdprAction: 'Vai alla pagina GDPR',
+    seoTitle: 'Funzionalità Doisense - Diario, chat AI, programmi',
+    seoDescription: 'Scopri le funzionalità principali di Doisense: diario guidato, chat AI e conformità GDPR.',
+  },
+  es: {
+    badge: 'Plataforma integral',
+    title: 'Funciones pensadas para bienestar real',
+    subtitle: 'Doisense combina diario guiado, conversaciones AI y planes de progreso en un flujo coherente.',
+    featureCards: [
+      { title: 'Diario guiado diario', description: 'Preguntas dinámicas y guardado rápido para crear hábitos saludables.' },
+      { title: 'Chat AI contextual', description: 'Respuestas más relevantes según tu contexto.' },
+      { title: 'Programas estructurados', description: 'Planes por día con pasos prácticos en tu cuenta.' },
+      { title: 'Perfil adaptativo', description: 'El tono y preferencias evolucionan según tu actividad.' },
+      { title: 'Premium simple', description: 'Ruta de upgrade transparente para funciones avanzadas.' },
+      { title: 'Arquitectura escalable', description: 'Nuxt, Django, PostgreSQL y Redis para estabilidad.' },
+    ],
+    gdprTitle: 'GDPR dentro del producto',
+    gdprItems: [
+      'Transparencia: qué datos recopilamos y por qué.',
+      'Control: acceso, rectificación o eliminación.',
+      'Minimización: guardamos solo datos necesarios.',
+      'Seguridad: separación de servicios y buenas prácticas.',
+    ],
+    gdprAction: 'Ver página GDPR',
+    seoTitle: 'Funciones Doisense - Diario, chat AI, programas',
+    seoDescription: 'Explora las funciones clave de Doisense: diario guiado, chat AI contextual y cumplimiento GDPR.',
+  },
+  pl: {
+    badge: 'Platforma all-in-one',
+    title: 'Funkcje dla realnego wellbeing',
+    subtitle: 'Doisense łączy dziennik prowadzony, rozmowy AI i plany postępu w jednym spójnym doświadczeniu.',
+    featureCards: [
+      { title: 'Codzienny dziennik', description: 'Dynamiczne pytania i szybkie zapisywanie dla zdrowych nawyków.' },
+      { title: 'Kontekstowy chat AI', description: 'Bardziej trafne odpowiedzi dzięki Twojemu kontekstowi.' },
+      { title: 'Programy strukturalne', description: 'Plan dnia po dniu z praktycznymi krokami.' },
+      { title: 'Profil adaptacyjny', description: 'Ton i preferencje dopasowują się do Twojej aktywności.' },
+      { title: 'Prosty Premium', description: 'Przejrzysty upgrade do funkcji zaawansowanych.' },
+      { title: 'Skalowalna architektura', description: 'Nuxt, Django, PostgreSQL i Redis dla niezawodności.' },
+    ],
+    gdprTitle: 'GDPR w produkcie',
+    gdprItems: [
+      'Transparentność: co zbieramy i dlaczego.',
+      'Kontrola: dostęp, poprawienie i usunięcie danych.',
+      'Minimalizacja: przechowujemy tylko potrzebne dane.',
+      'Bezpieczeństwo: separacja usług i dobre praktyki.',
+    ],
+    gdprAction: 'Zobacz stronę GDPR',
+    seoTitle: 'Funkcje Doisense - Dziennik, chat AI, programy',
+    seoDescription: 'Poznaj kluczowe funkcje Doisense: dziennik prowadzony, kontekstowy chat AI i zgodność GDPR.',
+  },
+}
+
+const text = computed(() => featuresCopy[localeCode.value] || featuresCopy.en)
+const seoTitle = computed(() => text.value.seoTitle)
+const seoDescription = computed(() => text.value.seoDescription)
+
+usePublicSeo({
+  title: seoTitle,
+  description: seoDescription,
 })
 </script>

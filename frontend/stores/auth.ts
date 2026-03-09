@@ -1,13 +1,5 @@
 import { defineStore } from 'pinia'
-
-export interface User {
-  id: number
-  email: string
-  language: string
-  is_premium: boolean
-  is_superuser: boolean
-  created_at: string
-}
+import type { User } from './User'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -35,15 +27,20 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('doisense_user', JSON.stringify(user))
       }
     },
-    async register(email: string, password: string, language: string) {
+    async register(email: string, password: string, language: string, firstName = '', lastName = '', taxRegion = '') {
       const config = useRuntimeConfig()
       const base = config.public.apiBase as string
-      const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/register`, {
+      return $fetch<{ detail: string }>(`${base}/auth/register`, {
         method: 'POST',
-        body: { email, password, language },
+        body: {
+          email,
+          password,
+          language,
+          first_name: firstName,
+          last_name: lastName,
+          tax_region: taxRegion,
+        },
       })
-      this.setUser(res.user)
-      this.setTokens(res.access, res.refresh)
     },
     async login(email: string, password: string) {
       const config = useRuntimeConfig()

@@ -22,6 +22,12 @@ const { fetchApi } = useApi()
 const day = ref<{ title: string; content: string; question: string } | null>(null)
 const loading = ref(true)
 
+usePublicSeo({
+  title: 'Program ghidat - Doisense',
+  description: 'Detalii program ghidat pentru utilizatori autentificati.',
+  noindex: true,
+})
+
 onMounted(async () => {
   const id = route.params.id as string
   try {

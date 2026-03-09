@@ -4,6 +4,12 @@
     "subtitle": "Dein Wohlfühl-Begleiter. Tagebuch, KI-Chat und geführte Programme."
   },
   "nav": {
+    "features": "Funktionen",
+    "pricing": "Preise",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "search": "Suche",
+    "admin": "Admin",
     "chat": "Chat",
     "journal": "Tagebuch",
     "programs": "Geführte Programme",
@@ -16,8 +22,36 @@
     "email": "E-Mail",
     "password": "Passwort",
     "language": "Sprache",
+    "recover": "Passwort wiederherstellen",
+    "recoverAction": "Wiederherstellungslink senden",
+    "recoverSetTitle": "Neues Passwort setzen",
+    "recoverSetAction": "Passwort speichern",
+    "recoverBack": "Zuruck zum Login",
+    "recoverSent": "Falls die E-Mail existiert, wurde ein Link gesendet.",
+    "recoverError": "Anfrage konnte momentan nicht verarbeitet werden.",
+    "recoverDone": "Passwort aktualisiert. Du kannst dich jetzt anmelden.",
+    "recoverInvalid": "Link ungultig/abgelaufen oder Passwort ungultig.",
     "noAccount": "Noch kein Konto? Registrieren",
-    "hasAccount": "Bereits Konto? Anmelden"
+    "hasAccount": "Bereits Konto? Anmelden",
+    "accountTitle": "Dein Konto",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "taxRegion": "Steuerregion",
+    "taxRegionPlaceholder": "z. B. DE",
+    "googleNotConfigured": "Google-Login ist nicht konfiguriert.",
+    "googleLoginFailed": "Google-Login konnte nicht abgeschlossen werden.",
+    "appleNotConfigured": "Apple-Login ist nicht konfiguriert.",
+    "appleLoginFailed": "Apple-Login konnte nicht abgeschlossen werden.",
+    "loginFailed": "Ungültige Anmeldedaten.",
+    "registerSuccess": "Konto erstellt. Bitte prüfe deine E-Mails zur Aktivierung.",
+    "registerFailed": "Konto konnte nicht erstellt werden. Bitte prüfe deine Daten und versuche es erneut.",
+    "legalAcceptPrefix": "Ich habe gelesen und akzeptiere",
+    "termsAndConditions": "Allgemeine Geschäftsbedingungen",
+    "and": "und",
+    "privacyPolicy": "Datenschutzerklärung",
+    "mustAcceptLegal": "Du musst die Bedingungen und die Datenschutzerklärung akzeptieren.",
+    "loginSeoDescription": "Melde dich bei deinem Doisense-Konto an.",
+    "registerSeoDescription": "Erstelle dein Doisense-Konto."
   },
   "chat": {
     "placeholder": "Nachricht eingeben...",
@@ -39,12 +73,37 @@
     "upgrade": "Auf Premium upgraden"
   },
   "footer": {
-    "copyright": "© Doisense. Alle Rechte vorbehalten."
+    "copyright": "© Doisense. Alle Rechte vorbehalten.",
+    "resources": "Ressourcen",
+    "helpCenter": "Hilfezentrum",
+    "docs": "Dokumentation",
+    "features": "Funktionen",
+    "company": "Unternehmen",
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen",
+    "cookies": "Cookies",
+    "gdpr": "DSGVO",
+    "newsletterTitle": "Newsletter abonnieren",
+    "newsletterPlaceholder": "E-Mail eingeben",
+    "subscribe": "Abonnieren",
+    "builtWithNuxt": "Erstellt mit Nuxt"
   },
   "common": {
     "loading": "Laden",
     "back": "Zurück",
     "yes": "Ja",
     "no": "Nein"
+  },
+  "search": {
+    "title": "Volltextsuche",
+    "subtitle": "Suche in Programmen, Tagebuchfragen und CMS-Seiten.",
+    "placeholder": "Mindestens 2 Zeichen eingeben",
+    "action": "Suchen",
+    "programs": "Programme",
+    "journalQuestions": "Tagebuchfragen",
+    "cmsPages": "CMS-Seiten",
+    "failed": "Suche fehlgeschlagen.",
+    "seoTitle": "Doisense Suche",
+    "seoDescription": "Suchfunktion für angemeldete Nutzer in Doisense."
   }
 }

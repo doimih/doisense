@@ -7,4 +7,10 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
+
+usePublicSeo({
+  title: 'Chat - Doisense',
+  description: 'Chat AI contextual pentru utilizatori autentificati.',
+  noindex: true,
+})
 </script>

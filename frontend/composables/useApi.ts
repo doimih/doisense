@@ -33,7 +33,7 @@ export function useApi() {
 
   async function fetchApi<T>(
     path: string,
-    options: RequestInit & { body?: object } = {}
+    options: Omit<RequestInit, 'body'> & { body?: unknown } = {}
   ): Promise<T> {
     const token = await getAccessToken()
     const headers: Record<string, string> = {

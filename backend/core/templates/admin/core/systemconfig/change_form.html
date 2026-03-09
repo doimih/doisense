@@ -1,0 +1,127 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  .syscfg-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 16px;
+  }
+
+  .syscfg-tab {
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1f2937;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .syscfg-tab.is-active {
+    background: #111827;
+    color: #ffffff;
+    border-color: #111827;
+  }
+</style>
+{% endblock %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+  <a href="{% url 'admin:core_systemconfig_test_email' %}" class="historylink">Send test email</a>
+</li>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script>
+(() => {
+  const key = 'doisense-system-config-tab'
+  const expectedLabels = [
+    'Localization',
+    'Contact & Email',
+    'OAuth',
+    'Stripe',
+    'AI',
+  ]
+  const form = document.querySelector('form')
+  if (!form) return
+
+  const fieldsets = Array.from(form.querySelectorAll('fieldset')).filter((fieldset) => {
+    const heading = fieldset.querySelector('h2, legend')
+    if (!heading) return false
+    const label = heading.textContent?.trim()
+    return Boolean(label && expectedLabels.includes(label))
+  })
+  if (fieldsets.length < 2) return
+
+  const tabs = document.createElement('div')
+  tabs.className = 'syscfg-tabs'
+
+  const byLabel = new Map()
+  fieldsets.forEach((fieldset) => {
+    const heading = fieldset.querySelector('h2, legend')
+    const label = heading?.textContent?.trim()
+    if (label) {
+      byLabel.set(label, fieldset)
+    }
+  })
+
+  const orderedFieldsets = expectedLabels
+    .map((label) => ({ label, fieldset: byLabel.get(label) }))
+    .filter((item) => Boolean(item.fieldset))
+
+  const items = orderedFieldsets.map(({ label, fieldset }, index) => {
+    const id = `syscfg-tab-${index}`
+
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'syscfg-tab'
+    button.textContent = label
+    button.dataset.target = id
+
+    fieldset.id = id
+    tabs.appendChild(button)
+
+    return { fieldset, button, id }
+  })
+
+  if (items.length < 2) return
+
+  form.insertBefore(tabs, items[0].fieldset)
+
+  function setActive(id) {
+    items.forEach(({ fieldset, button, id: itemId }) => {
+      const active = itemId === id
+      fieldset.style.display = active ? '' : 'none'
+      button.classList.toggle('is-active', active)
+    })
+    try {
+      localStorage.setItem(key, id)
+    } catch {
+      // Ignore storage errors.
+    }
+  }
+
+  let initial = items[0].id
+  try {
+    const remembered = localStorage.getItem(key)
+    if (remembered && items.some((item) => item.id === remembered)) {
+      initial = remembered
+    }
+  } catch {
+    // Ignore storage errors.
+  }
+
+  items.forEach(({ button, id }) => {
+    button.addEventListener('click', () => setActive(id))
+  })
+
+  setActive(initial)
+})()
+</script>
+{% endblock %}

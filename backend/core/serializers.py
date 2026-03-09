@@ -10,8 +10,12 @@ class CMSPageSerializer(serializers.ModelSerializer):
             "id",
             "slug",
             "title",
+            "language",
             "content",
             "is_published",
+            "show_in_header",
+            "show_in_footer",
+            "menu_order",
             "created_at",
             "updated_at",
         )

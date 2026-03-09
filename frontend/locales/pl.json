@@ -4,6 +4,12 @@
     "subtitle": "Twój towarzysz dobrego samopoczucia. Dziennik, czat z AI i programy prowadzone."
   },
   "nav": {
+    "features": "Funkcje",
+    "pricing": "Cennik",
+    "about": "O nas",
+    "contact": "Kontakt",
+    "search": "Szukaj",
+    "admin": "Admin",
     "chat": "Czat",
     "journal": "Dziennik",
     "programs": "Programy prowadzone",
@@ -16,8 +22,36 @@
     "email": "Email",
     "password": "Hasło",
     "language": "Język",
+    "recover": "Odzyskaj haslo",
+    "recoverAction": "Wyslij link odzyskiwania",
+    "recoverSetTitle": "Ustaw nowe haslo",
+    "recoverSetAction": "Zapisz haslo",
+    "recoverBack": "Powrot do logowania",
+    "recoverSent": "Jesli email istnieje, wyslalismy link odzyskiwania.",
+    "recoverError": "Nie mozemy teraz przetworzyc zadania.",
+    "recoverDone": "Haslo zaktualizowane. Mozesz sie zalogowac.",
+    "recoverInvalid": "Link niewazny/wygasl lub haslo niepoprawne.",
     "noAccount": "Nie masz konta? Zarejestruj się",
-    "hasAccount": "Masz konto? Zaloguj się"
+    "hasAccount": "Masz konto? Zaloguj się",
+    "accountTitle": "Twoje konto",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "taxRegion": "Region podatkowy",
+    "taxRegionPlaceholder": "np: PL",
+    "googleNotConfigured": "Logowanie Google nie jest skonfigurowane.",
+    "googleLoginFailed": "Nie udało się zakończyć logowania Google.",
+    "appleNotConfigured": "Logowanie Apple nie jest skonfigurowane.",
+    "appleLoginFailed": "Nie udało się zakończyć logowania Apple.",
+    "loginFailed": "Nieprawidłowe dane logowania.",
+    "registerSuccess": "Konto utworzone. Sprawdź e-mail w celu aktywacji.",
+    "registerFailed": "Nie udało się utworzyć konta. Sprawdź dane i spróbuj ponownie.",
+    "legalAcceptPrefix": "Przeczytałem i akceptuję",
+    "termsAndConditions": "Regulamin",
+    "and": "i",
+    "privacyPolicy": "Politykę prywatności",
+    "mustAcceptLegal": "Musisz zaakceptować regulamin i politykę prywatności.",
+    "loginSeoDescription": "Zaloguj się do konta Doisense.",
+    "registerSeoDescription": "Utwórz konto Doisense."
   },
   "chat": {
     "placeholder": "Wpisz wiadomość...",
@@ -39,12 +73,37 @@
     "upgrade": "Przejdź na Premium"
   },
   "footer": {
-    "copyright": "© Doisense. Wszelkie prawa zastrzeżone."
+    "copyright": "© Doisense. Wszelkie prawa zastrzeżone.",
+    "resources": "Zasoby",
+    "helpCenter": "Centrum pomocy",
+    "docs": "Dokumentacja",
+    "features": "Funkcje",
+    "company": "Firma",
+    "privacy": "Prywatność",
+    "terms": "Regulamin",
+    "cookies": "Cookies",
+    "gdpr": "GDPR",
+    "newsletterTitle": "Zapisz się do newslettera",
+    "newsletterPlaceholder": "Wpisz e-mail",
+    "subscribe": "Subskrybuj",
+    "builtWithNuxt": "Zbudowano w Nuxt"
   },
   "common": {
     "loading": "Ładowanie",
     "back": "Wstecz",
     "yes": "Tak",
     "no": "Nie"
+  },
+  "search": {
+    "title": "Pełne wyszukiwanie",
+    "subtitle": "Szukaj w programach, pytaniach dziennika i stronach CMS.",
+    "placeholder": "Wpisz co najmniej 2 znaki",
+    "action": "Szukaj",
+    "programs": "Programy",
+    "journalQuestions": "Pytania dziennika",
+    "cmsPages": "Strony CMS",
+    "failed": "Wyszukiwanie nie powiodło się.",
+    "seoTitle": "Wyszukiwanie Doisense",
+    "seoDescription": "Narzędzie wyszukiwania dla zalogowanych użytkowników Doisense."
   }
 }

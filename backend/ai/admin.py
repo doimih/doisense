@@ -11,3 +11,10 @@ class ConversationTemplateAdmin(admin.ModelAdmin):
 class AILogAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "model", "created_at")
     list_filter = ("model",)
+    readonly_fields = ("user", "model", "prompt_hash", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

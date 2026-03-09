@@ -23,6 +23,10 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=120, blank=True)
+    last_name = models.CharField(max_length=120, blank=True)
+    phone_contact = models.CharField(max_length=30, blank=True)
+    tax_region = models.CharField(max_length=120, blank=True)
     language = models.CharField(max_length=2, default="en", validators=[validate_language])
     is_premium = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)

@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -7,6 +6,7 @@ from rest_framework.views import APIView
 
 from .router import complete
 from .prompt_builder import get_chat_system_prompt
+from core.system_config import get_ai_chat_rate_limit
 
 
 def _rate_limit_key(user_id):
@@ -16,7 +16,7 @@ def _rate_limit_key(user_id):
 def _check_rate_limit(user_id) -> bool:
     key = _rate_limit_key(user_id)
     count = cache.get(key, 0)
-    limit = getattr(settings, "AI_CHAT_RATE_LIMIT", 20)
+    limit = get_ai_chat_rate_limit()
     if count >= limit:
         return False
     cache.set(key, count + 1, timeout=60)

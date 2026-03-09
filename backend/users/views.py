@@ -1,4 +1,8 @@
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage, get_connection
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -8,14 +12,57 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 import jwt
+from core.system_config import get_apple_client_id, get_google_client_id, get_system_config
 
 from .models import User
 from .serializers import (
+    PasswordChangeSerializer,
     SocialLoginSerializer,
+    PasswordRecoveryRequestSerializer,
+    PasswordResetConfirmSerializer,
     UserLoginSerializer,
     UserRegisterSerializer,
     UserSerializer,
 )
+
+
+def _send_activation_email(user) -> None:
+    config = get_system_config()
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    language = (user.language or config.default_site_language or "ro").strip() or "ro"
+    base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+    activation_url = f"{base_url}/{language}/auth/activate?uid={uid}&token={token}"
+
+    from_email = (
+        config.contact_from_email
+        or config.email_host_user
+        or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.app")
+    )
+
+    connection = get_connection(
+        host=config.email_host,
+        port=config.email_port,
+        username=config.email_host_user,
+        password=config.email_host_password,
+        use_tls=config.email_use_tls,
+        use_ssl=config.email_use_ssl,
+        fail_silently=False,
+    )
+
+    message = EmailMessage(
+        subject="Confirm your Doisense account",
+        body=(
+            "Welcome to Doisense!\n\n"
+            "Please confirm your email address to activate your account:\n"
+            f"{activation_url}\n\n"
+            "If you did not create this account, you can safely ignore this email."
+        ),
+        from_email=from_email,
+        to=[user.email],
+        connection=connection,
+    )
+    message.send()
 
 
 class RegisterView(APIView):
@@ -25,15 +72,54 @@ class RegisterView(APIView):
         serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        refresh = RefreshToken.for_user(user)
+        try:
+            _send_activation_email(user)
+        except Exception:
+            user.delete()
+            return Response(
+                {"detail": "We could not send the activation email right now. Please try again."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         return Response(
-            {
-                "user": UserSerializer(user).data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            },
+            {"detail": "Account created. Please confirm your email to activate your account."},
             status=status.HTTP_201_CREATED,
         )
+
+
+class ActivateAccountView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get("uid")
+        token = request.data.get("token")
+        if not uid or not token:
+            return Response(
+                {"detail": "uid and token are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.filter(pk=user_id).first()
+        except Exception:
+            user = None
+
+        if not user or not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "Invalid or expired activation link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.is_active:
+            return Response(
+                {"detail": "Account is already activated."},
+                status=status.HTTP_200_OK,
+            )
+
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+        return Response({"detail": "Account activated successfully."}, status=status.HTTP_200_OK)
 
 
 class LoginView(APIView):
@@ -52,7 +138,7 @@ class LoginView(APIView):
             )
         if not user.is_active:
             return Response(
-                {"detail": "User account is disabled"},
+                {"detail": "Account is not activated. Please confirm your email first."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         refresh = RefreshToken.for_user(user)
@@ -92,23 +178,45 @@ class MeView(APIView):
     def get(self, request):
         return Response(UserSerializer(request.user).data)
 
+    def patch(self, request):
+        allowed_fields = {"first_name", "last_name", "phone_contact", "language", "tax_region"}
+        payload = {key: value for key, value in request.data.items() if key in allowed_fields}
+        serializer = UserSerializer(request.user, data=payload, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        request.user.set_password(serializer.validated_data["new_password"])
+        request.user.save(update_fields=["password"])
+        return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
+
 
 class SocialLoginView(APIView):
     permission_classes = [AllowAny]
 
     @staticmethod
     def _verify_google_token(raw_token: str):
-        if not settings.GOOGLE_CLIENT_ID:
+        google_client_id = get_google_client_id()
+        if not google_client_id:
             raise ValueError("Google login is not configured")
         return google_id_token.verify_oauth2_token(
             raw_token,
             google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID,
+            google_client_id,
         )
 
     @staticmethod
     def _verify_apple_token(raw_token: str):
-        if not settings.APPLE_CLIENT_ID:
+        apple_client_id = get_apple_client_id()
+        if not apple_client_id:
             raise ValueError("Apple login is not configured")
         jwk_client = jwt.PyJWKClient("https://appleid.apple.com/auth/keys")
         signing_key = jwk_client.get_signing_key_from_jwt(raw_token)
@@ -116,7 +224,7 @@ class SocialLoginView(APIView):
             raw_token,
             signing_key.key,
             algorithms=["RS256"],
-            audience=settings.APPLE_CLIENT_ID,
+            audience=apple_client_id,
             issuer="https://appleid.apple.com",
         )
 
@@ -166,3 +274,87 @@ class SocialLoginView(APIView):
                 "refresh": str(refresh),
             }
         )
+
+
+class PasswordRecoveryRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordRecoveryRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"].lower().strip()
+        user = User.objects.filter(email=email).first()
+        if user and user.is_active:
+            config = get_system_config()
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            language = (user.language or config.default_site_language or "ro").strip() or "ro"
+            base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+            reset_url = f"{base_url}/{language}/auth/recover?uid={uid}&token={token}"
+
+            from_email = (
+                config.contact_from_email
+                or config.email_host_user
+                or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.app")
+            )
+            to_email = [email]
+
+            try:
+                connection = get_connection(
+                    host=config.email_host,
+                    port=config.email_port,
+                    username=config.email_host_user,
+                    password=config.email_host_password,
+                    use_tls=config.email_use_tls,
+                    use_ssl=config.email_use_ssl,
+                    fail_silently=False,
+                )
+                message = EmailMessage(
+                    subject="Doisense password recovery",
+                    body=(
+                        "You requested a password reset. Use the link below to set a new password:\n\n"
+                        f"{reset_url}\n\n"
+                        "If you did not request this, you can safely ignore this email."
+                    ),
+                    from_email=from_email,
+                    to=to_email,
+                    connection=connection,
+                )
+                message.send()
+            except Exception:
+                # Return generic success response to avoid account enumeration.
+                pass
+
+        return Response(
+            {"detail": "If this email exists, a recovery link has been sent."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uid = serializer.validated_data["uid"]
+        token = serializer.validated_data["token"]
+        new_password = serializer.validated_data["new_password"]
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.filter(pk=user_id).first()
+        except Exception:
+            user = None
+
+        if not user or not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "Invalid or expired reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+        return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)

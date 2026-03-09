@@ -7,6 +7,7 @@ import os
 from django.conf import settings
 
 from .models import AILog
+from core.system_config import get_system_config
 
 
 def _hash_prompt(prompt: str) -> str:
@@ -26,26 +27,59 @@ def complete(prompt: str, system: str | None = None, user_id=None) -> str:
     Send prompt to AI and return reply text.
     Prefer OpenAI (GPT) if key is set, else Anthropic (Claude).
     """
-    openai_key = getattr(settings, "OPENAI_API_KEY", "") or os.environ.get("OPENAI_API_KEY")
-    anthropic_key = getattr(settings, "ANTHROPIC_API_KEY", "") or os.environ.get("ANTHROPIC_API_KEY")
+    config = get_system_config()
+    provider = (config.ai_provider or "auto").strip().lower()
+
+    openai_key = (
+        config.ai_openai_api_key
+        or getattr(settings, "OPENAI_API_KEY", "")
+        or os.environ.get("OPENAI_API_KEY")
+    )
+    anthropic_key = (
+        config.ai_anthropic_api_key
+        or getattr(settings, "ANTHROPIC_API_KEY", "")
+        or os.environ.get("ANTHROPIC_API_KEY")
+    )
+
+    if provider == "openai":
+        if not openai_key:
+            return "[AI not configured. Set OpenAI API key in Admin or OPENAI_API_KEY.]"
+        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key)
+    if provider == "anthropic":
+        if not anthropic_key:
+            return "[AI not configured. Set Anthropic API key in Admin or ANTHROPIC_API_KEY.]"
+        return _complete_anthropic(
+            prompt,
+            system=system,
+            user_id=user_id,
+            api_key=anthropic_key,
+        )
 
     if openai_key:
-        return _complete_openai(prompt, system=system, user_id=user_id)
+        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key)
     if anthropic_key:
-        return _complete_anthropic(prompt, system=system, user_id=user_id)
+        return _complete_anthropic(
+            prompt,
+            system=system,
+            user_id=user_id,
+            api_key=anthropic_key,
+        )
     return "[AI not configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY.]"
 
 
-def _complete_openai(prompt: str, system: str | None = None, user_id=None) -> str:
+def _complete_openai(prompt: str, system: str | None = None, user_id=None, api_key: str = "") -> str:
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY"))
+
+        config = get_system_config()
+        model = config.ai_openai_model or os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+        client = OpenAI(api_key=api_key)
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
         resp = client.chat.completions.create(
-            model=os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
+            model=model,
             messages=messages,
             max_tokens=1024,
         )
@@ -56,11 +90,18 @@ def _complete_openai(prompt: str, system: str | None = None, user_id=None) -> st
         return f"[OpenAI error: {e}]"
 
 
-def _complete_anthropic(prompt: str, system: str | None = None, user_id=None) -> str:
+def _complete_anthropic(prompt: str, system: str | None = None, user_id=None, api_key: str = "") -> str:
     try:
         from anthropic import Anthropic
-        client = Anthropic(api_key=settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY"))
-        kwargs = {"model": "claude-3-5-haiku-20241022", "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]}
+
+        config = get_system_config()
+        model = config.ai_anthropic_model or "claude-3-5-haiku-20241022"
+        client = Anthropic(api_key=api_key)
+        kwargs = {
+            "model": model,
+            "max_tokens": 1024,
+            "messages": [{"role": "user", "content": prompt}],
+        }
         if system:
             kwargs["system"] = system
         resp = client.messages.create(**kwargs)

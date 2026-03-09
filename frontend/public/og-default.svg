@@ -1,0 +1,16 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f59e0b" stop-opacity="0.22"/>
+      <stop offset="0.55" stop-color="#fafaf9"/>
+      <stop offset="1" stop-color="#d6d3d1" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#fafaf9"/>
+  <rect x="24" y="24" width="1152" height="582" rx="28" fill="url(#bg)"/>
+  <circle cx="1080" cy="120" r="120" fill="#f59e0b" fill-opacity="0.2"/>
+  <circle cx="120" cy="560" r="180" fill="#a8a29e" fill-opacity="0.2"/>
+  <text x="96" y="254" fill="#111827" font-family="Georgia, 'Times New Roman', serif" font-size="88" font-weight="700">Doisense</text>
+  <text x="96" y="330" fill="#374151" font-family="Arial, sans-serif" font-size="38">Digital wellbeing. Guided journaling. Contextual AI.</text>
+  <text x="96" y="390" fill="#4b5563" font-family="Arial, sans-serif" font-size="32">Privacy-first platform with transparent legal coverage.</text>
+</svg>

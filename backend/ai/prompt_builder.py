@@ -1,7 +1,6 @@
-from django.conf import settings
-
 from .models import ConversationTemplate
 from profiles.models import UserProfile
+from core.system_config import get_system_config
 
 
 def get_chat_system_prompt(user, language: str) -> str:
@@ -28,7 +27,10 @@ def get_chat_system_prompt(user, language: str) -> str:
     if template:
         parts.insert(0, template.prompt)
 
-    base = "You are a supportive wellbeing assistant. Respond in the user's language. Be empathetic and concise."
+    base = get_system_config().ai_system_prompt_base or (
+        "You are a supportive wellbeing assistant. Respond in the user's language. "
+        "Be empathetic and concise."
+    )
     if parts:
         return base + " " + " ".join(parts)
     return base

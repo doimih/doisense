@@ -4,6 +4,12 @@
     "subtitle": "Your wellbeing companion. Journal, chat with AI, and follow guided programs."
   },
   "nav": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "search": "Search",
+    "admin": "Admin",
     "chat": "Chat",
     "journal": "Journal",
     "programs": "Guided Programs",
@@ -16,8 +22,36 @@
     "email": "Email",
     "password": "Password",
     "language": "Language",
+    "recover": "Recover password",
+    "recoverAction": "Send recovery link",
+    "recoverSetTitle": "Set new password",
+    "recoverSetAction": "Save password",
+    "recoverBack": "Back to login",
+    "recoverSent": "If this email exists, we sent a recovery link.",
+    "recoverError": "We could not process your request right now.",
+    "recoverDone": "Password updated. You can now log in.",
+    "recoverInvalid": "Invalid or expired link, or invalid password.",
     "noAccount": "Don't have an account? Sign up",
-    "hasAccount": "Already have an account? Log in"
+    "hasAccount": "Already have an account? Log in",
+    "accountTitle": "Your account",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "taxRegion": "Tax region",
+    "taxRegionPlaceholder": "e.g. RO",
+    "googleNotConfigured": "Google login is not configured.",
+    "googleLoginFailed": "Google login could not be completed.",
+    "appleNotConfigured": "Apple login is not configured.",
+    "appleLoginFailed": "Apple login could not be completed.",
+    "loginFailed": "Invalid login details.",
+    "registerSuccess": "Account created. Check your email for activation.",
+    "registerFailed": "Could not create account. Please verify your data and try again.",
+    "legalAcceptPrefix": "I have read and accept",
+    "termsAndConditions": "Terms and Conditions",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "mustAcceptLegal": "You must accept the terms and privacy policy.",
+    "loginSeoDescription": "Log in to your Doisense account.",
+    "registerSeoDescription": "Create your Doisense account."
   },
   "chat": {
     "placeholder": "Type your message...",
@@ -39,12 +73,37 @@
     "upgrade": "Upgrade to Premium"
   },
   "footer": {
-    "copyright": "© Doisense. All rights reserved."
+    "copyright": "© Doisense. All rights reserved.",
+    "resources": "Resources",
+    "helpCenter": "Help center",
+    "docs": "Docs",
+    "features": "Features",
+    "company": "Company",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "cookies": "Cookies",
+    "gdpr": "GDPR",
+    "newsletterTitle": "Subscribe to our newsletter",
+    "newsletterPlaceholder": "Enter your email",
+    "subscribe": "Subscribe",
+    "builtWithNuxt": "Built with Nuxt"
   },
   "common": {
     "loading": "Loading",
     "back": "Back",
     "yes": "Yes",
     "no": "No"
+  },
+  "search": {
+    "title": "Full Search",
+    "subtitle": "Search across programs, journal questions, and CMS pages.",
+    "placeholder": "Type at least 2 characters",
+    "action": "Search",
+    "programs": "Programs",
+    "journalQuestions": "Journal Questions",
+    "cmsPages": "CMS Pages",
+    "failed": "Search failed.",
+    "seoTitle": "Doisense Search",
+    "seoDescription": "Search utility for logged-in users inside Doisense."
   }
 }

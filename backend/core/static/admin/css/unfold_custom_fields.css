@@ -1,0 +1,81 @@
+/* Improve field visibility in admin forms with requested border style. */
+form input[type="text"],
+form input[type="email"],
+form input[type="number"],
+form input[type="password"],
+form input[type="url"],
+form input[type="search"],
+form input[type="tel"],
+form input[type="date"],
+form input[type="datetime-local"],
+form input[type="time"],
+form input[type="file"],
+form textarea,
+form select,
+form .vTextField,
+form .vLargeTextField,
+form .vURLField,
+form .vEmailField,
+form .vIntegerField,
+form .vDateField,
+form .vTimeField {
+  border: 1px solid #fafafa !important;
+}
+
+/* Keep select2 controls aligned with the same requested border. */
+.select2-container--admin-autocomplete .select2-selection,
+.select2-container .select2-selection {
+  border: 1px solid #fafafa !important;
+}
+
+/* File upload area styling for attachment fields. */
+.file-upload,
+.file-upload a,
+.file-upload input[type="file"] {
+  border-color: #fafafa !important;
+}
+
+/* Keep WYSIWYG area at a fixed, scrollable height. */
+trix-editor.doisense-wysiwyg-editor {
+  overflow-y: auto;
+}
+
+/* Keep FK relation controls (select + add/change/view) on one row. */
+.related-widget-wrapper {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.related-widget-wrapper-link {
+  align-items: center;
+  display: inline-flex !important;
+  justify-content: center;
+  margin: 0 !important;
+}
+
+.related-widget-wrapper select,
+.related-widget-wrapper .select2-container {
+  flex: 1;
+}
+
+/* Payment form: narrower fields and subtle border around each field block. */
+body.app-payments.model-payment .form-row {
+  border: 1px solid #fafafa;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  max-width: 720px;
+  padding: 0.75rem;
+}
+
+body.app-payments.model-payment .form-row input,
+body.app-payments.model-payment .form-row textarea,
+body.app-payments.model-payment .form-row select,
+body.app-payments.model-payment .form-row .select2-container {
+  max-width: 680px;
+  width: 100% !important;
+}
+
+body.app-payments.model-payment .related-widget-wrapper {
+  max-width: 680px;
+}

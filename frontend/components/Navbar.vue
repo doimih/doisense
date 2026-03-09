@@ -2,21 +2,32 @@
   <nav class="bg-white border-b border-stone-200 px-4 py-3">
     <div class="container mx-auto flex items-center justify-between gap-4">
       <NuxtLink :to="localePath('/')" class="text-xl font-semibold text-stone-800">Doisense</NuxtLink>
-      <div class="flex items-center gap-3 flex-wrap justify-end text-sm">
+
+      <button
+        type="button"
+        class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md border border-stone-300 text-stone-700"
+        @click="mobileOpen = !mobileOpen"
+        aria-label="Toggle navigation"
+      >
+        <span v-if="!mobileOpen">☰</span>
+        <span v-else>✕</span>
+      </button>
+
+      <div class="hidden lg:flex items-center gap-3 flex-wrap justify-end text-sm">
         <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/features')" class="text-stone-600 hover:text-stone-900">
-          Features
+          {{ $t('nav.features') }}
         </NuxtLink>
         <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" class="text-stone-600 hover:text-stone-900">
-          Pricing
+          {{ $t('nav.pricing') }}
         </NuxtLink>
         <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" class="text-stone-600 hover:text-stone-900">
-          About
+          {{ $t('nav.about') }}
         </NuxtLink>
         <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" class="text-stone-600 hover:text-stone-900">
-          Contact
+          {{ $t('nav.contact') }}
         </NuxtLink>
         <NuxtLink :to="localePath('/search')" class="text-stone-600 hover:text-stone-900">
-          Search
+          {{ $t('nav.search') }}
         </NuxtLink>
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" class="text-stone-600 hover:text-stone-900">
           {{ $t('nav.chat') }}
@@ -37,7 +48,7 @@
           CMS Editor
         </NuxtLink>
         <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" class="text-stone-600 hover:text-stone-900">
-          Admin
+          {{ $t('nav.admin') }}
         </a>
         <button
           v-if="!authStore.isLoggedIn"
@@ -50,9 +61,32 @@
             <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5Z" />
           </svg>
         </button>
-        <NuxtLink :to="localePath('/legal/gdpr')" class="text-stone-600 hover:text-stone-900">
-          GDPR
-        </NuxtLink>
+        <div class="relative">
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-stone-400"
+            aria-label="Open language menu"
+            @click="desktopLanguageMenuOpen = !desktopLanguageMenuOpen"
+          >
+            {{ activeLanguageLabel }}
+            <span class="text-[10px]">▾</span>
+          </button>
+          <div
+            v-if="desktopLanguageMenuOpen"
+            class="absolute right-0 z-20 mt-2 w-36 rounded-lg border border-stone-200 bg-white p-1 shadow-lg"
+          >
+            <button
+              v-for="lang in languageOptions"
+              :key="lang.code"
+              type="button"
+              class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-100"
+              @click="changeLanguage(lang.code)"
+            >
+              <span>{{ lang.label }}</span>
+              <span v-if="locale.startsWith(lang.code)">✓</span>
+            </button>
+          </div>
+        </div>
         <button
           v-if="authStore.isLoggedIn"
           type="button"
@@ -61,6 +95,49 @@
         >
           {{ $t('auth.logout') }}
         </button>
+      </div>
+    </div>
+
+    <div v-if="mobileOpen" class="container mx-auto mt-3 space-y-2 border-t border-stone-200 pt-3 text-sm lg:hidden">
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/features')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.features') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.pricing') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.about') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.contact') }}</NuxtLink>
+      <NuxtLink :to="localePath('/search')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.search') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.chat') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/cms/home')" class="block text-stone-700" @click="mobileOpen = false">CMS</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/cms/editor')" class="block text-stone-700" @click="mobileOpen = false">CMS Editor</NuxtLink>
+      <div class="pt-2">
+        <p class="mb-1 text-xs text-stone-500">{{ $t('auth.language') }}</p>
+        <div class="relative inline-block">
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-700"
+            aria-label="Open language menu"
+            @click="mobileLanguageMenuOpen = !mobileLanguageMenuOpen"
+          >
+            {{ activeLanguageLabel }}
+            <span class="text-[10px]">▾</span>
+          </button>
+          <div
+            v-if="mobileLanguageMenuOpen"
+            class="absolute left-0 z-20 mt-2 w-40 rounded-lg border border-stone-200 bg-white p-1 shadow-lg"
+          >
+            <button
+              v-for="lang in languageOptions"
+              :key="`mobile-lang-${lang.code}`"
+              type="button"
+              class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-100"
+              @click="changeLanguage(lang.code)"
+            >
+              <span>{{ lang.label }}</span>
+              <span v-if="locale.startsWith(lang.code)">✓</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
@@ -75,7 +152,7 @@
       <div class="flex min-h-full items-center justify-center px-4 py-6">
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @click.stop>
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-stone-900">Contul tău</h2>
+        <h2 class="text-lg font-semibold text-stone-900">{{ $t('auth.accountTitle') }}</h2>
         <button type="button" class="text-stone-500 hover:text-stone-800" @click="closeAuthModal" aria-label="Close">
           ✕
         </button>
@@ -100,22 +177,30 @@
         </button>
       </div>
 
-      <div class="mb-4 space-y-2">
+      <div class="mb-4 grid grid-cols-2 gap-2">
         <button
           type="button"
           class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'apple'"
           @click="loginWithGoogle"
+          aria-label="Continue with Google"
         >
-          {{ socialLoading === 'google' ? 'Google...' : 'Continua cu Google' }}
+          <span v-if="socialLoading === 'google'">...</span>
+          <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5" aria-hidden="true">
+            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.1 14.6 2 12 2 6.5 2 2 6.5 2 12s4.5 10 10 10c5.8 0 9.6-4.1 9.6-9.8 0-.7-.1-1.2-.2-2H12z"/>
+          </svg>
         </button>
         <button
           type="button"
           class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'google'"
           @click="loginWithApple"
+          aria-label="Continue with Apple"
         >
-          {{ socialLoading === 'apple' ? 'Apple...' : 'Continua cu Apple' }}
+          <span v-if="socialLoading === 'apple'">...</span>
+          <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5 fill-current" aria-hidden="true">
+            <path d="M16.9 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.6 2.3 2.8 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.7-2.2.9-1.3 1.2-2.6 1.2-2.7 0 0-2.3-.9-2.3-3.4zM14.6 5.8c.6-.8 1-1.9.9-3-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.9-1 3 .9.1 2-.5 2.7-1.4z"/>
+          </svg>
         </button>
       </div>
 
@@ -128,6 +213,16 @@
           <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.password') }}</label>
           <input v-model="loginPassword" type="password" required class="w-full rounded-lg border border-stone-300 px-3 py-2" />
         </div>
+        <div class="text-right">
+          <button
+            type="button"
+            class="text-sm text-amber-700 hover:underline"
+            :disabled="authLoading"
+            @click="goToRecover"
+          >
+            {{ $t('auth.recover') }}
+          </button>
+        </div>
         <p v-if="authError" class="text-sm text-red-600">{{ authError }}</p>
         <button
           type="submit"
@@ -139,6 +234,16 @@
       </form>
 
       <form v-else class="space-y-3" @submit.prevent="submitRegister">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.firstName') }}</label>
+            <input v-model="registerFirstName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.lastName') }}</label>
+            <input v-model="registerLastName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          </div>
+        </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.email') }}</label>
           <input v-model="registerEmail" type="email" required class="w-full rounded-lg border border-stone-300 px-3 py-2" />
@@ -158,10 +263,15 @@
             <option value="pl">Polski</option>
           </select>
         </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.taxRegion') }}</label>
+          <input v-model="registerTaxRegion" type="text" :placeholder="$t('auth.taxRegionPlaceholder')" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+        </div>
         <p v-if="authError" class="text-sm text-red-600">{{ authError }}</p>
+        <p v-if="authSuccess" class="text-sm text-emerald-700">{{ authSuccess }}</p>
         <button
           type="submit"
-          :disabled="authLoading"
+          :disabled="authLoading || !!authSuccess"
           class="w-full rounded-lg bg-amber-600 py-2 text-white hover:bg-amber-700 disabled:opacity-50"
         >
           {{ authLoading ? $t('common.loading') : $t('auth.register') }}
@@ -177,14 +287,32 @@
 const localePath = useLocalePath()
 const authStore = useAuthStore()
 const router = useRouter()
-const { locale } = useI18n()
+const route = useRoute()
+const { locale, setLocale, t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
+
+const mobileOpen = ref(false)
+const desktopLanguageMenuOpen = ref(false)
+const mobileLanguageMenuOpen = ref(false)
+const languageOptions = [
+  { code: 'ro', label: 'ro' },
+  { code: 'en', label: 'en' },
+  { code: 'de', label: 'de' },
+  { code: 'it', label: 'it' },
+  { code: 'es', label: 'es' },
+  { code: 'pl', label: 'pl' },
+]
+const activeLanguageLabel = computed(() => {
+  const current = languageOptions.find((lang) => locale.value.startsWith(lang.code))
+  return current?.label ?? 'en'
+})
 
 const showAuthModal = ref(false)
 const authTab = ref<'login' | 'register'>('login')
 const authLoading = ref(false)
 const socialLoading = ref<'' | 'google' | 'apple'>('')
 const authError = ref('')
+const authSuccess = ref('')
 
 const loginEmail = ref('')
 const loginPassword = ref('')
@@ -192,25 +320,37 @@ const loginPassword = ref('')
 const registerEmail = ref('')
 const registerPassword = ref('')
 const registerLanguage = ref('en')
+const registerFirstName = ref('')
+const registerLastName = ref('')
+const registerTaxRegion = ref('')
 
 function openAuthModal() {
   showAuthModal.value = true
   authError.value = ''
-  registerLanguage.value = locale.value?.startsWith('ro') ? 'ro' : 'en'
+  authSuccess.value = ''
+  registerLanguage.value = preferredLanguage()
 }
 
 function closeAuthModal() {
   showAuthModal.value = false
   authError.value = ''
+  authSuccess.value = ''
 }
 
 function switchTab(tab: 'login' | 'register') {
   authTab.value = tab
   authError.value = ''
+  authSuccess.value = ''
+}
+
+async function goToRecover() {
+  closeAuthModal()
+  await router.push(localePath('/auth/recover'))
 }
 
 function preferredLanguage() {
-  return locale.value?.startsWith('ro') ? 'ro' : 'en'
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return languageOptions.some((lang) => lang.code === code) ? code : 'en'
 }
 
 function loadScript(src: string, id: string) {
@@ -232,7 +372,7 @@ function loadScript(src: string, id: string) {
 async function loginWithGoogle() {
   const clientId = (runtimeConfig.public.googleClientId as string) || ''
   if (!clientId) {
-    authError.value = 'Google login nu este configurat.'
+    authError.value = t('auth.googleNotConfigured')
     return
   }
 
@@ -263,7 +403,7 @@ async function loginWithGoogle() {
     closeAuthModal()
     await router.push(localePath('/chat'))
   } catch {
-    authError.value = 'Nu am putut finaliza login cu Google.'
+    authError.value = t('auth.googleLoginFailed')
   } finally {
     socialLoading.value = ''
   }
@@ -272,7 +412,7 @@ async function loginWithGoogle() {
 async function loginWithApple() {
   const clientId = (runtimeConfig.public.appleClientId as string) || ''
   if (!clientId) {
-    authError.value = 'Apple login nu este configurat.'
+    authError.value = t('auth.appleNotConfigured')
     return
   }
 
@@ -304,7 +444,7 @@ async function loginWithApple() {
     closeAuthModal()
     await router.push(localePath('/chat'))
   } catch {
-    authError.value = 'Nu am putut finaliza login cu Apple.'
+    authError.value = t('auth.appleLoginFailed')
   } finally {
     socialLoading.value = ''
   }
@@ -312,13 +452,14 @@ async function loginWithApple() {
 
 async function submitLogin() {
   authError.value = ''
+  authSuccess.value = ''
   authLoading.value = true
   try {
     await authStore.login(loginEmail.value, loginPassword.value)
     closeAuthModal()
     await router.push(localePath('/chat'))
-  } catch {
-    authError.value = 'Datele de logare sunt eronate.'
+  } catch (e: unknown) {
+    authError.value = (e as { data?: { detail?: string } })?.data?.detail || t('auth.loginFailed')
   } finally {
     authLoading.value = false
   }
@@ -326,13 +467,20 @@ async function submitLogin() {
 
 async function submitRegister() {
   authError.value = ''
+  authSuccess.value = ''
   authLoading.value = true
   try {
-    await authStore.register(registerEmail.value, registerPassword.value, registerLanguage.value)
-    closeAuthModal()
-    await router.push(localePath('/chat'))
-  } catch {
-    authError.value = 'Nu am putut crea contul. Verifica datele si incearca din nou.'
+    const res = await authStore.register(
+      registerEmail.value,
+      registerPassword.value,
+      registerLanguage.value,
+      registerFirstName.value,
+      registerLastName.value,
+      registerTaxRegion.value,
+    )
+    authSuccess.value = res.detail || t('auth.registerSuccess')
+  } catch (e: unknown) {
+    authError.value = (e as { data?: { detail?: string } })?.data?.detail || t('auth.registerFailed')
   } finally {
     authLoading.value = false
   }
@@ -342,4 +490,23 @@ function logout() {
   authStore.logout()
   router.push(localePath('/'))
 }
+
+async function changeLanguage(code: string) {
+  try {
+    await setLocale(code)
+  } finally {
+    desktopLanguageMenuOpen.value = false
+    mobileLanguageMenuOpen.value = false
+    mobileOpen.value = false
+  }
+}
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileOpen.value = false
+    desktopLanguageMenuOpen.value = false
+    mobileLanguageMenuOpen.value = false
+  },
+)
 </script>

@@ -4,6 +4,12 @@
     "subtitle": "Il tuo compagno di benessere. Diario, chat con AI e programmi guidati."
   },
   "nav": {
+    "features": "Funzionalità",
+    "pricing": "Prezzi",
+    "about": "Chi siamo",
+    "contact": "Contatto",
+    "search": "Ricerca",
+    "admin": "Admin",
     "chat": "Chat",
     "journal": "Diario",
     "programs": "Programmi guidati",
@@ -16,8 +22,36 @@
     "email": "Email",
     "password": "Password",
     "language": "Lingua",
+    "recover": "Recupera password",
+    "recoverAction": "Invia link di recupero",
+    "recoverSetTitle": "Imposta nuova password",
+    "recoverSetAction": "Salva password",
+    "recoverBack": "Torna al login",
+    "recoverSent": "Se l'email esiste, abbiamo inviato il link di recupero.",
+    "recoverError": "Non possiamo elaborare la richiesta ora.",
+    "recoverDone": "Password aggiornata. Ora puoi accedere.",
+    "recoverInvalid": "Link non valido/scaduto o password non valida.",
     "noAccount": "Non hai un account? Registrati",
-    "hasAccount": "Hai già un account? Accedi"
+    "hasAccount": "Hai già un account? Accedi",
+    "accountTitle": "Il tuo account",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "taxRegion": "Regione fiscale",
+    "taxRegionPlaceholder": "es: IT",
+    "googleNotConfigured": "Accesso Google non configurato.",
+    "googleLoginFailed": "Impossibile completare l'accesso con Google.",
+    "appleNotConfigured": "Accesso Apple non configurato.",
+    "appleLoginFailed": "Impossibile completare l'accesso con Apple.",
+    "loginFailed": "Credenziali non valide.",
+    "registerSuccess": "Account creato. Controlla la tua email per l'attivazione.",
+    "registerFailed": "Impossibile creare l'account. Verifica i dati e riprova.",
+    "legalAcceptPrefix": "Ho letto e accetto",
+    "termsAndConditions": "Termini e condizioni",
+    "and": "e",
+    "privacyPolicy": "Informativa sulla privacy",
+    "mustAcceptLegal": "Devi accettare termini e informativa sulla privacy.",
+    "loginSeoDescription": "Accedi al tuo account Doisense.",
+    "registerSeoDescription": "Crea il tuo account Doisense."
   },
   "chat": {
     "placeholder": "Scrivi il tuo messaggio...",
@@ -39,12 +73,37 @@
     "upgrade": "Passa a Premium"
   },
   "footer": {
-    "copyright": "© Doisense. Tutti i diritti riservati."
+    "copyright": "© Doisense. Tutti i diritti riservati.",
+    "resources": "Risorse",
+    "helpCenter": "Centro assistenza",
+    "docs": "Documentazione",
+    "features": "Funzionalità",
+    "company": "Azienda",
+    "privacy": "Privacy",
+    "terms": "Termini",
+    "cookies": "Cookie",
+    "gdpr": "GDPR",
+    "newsletterTitle": "Iscriviti alla newsletter",
+    "newsletterPlaceholder": "Inserisci la tua email",
+    "subscribe": "Iscriviti",
+    "builtWithNuxt": "Realizzato con Nuxt"
   },
   "common": {
     "loading": "Caricamento",
     "back": "Indietro",
     "yes": "Sì",
     "no": "No"
+  },
+  "search": {
+    "title": "Ricerca completa",
+    "subtitle": "Cerca tra programmi, domande del diario e pagine CMS.",
+    "placeholder": "Inserisci almeno 2 caratteri",
+    "action": "Cerca",
+    "programs": "Programmi",
+    "journalQuestions": "Domande diario",
+    "cmsPages": "Pagine CMS",
+    "failed": "Ricerca non riuscita.",
+    "seoTitle": "Ricerca Doisense",
+    "seoDescription": "Utilità di ricerca per utenti autenticati su Doisense."
   }
 }

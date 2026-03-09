@@ -11,6 +11,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || "https://projects.doimih.net",
       appBaseUrl: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense/",
       apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000/api",
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",
@@ -18,15 +19,7 @@ export default defineNuxtConfig({
       appleRedirectUri: process.env.NUXT_PUBLIC_APPLE_REDIRECT_URI || "",
     },
   },
-  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content", "nuxt-studio"],
-  studio: {
-    repository: {
-      provider: "github",
-      owner: "doimih",
-      repo: "doisense",
-      branch: "main",
-    },
-  },
+  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content"],
   i18n: {
     restructureDir: "",
     locales: [
