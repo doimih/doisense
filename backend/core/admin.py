@@ -6,6 +6,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.core.mail import EmailMessage, get_connection
 from django.core.files.storage import default_storage
+from django.db import transaction
 from django.db.models import Min
 from django.http import HttpResponseForbidden, JsonResponse
 from django.http import HttpResponseRedirect
@@ -231,8 +232,21 @@ class CMSPageAdmin(ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        min_ids = qs.values("slug").annotate(min_id=Min("id")).values_list("min_id", flat=True)
+        # Reset ordering before grouping by slug to avoid DB errors with changelist sort params (?o=...).
+        min_ids = qs.order_by().values("slug").annotate(min_id=Min("id")).values_list("min_id", flat=True)
         return qs.filter(id__in=min_ids)
+
+    def delete_model(self, request, obj):
+        # In multilingual mode, one admin row represents all language variants of a slug.
+        CMSPage.objects.filter(slug=obj.slug).delete()
+
+    def delete_queryset(self, request, queryset):
+        slugs = list(queryset.values_list("slug", flat=True).distinct())
+        if not slugs:
+            return
+
+        with transaction.atomic():
+            CMSPage.objects.filter(slug__in=slugs).delete()
 
     def display_title(self, obj):
         ro_title = (
