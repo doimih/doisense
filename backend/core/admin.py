@@ -209,6 +209,33 @@ class CMSPageAdmin(ModelAdmin):
 
     readonly_fields = ("preview_link",)
 
+    def _ensure_frontend_page_rows(self):
+        existing_slugs = set(CMSPage.objects.values_list("slug", flat=True).distinct())
+        label_map = dict(CMS_FRONTEND_PAGE_CHOICES)
+        missing_slugs = [slug for slug, _ in CMS_FRONTEND_PAGE_CHOICES if slug not in existing_slugs]
+
+        if not missing_slugs:
+            return
+
+        with transaction.atomic():
+            for slug in missing_slugs:
+                CMSPage.objects.get_or_create(
+                    slug=slug,
+                    language="ro",
+                    defaults={
+                        "title": label_map.get(slug, slug.replace("-", " ").title()),
+                        "content": "",
+                        "is_published": True,
+                        "show_in_header": False,
+                        "show_in_footer": False,
+                        "menu_order": 300,
+                    },
+                )
+
+    def changelist_view(self, request, extra_context=None):
+        self._ensure_frontend_page_rows()
+        return super().changelist_view(request, extra_context)
+
     def get_fieldsets(self, request, obj=None):
         languages = get_cms_languages()
         language_fieldsets = []
