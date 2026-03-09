@@ -47,6 +47,12 @@ LANGUAGE_LABELS = {
 }
 
 
+def get_cms_languages():
+    configured = list(getattr(settings, "SUPPORTED_LANGUAGES", ["ro", "en", "de", "it", "es", "pl"]))
+    allowed = [language for language in configured if language in LANGUAGE_LABELS]
+    return allowed or ["ro", "en", "de", "it", "es", "pl"]
+
+
 class CMSPageAdminForm(forms.ModelForm):
     template_preset = forms.ChoiceField(
         required=False,
@@ -62,6 +68,18 @@ class CMSPageAdminForm(forms.ModelForm):
         required=True,
         help_text="Only public frontend pages can be managed from CMS.",
     )
+    title_ro = forms.CharField(required=False, label="Title (RO)")
+    content_ro = forms.CharField(required=False, label="Content (RO)", widget=CKEditor5Widget(config_name="complete"))
+    title_en = forms.CharField(required=False, label="Title (EN)")
+    content_en = forms.CharField(required=False, label="Content (EN)", widget=CKEditor5Widget(config_name="complete"))
+    title_de = forms.CharField(required=False, label="Title (DE)")
+    content_de = forms.CharField(required=False, label="Content (DE)", widget=CKEditor5Widget(config_name="complete"))
+    title_it = forms.CharField(required=False, label="Title (IT)")
+    content_it = forms.CharField(required=False, label="Content (IT)", widget=CKEditor5Widget(config_name="complete"))
+    title_es = forms.CharField(required=False, label="Title (ES)")
+    content_es = forms.CharField(required=False, label="Content (ES)", widget=CKEditor5Widget(config_name="complete"))
+    title_pl = forms.CharField(required=False, label="Title (PL)")
+    content_pl = forms.CharField(required=False, label="Content (PL)", widget=CKEditor5Widget(config_name="complete"))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -70,20 +88,14 @@ class CMSPageAdminForm(forms.ModelForm):
         editor_height = getattr(settings, "ADMIN_WYSIWYG_HEIGHT", 420)
 
         config_name = "simple" if toolbar_mode == "simple" else "complete"
-        self.languages = list(getattr(settings, "SUPPORTED_LANGUAGES", ["ro", "en", "de", "it", "es", "pl"]))
+        self.languages = get_cms_languages()
 
         for language in self.languages:
-            self.fields[f"title_{language}"] = forms.CharField(
-                required=False,
-                label=f"Title ({language.upper()})",
-            )
-            self.fields[f"content_{language}"] = forms.CharField(
-                required=False,
-                label=f"Content ({language.upper()})",
-                widget=CKEditor5Widget(
-                    config_name=config_name,
-                    attrs={"style": f"min-height: {editor_height}px;"},
-                ),
+            self.fields[f"title_{language}"].label = f"Title ({language.upper()})"
+            self.fields[f"content_{language}"].label = f"Content ({language.upper()})"
+            self.fields[f"content_{language}"].widget = CKEditor5Widget(
+                config_name=config_name,
+                attrs={"style": f"min-height: {editor_height}px;"},
             )
 
         instance = getattr(self, "instance", None)
@@ -197,7 +209,7 @@ class CMSPageAdmin(ModelAdmin):
     readonly_fields = ("preview_link",)
 
     def get_fieldsets(self, request, obj=None):
-        languages = list(getattr(settings, "SUPPORTED_LANGUAGES", ["ro", "en", "de", "it", "es", "pl"]))
+        languages = get_cms_languages()
         language_fieldsets = []
         for language in languages:
             language_label = LANGUAGE_LABELS.get(language, language.upper())
@@ -261,7 +273,7 @@ class CMSPageAdmin(ModelAdmin):
         preset = form.cleaned_data.get("template_preset")
         preset_content = CMS_TEMPLATE_PRESETS.get(preset, "")
 
-        languages = list(getattr(settings, "SUPPORTED_LANGUAGES", ["ro", "en", "de", "it", "es", "pl"]))
+        languages = get_cms_languages()
         title_by_language = {}
         content_by_language = {}
 
@@ -326,7 +338,7 @@ class CMSPageAdmin(ModelAdmin):
 
         url = reverse("cms-page-preview", args=[obj.slug])
         links = []
-        for language in getattr(settings, "SUPPORTED_LANGUAGES", ["ro", "en", "de", "it", "es", "pl"]):
+        for language in get_cms_languages():
             links.append(
                 format_html(
                     '<a href="{}?language={}" target="_blank" rel="noopener">{}</a>',
