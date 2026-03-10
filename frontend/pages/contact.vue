@@ -30,7 +30,7 @@ const localePath = useLocalePath()
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 
 const copy: Record<string, {
@@ -88,6 +88,20 @@ const copy: Record<string, {
     gdprLink: 'DSGVO-Seite.',
     seoTitle: 'Doisense Kontakt - Support und DSGVO-Anfragen',
     seoDescription: 'Kontaktiere das Doisense-Team für technischen Support, geschäftliche Fragen oder Datenschutzanfragen.',
+  },
+  fr: {
+    title: 'Contact',
+    subtitle: 'Pour le support technique, les questions commerciales ou les demandes sur les donnees personnelles, vous pouvez nous contacter a tout moment.',
+    supportTitle: 'Support general',
+    supportText: 'Email: support@doisense.app',
+    gdprTitle: 'Demandes GDPR',
+    gdprText: 'Email: privacy@doisense.app',
+    responseTitle: 'Delai de reponse',
+    responseText: 'Nous essayons de repondre sous 1 a 3 jours ouvrables selon la complexite de la demande.',
+    note: 'Pour vos droits sur les donnees personnelles, consultez la ',
+    gdprLink: 'page GDPR.',
+    seoTitle: 'Contact Doisense - Support et demandes GDPR',
+    seoDescription: 'Contactez l\'equipe Doisense pour le support technique, les questions commerciales ou les demandes de donnees personnelles.',
   },
   it: {
     title: 'Contatto',

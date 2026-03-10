@@ -36,16 +36,21 @@
 
         <div>
           <h3 class="mb-4 text-sm font-semibold text-white">{{ $t('footer.newsletterTitle') }}</h3>
-          <form class="flex items-center gap-2" @submit.prevent>
+          <form class="flex items-center gap-2" @submit.prevent="subscribeToNewsletter">
             <input
+              v-model="newsletterEmail"
               type="email"
               :placeholder="$t('footer.newsletterPlaceholder')"
+              required
               class="w-full rounded-md border border-stone-700 bg-[#151519] px-3 py-2 text-sm text-stone-100 placeholder:text-stone-500"
             />
-            <button type="submit" class="rounded-md bg-amber-500 px-3 py-2 text-sm font-medium text-black hover:bg-amber-400">
+            <button type="submit" :disabled="newsletterLoading" class="rounded-md bg-amber-500 px-3 py-2 text-sm font-medium text-black hover:bg-amber-400 disabled:opacity-60">
               {{ $t('footer.subscribe') }}
             </button>
           </form>
+          <p v-if="newsletterStatus" class="mt-2 text-xs" :class="newsletterError ? 'text-red-300' : 'text-emerald-300'">
+            {{ newsletterStatus }}
+          </p>
         </div>
       </div>
 
@@ -62,8 +67,44 @@
 </template>
 
 <script setup lang="ts">
-import { useLocalePath } from '#imports'
+import { useI18n, useLocalePath } from '#imports'
+import { useApi } from '~/composables/useApi'
+import { useGdprConsent } from '~/composables/useGdprConsent'
 
 const localePath = useLocalePath()
 const { openModal } = useGdprConsent()
+const { fetchApi } = useApi()
+const { t } = useI18n()
+
+const newsletterEmail = ref('')
+const newsletterStatus = ref('')
+const newsletterError = ref(false)
+const newsletterLoading = ref(false)
+
+async function subscribeToNewsletter() {
+  newsletterStatus.value = ''
+  newsletterError.value = false
+
+  const email = newsletterEmail.value.trim().toLowerCase()
+  if (!email) {
+    newsletterError.value = true
+    newsletterStatus.value = t('footer.newsletterInvalidEmail')
+    return
+  }
+
+  newsletterLoading.value = true
+  try {
+    await fetchApi('/newsletter/subscribe', {
+      method: 'POST',
+      body: { email },
+    })
+    newsletterEmail.value = ''
+    newsletterStatus.value = t('footer.newsletterSubscribed')
+  } catch {
+    newsletterError.value = true
+    newsletterStatus.value = t('footer.newsletterSubscribeError')
+  } finally {
+    newsletterLoading.value = false
+  }
+}
 </script>

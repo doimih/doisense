@@ -4,6 +4,7 @@ from uuid import uuid4
 from django.conf import settings
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.sites import NotRegistered
 from django.core.mail import EmailMessage, get_connection
 from django.core.files.storage import default_storage
 from django.db import transaction
@@ -14,9 +15,36 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from django.views.decorators.csrf import csrf_exempt
 from django_ckeditor_5.widgets import CKEditor5Widget
+from newsletter.admin import MessageAdmin as NewsletterMessageAdmin
+from newsletter.models import Message as NewsletterMessage
 from unfold.admin import ModelAdmin
 
-from .models import CMSPage, SystemConfig
+from .models import AIConfig, CMSPage, OAuthConfig, StripeConfig, SystemConfig
+
+
+class DoisenseNewsletterMessageAdmin(NewsletterMessageAdmin):
+    list_display = (
+        "admin_title",
+        "admin_newsletter",
+        "admin_preview",
+        "admin_send",
+        "date_create",
+        "date_modify",
+    )
+
+    def admin_send(self, obj):
+        submit_url = reverse("admin:newsletter_message_submit", args=[obj.id])
+        return format_html('<a href="{}">Send newsletter</a>', submit_url)
+
+    admin_send.short_description = "Send"
+
+
+try:
+    admin.site.unregister(NewsletterMessage)
+except NotRegistered:
+    pass
+
+admin.site.register(NewsletterMessage, DoisenseNewsletterMessageAdmin)
 
 
 CMS_TEMPLATE_PRESETS = {
@@ -42,6 +70,7 @@ LANGUAGE_LABELS = {
     "ro": "Romanian",
     "en": "English",
     "de": "German",
+    "fr": "French",
     "it": "Italian",
     "es": "Spanish",
     "pl": "Polish",
@@ -49,9 +78,9 @@ LANGUAGE_LABELS = {
 
 
 def get_cms_languages():
-    configured = list(getattr(settings, "SUPPORTED_LANGUAGES", ["ro", "en", "de", "it", "es", "pl"]))
+    configured = list(getattr(settings, "SUPPORTED_LANGUAGES", ["ro", "en", "de", "fr", "it", "es", "pl"]))
     allowed = [language for language in configured if language in LANGUAGE_LABELS]
-    return allowed or ["ro", "en", "de", "it", "es", "pl"]
+    return allowed or ["ro", "en", "de", "fr", "it", "es", "pl"]
 
 
 class CMSPageAdminForm(forms.ModelForm):
@@ -75,6 +104,8 @@ class CMSPageAdminForm(forms.ModelForm):
     content_en = forms.CharField(required=False, label="Content (EN)", widget=CKEditor5Widget(config_name="complete"))
     title_de = forms.CharField(required=False, label="Title (DE)")
     content_de = forms.CharField(required=False, label="Content (DE)", widget=CKEditor5Widget(config_name="complete"))
+    title_fr = forms.CharField(required=False, label="Title (FR)")
+    content_fr = forms.CharField(required=False, label="Content (FR)", widget=CKEditor5Widget(config_name="complete"))
     title_it = forms.CharField(required=False, label="Title (IT)")
     content_it = forms.CharField(required=False, label="Content (IT)", widget=CKEditor5Widget(config_name="complete"))
     title_es = forms.CharField(required=False, label="Title (ES)")
@@ -134,7 +165,7 @@ class CMSPageAdminForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         has_any_title = False
-        for language in getattr(self, "languages", ["ro", "en", "de", "it", "es", "pl"]):
+        for language in getattr(self, "languages", ["ro", "en", "de", "fr", "it", "es", "pl"]):
             if (cleaned_data.get(f"title_{language}") or "").strip():
                 has_any_title = True
                 break
@@ -454,42 +485,6 @@ class SystemConfigAdmin(ModelAdmin):
                 )
             },
         ),
-        (
-            "OAuth",
-            {
-                "fields": (
-                    "google_client_id",
-                    "apple_client_id",
-                )
-            },
-        ),
-        (
-            "Stripe",
-            {
-                "fields": (
-                    "stripe_secret_key",
-                    "stripe_webhook_secret",
-                    "stripe_price_id_premium",
-                )
-            },
-        ),
-        (
-            "AI",
-            {
-                "fields": (
-                    "ai_provider",
-                    "ai_openai_api_key",
-                    "ai_anthropic_api_key",
-                    "ai_openai_model",
-                    "ai_anthropic_model",
-                    "ai_chat_rate_limit",
-                    "ai_temperature",
-                    "ai_max_tokens",
-                    "ai_request_timeout_seconds",
-                    "ai_system_prompt_base",
-                )
-            },
-        ),
     )
 
     def get_urls(self):
@@ -569,3 +564,71 @@ class SystemConfigAdmin(ModelAdmin):
     def has_add_permission(self, request):
         # Only one configuration row should exist.
         return not SystemConfig.objects.exists()
+
+
+class SingletonProxyConfigAdmin(ModelAdmin):
+    form = SystemConfigAdminForm
+    change_form_template = "admin/core/systemconfig/change_form.html"
+
+    def changelist_view(self, request, extra_context=None):
+        config = SystemConfig.get_solo()
+        meta = self.model._meta
+        url = reverse(f"admin:{meta.app_label}_{meta.model_name}_change", args=[config.pk])
+        return HttpResponseRedirect(url)
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(OAuthConfig)
+class OAuthConfigAdmin(SingletonProxyConfigAdmin):
+    fieldsets = (
+        (
+            "OAuth",
+            {
+                "fields": (
+                    "google_client_id",
+                    "apple_client_id",
+                )
+            },
+        ),
+    )
+
+
+@admin.register(StripeConfig)
+class StripeConfigAdmin(SingletonProxyConfigAdmin):
+    fieldsets = (
+        (
+            "Stripe",
+            {
+                "fields": (
+                    "stripe_secret_key",
+                    "stripe_webhook_secret",
+                    "stripe_price_id_premium",
+                )
+            },
+        ),
+    )
+
+
+@admin.register(AIConfig)
+class AIConfigAdmin(SingletonProxyConfigAdmin):
+    fieldsets = (
+        (
+            "AI",
+            {
+                "fields": (
+                    "ai_provider",
+                    "ai_openai_api_key",
+                    "ai_anthropic_api_key",
+                    "ai_openai_model",
+                    "ai_anthropic_model",
+                    "ai_chat_rate_limit",
+                    "ai_temperature",
+                    "ai_max_tokens",
+                    "ai_request_timeout_seconds",
+                    "ai_system_prompt_base",
+                )
+            },
+        ),
+    )

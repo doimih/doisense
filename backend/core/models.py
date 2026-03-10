@@ -91,7 +91,7 @@ class SystemConfig(models.Model):
         # Keep this as a singleton row for predictable runtime lookups.
         self.pk = 1
         if not self.enabled_languages:
-            self.enabled_languages = ["ro", "en", "de", "it", "es", "pl"]
+            self.enabled_languages = ["ro", "en", "de", "fr", "it", "es", "pl"]
         super().save(*args, **kwargs)
         cache.delete("core:system_config")
 
@@ -102,3 +102,56 @@ class SystemConfig(models.Model):
 
     def __str__(self):
         return "System Configuration"
+
+
+class OAuthConfig(SystemConfig):
+    class Meta:
+        proxy = True
+        verbose_name = "OAuth Configuration"
+        verbose_name_plural = "OAuth Configuration"
+
+
+class StripeConfig(SystemConfig):
+    class Meta:
+        proxy = True
+        verbose_name = "Stripe Configuration"
+        verbose_name_plural = "Stripe Configuration"
+
+
+class AIConfig(SystemConfig):
+    class Meta:
+        proxy = True
+        verbose_name = "AI Configuration"
+        verbose_name_plural = "AI Configuration"
+
+
+class UserWellbeingCheckin(models.Model):
+    MOOD_LOW = "low"
+    MOOD_OK = "ok"
+    MOOD_GOOD = "good"
+    MOOD_GREAT = "great"
+    MOOD_CHOICES = [
+        (MOOD_LOW, "Low"),
+        (MOOD_OK, "OK"),
+        (MOOD_GOOD, "Good"),
+        (MOOD_GREAT, "Great"),
+    ]
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="wellbeing_checkins",
+    )
+    mood = models.CharField(max_length=16, choices=MOOD_CHOICES, blank=True)
+    energy_level = models.PositiveSmallIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_userwellbeingcheckin"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"Wellbeing checkin for {self.user_id} at {self.created_at}"

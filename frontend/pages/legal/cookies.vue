@@ -26,7 +26,7 @@
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 const { cmsPage, hasCmsContent } = useLegalCmsPage('cookies')
 
@@ -77,6 +77,19 @@ const cookiesCopy: Record<string, {
     note: 'Du kannst Cookies in den Browsereinstellungen verwalten. Das Deaktivieren essenzieller Cookies kann Funktionen einschränken.',
     seoTitle: 'Cookie-Richtlinie - Doisense',
     seoDescription: 'Erfahre, welche Cookie-Typen Doisense nutzt und wie du Browser-Einstellungen steuern kannst.',
+  },
+  fr: {
+    title: 'Politique de cookies',
+    updated: 'Derniere mise a jour: 08 mars 2026',
+    intro: 'Nous utilisons des cookies et technologies similaires pour l\'authentification, la langue choisie et le bon fonctionnement de l\'interface.',
+    items: [
+      'Cookies essentiels: necessaires a l\'authentification et a la securite de session.',
+      'Cookies de preference: memorisent la langue et les parametres d\'interface.',
+      'Cookies techniques: diagnostic minimal pour la stabilite et les performances.',
+    ],
+    note: 'Vous pouvez gerer les cookies dans les parametres du navigateur. Desactiver les cookies essentiels peut limiter certaines fonctions.',
+    seoTitle: 'Politique de cookies - Doisense',
+    seoDescription: 'Decouvrez les types de cookies utilises par Doisense et comment gerer vos parametres navigateur.',
   },
   it: {
     title: 'Politica sui cookie',

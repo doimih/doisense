@@ -32,7 +32,7 @@
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 const { cmsPage, hasCmsContent } = useLegalCmsPage('gdpr')
 
@@ -100,6 +100,24 @@ const copy: Record<string, {
     requestNote: 'Zum Schutz deiner Kontodaten können wir eine zusätzliche Identitätsprüfung verlangen.',
     seoTitle: 'DSGVO-Rechte - Doisense',
     seoDescription: 'Sieh dir deine DSGVO-Rechte in Doisense an und erfahre, wie du Anfragen zu personenbezogenen Daten einreichst.',
+  },
+  fr: {
+    title: 'Vos droits GDPR',
+    subtitle: 'Vous gardez le controle de vos donnees personnelles et pouvez envoyer des demandes a tout moment.',
+    rightsTitle: 'Droits principaux',
+    rights: [
+      'Droit d\'acces a vos donnees personnelles.',
+      'Droit de rectification des donnees inexactes.',
+      'Droit a l\'effacement (droit a l\'oubli), lorsque applicable.',
+      'Droit a la limitation du traitement.',
+      'Droit a la portabilite des donnees dans un format exploitable.',
+      'Droit d\'opposition a certains traitements.',
+    ],
+    requestTitle: 'Comment envoyer une demande',
+    requestText: 'Envoyez un email avec l\'objet "GDPR Request" et les details de votre demande.',
+    requestNote: 'Nous pouvons demander une verification d\'identite supplementaire pour proteger les donnees de votre compte.',
+    seoTitle: 'Droits GDPR - Doisense',
+    seoDescription: 'Consultez vos droits GDPR dans Doisense et la procedure pour envoyer des demandes sur vos donnees personnelles.',
   },
   it: {
     title: 'I tuoi diritti GDPR',

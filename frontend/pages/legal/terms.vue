@@ -23,7 +23,7 @@
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 const { cmsPage, hasCmsContent } = useLegalCmsPage('terms')
 
@@ -72,6 +72,19 @@ const termsCopy: Record<string, {
     ],
     seoTitle: 'Nutzungsbedingungen - Doisense',
     seoDescription: 'Lies die Doisense-Nutzungsbedingungen, einschließlich zulässiger Nutzung, Premiumzugang und Haftungsbeschränkungen.',
+  },
+  fr: {
+    title: 'Conditions generales',
+    updated: 'Derniere mise a jour: 08 mars 2026',
+    sections: [
+      { title: '1. Acceptation', body: 'En utilisant la plateforme, vous acceptez ces conditions. Si vous n\'etes pas d\'accord, n\'utilisez pas le service.' },
+      { title: '2. Votre compte', body: 'Vous etes responsable de la confidentialite de vos identifiants et de l\'activite de votre compte.' },
+      { title: '3. Utilisation autorisee', body: 'N\'utilisez pas le service pour des activites illegales, abusives ou qui violent les droits d\'autrui.' },
+      { title: '4. Paiements et premium', body: 'Les fonctionnalites premium sont gerees via Stripe. Les conditions commerciales sont affichees avant le paiement.' },
+      { title: '5. Limitation de responsabilite', body: 'Le service est un outil numerique de support et ne remplace pas un suivi medical ou psychologique professionnel.' },
+    ],
+    seoTitle: 'Conditions generales - Doisense',
+    seoDescription: 'Lisez les conditions generales de Doisense, y compris l\'utilisation autorisee, l\'acces premium et les limites de responsabilite.',
   },
   it: {
     title: 'Termini e condizioni',

@@ -42,7 +42,7 @@
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 const { cmsPage, hasCmsContent } = useCmsStaticPage('pricing')
 
@@ -97,6 +97,19 @@ const pricingCopy: Record<string, {
     notice: 'Zahlungen werden über Stripe verarbeitet. Den Endpreis siehst du vor der Bestätigung im Checkout.',
     seoTitle: 'Doisense Preise - Free und Premium',
     seoDescription: 'Sieh dir Doisense-Pläne, Unterschiede zwischen Free und Premium und sichere Stripe-Zahlung an.',
+  },
+  fr: {
+    title: 'Plans et tarifs',
+    subtitle: 'Commence gratuitement et passe a Premium quand tu as besoin de fonctions avancees et de programmes complets.',
+    freeTitle: 'Free',
+    freePrice: '0 EUR / mois',
+    freeItems: ['Acces de base au journal', 'Chat IA standard', 'Profil personnel de base'],
+    premiumTitle: 'Premium',
+    premiumPrice: 'Comme affiche dans Stripe checkout',
+    premiumItems: ['Programmes guides etendus', 'Personnalisation IA avancee', 'Priorite sur les nouvelles fonctionnalites'],
+    notice: 'Les paiements sont traites via Stripe. Le prix final est visible avant confirmation.',
+    seoTitle: 'Tarifs Doisense - Plans Free et Premium',
+    seoDescription: 'Consulte les plans Doisense, les differences entre Free et Premium, et les details du paiement securise Stripe.',
   },
   it: {
     title: 'Piani e prezzi',

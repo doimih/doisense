@@ -31,6 +31,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
+    "sorl.thumbnail",
+    "newsletter",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -127,6 +130,30 @@ UNFOLD = {
                         "link": lambda request: reverse("admin:core_cmspage_changelist"),
                         "permission": _perm("core.view_cmspage"),
                     },
+                    {
+                        "title": "Email Settings (SMTP)",
+                        "icon": "mail",
+                        "link": lambda request: reverse("admin:core_systemconfig_changelist"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "OAuth Settings",
+                        "icon": "vpn_key",
+                        "link": lambda request: reverse("admin:core_oauthconfig_changelist"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "Stripe Settings",
+                        "icon": "credit_card",
+                        "link": lambda request: reverse("admin:core_stripeconfig_changelist"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "AI Settings",
+                        "icon": "psychology",
+                        "link": lambda request: reverse("admin:core_aiconfig_changelist"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
                 ],
             },
             {
@@ -143,6 +170,36 @@ UNFOLD = {
                         "icon": "receipt_long",
                         "link": lambda request: reverse("admin:ai_ailog_changelist"),
                         "permission": _perm("ai.view_ailog"),
+                    },
+                ],
+            },
+            {
+                "title": "Newsletter",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Messages",
+                        "icon": "mail",
+                        "link": lambda request: reverse("admin:newsletter_message_changelist"),
+                        "permission": _perm("newsletter.view_message"),
+                    },
+                    {
+                        "title": "Newsletters",
+                        "icon": "campaign",
+                        "link": lambda request: reverse("admin:newsletter_newsletter_changelist"),
+                        "permission": _perm("newsletter.view_newsletter"),
+                    },
+                    {
+                        "title": "Submissions",
+                        "icon": "send",
+                        "link": lambda request: reverse("admin:newsletter_submission_changelist"),
+                        "permission": _perm("newsletter.view_submission"),
+                    },
+                    {
+                        "title": "Subscriptions",
+                        "icon": "alternate_email",
+                        "link": lambda request: reverse("admin:newsletter_subscription_changelist"),
+                        "permission": _perm("newsletter.view_subscription"),
                     },
                 ],
             },
@@ -271,6 +328,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = env("MEDIA_URL", default="/doisense/media/")
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+SITE_ID = 1
+NEWSLETTER_THUMBNAIL = "sorl-thumbnail"
+NEWSLETTER_USE_HTTPS = True
 
 AUTH_USER_MODEL = "users.User"
 
@@ -314,7 +374,7 @@ ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 AI_CHAT_RATE_LIMIT = env.int("AI_CHAT_RATE_LIMIT", default=20)  # per minute
 
 # Supported languages (must match frontend i18n)
-SUPPORTED_LANGUAGES = ["ro", "en", "de", "it", "es", "pl"]
+SUPPORTED_LANGUAGES = ["ro", "en", "de", "fr", "it", "es", "pl"]
 
 # Social login
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")

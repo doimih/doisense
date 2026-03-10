@@ -163,7 +163,7 @@ const phoneContact = ref(authStore.user?.phone_contact || '')
 
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 
 const profileCopy: Record<string, {
@@ -209,6 +209,13 @@ const profileCopy: Record<string, {
     passwordChange: 'Passwort ändern', currentPassword: 'Aktuelles Passwort', newPassword: 'Neues Passwort', confirmNewPassword: 'Neues Passwort bestätigen', changePassword: 'Passwort ändern',
     saveSuccess: 'Profil wurde aktualisiert.', saveError: 'Profil konnte nicht gespeichert werden.', passwordSuccess: 'Passwort erfolgreich geändert.', passwordError: 'Passwort konnte nicht geändert werden.',
     seoTitle: 'Benutzerprofil - Doisense', seoDescription: 'Kontodashboard für angemeldete Doisense-Nutzer.',
+  },
+  fr: {
+    membershipPremium: 'Membre Premium', membershipStandard: 'Membre Standard', firstName: 'Prenom', lastName: 'Nom', phone: 'Telephone de contact',
+    savedCard: 'Carte enregistree', expires: 'Expire', manageCard: 'Gerer la carte', noCard: 'Aucune carte enregistree pour le moment.', saveProfile: 'Enregistrer le profil',
+    passwordChange: 'Changer le mot de passe', currentPassword: 'Mot de passe actuel', newPassword: 'Nouveau mot de passe', confirmNewPassword: 'Confirmer le nouveau mot de passe', changePassword: 'Changer le mot de passe',
+    saveSuccess: 'Profil mis a jour.', saveError: 'Impossible d\'enregistrer le profil.', passwordSuccess: 'Mot de passe modifie avec succes.', passwordError: 'Impossible de modifier le mot de passe.',
+    seoTitle: 'Profil utilisateur - Doisense', seoDescription: 'Tableau de bord du compte pour les utilisateurs connectes de Doisense.',
   },
   it: {
     membershipPremium: 'Membro Premium', membershipStandard: 'Membro Standard', firstName: 'Nome', lastName: 'Cognome', phone: 'Telefono di contatto',

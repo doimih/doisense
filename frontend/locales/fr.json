@@ -1,0 +1,112 @@
+{
+  "landing": {
+    "title": "Doisense",
+    "subtitle": "Votre compagnon bien-etre. Journal, chat avec IA et programmes guides."
+  },
+  "nav": {
+    "features": "Fonctionnalites",
+    "pricing": "Tarifs",
+    "about": "A propos",
+    "contact": "Contact",
+    "search": "Recherche",
+    "admin": "Admin",
+    "chat": "Discussion",
+    "journal": "Journal",
+    "programs": "Programmes guides",
+    "profile": "Profil"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "Creer un compte",
+    "logout": "Se deconnecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "language": "Langue",
+    "recover": "Recuperer le mot de passe",
+    "recoverAction": "Envoyer le lien de recuperation",
+    "recoverSetTitle": "Definir un nouveau mot de passe",
+    "recoverSetAction": "Enregistrer le mot de passe",
+    "recoverBack": "Retour a la connexion",
+    "recoverSent": "Si cet email existe, nous avons envoye un lien de recuperation.",
+    "recoverError": "Nous ne pouvons pas traiter votre demande pour le moment.",
+    "recoverDone": "Mot de passe mis a jour. Vous pouvez maintenant vous connecter.",
+    "recoverInvalid": "Lien invalide ou expire, ou mot de passe invalide.",
+    "noAccount": "Vous n'avez pas de compte ? Creez-en un",
+    "hasAccount": "Vous avez deja un compte ? Connectez-vous",
+    "accountTitle": "Votre compte",
+    "firstName": "Prenom",
+    "lastName": "Nom",
+    "taxRegion": "Region fiscale",
+    "taxRegionPlaceholder": "ex: FR",
+    "googleNotConfigured": "La connexion Google n'est pas configuree.",
+    "googleLoginFailed": "La connexion Google n'a pas pu etre finalisee.",
+    "appleNotConfigured": "La connexion Apple n'est pas configuree.",
+    "appleLoginFailed": "La connexion Apple n'a pas pu etre finalisee.",
+    "loginFailed": "Identifiants invalides.",
+    "registerSuccess": "Compte cree. Verifiez votre email pour l'activation.",
+    "registerFailed": "Impossible de creer le compte. Verifiez vos donnees et reessayez.",
+    "legalAcceptPrefix": "J'ai lu et j'accepte",
+    "termsAndConditions": "Conditions generales",
+    "and": "et",
+    "privacyPolicy": "Politique de confidentialite",
+    "mustAcceptLegal": "Vous devez accepter les conditions et la politique de confidentialite.",
+    "loginSeoDescription": "Connectez-vous a votre compte Doisense.",
+    "registerSeoDescription": "Creez votre compte Doisense."
+  },
+  "chat": {
+    "placeholder": "Ecrivez votre message...",
+    "send": "Envoyer"
+  },
+  "journal": {
+    "contentPlaceholder": "Ecrivez vos pensees ici...",
+    "save": "Enregistrer",
+    "saved": "Enregistre."
+  },
+  "programs": {
+    "noDescription": "Aucune description.",
+    "premium": "Premium",
+    "view": "Voir le programme",
+    "notFound": "Programme ou jour introuvable."
+  },
+  "profile": {
+    "premium": "Premium",
+    "upgrade": "Passer a Premium"
+  },
+  "footer": {
+    "copyright": "© Doisense. Tous droits reserves.",
+    "resources": "Ressources",
+    "helpCenter": "Centre d'aide",
+    "docs": "Documentation",
+    "features": "Fonctionnalites",
+    "company": "Entreprise",
+    "privacy": "Confidentialite",
+    "terms": "Conditions",
+    "cookies": "Cookies",
+    "gdpr": "GDPR",
+    "newsletterTitle": "Abonnez-vous a notre newsletter",
+    "newsletterPlaceholder": "Entrez votre email",
+    "subscribe": "S'abonner",
+    "newsletterSubscribed": "Vous etes abonne avec succes.",
+    "newsletterSubscribeError": "L'abonnement a echoue. Veuillez reessayer.",
+    "newsletterInvalidEmail": "Veuillez entrer une adresse email valide.",
+    "builtWithNuxt": "Construit avec Nuxt"
+  },
+  "common": {
+    "loading": "Chargement",
+    "back": "Retour",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "search": {
+    "title": "Recherche complete",
+    "subtitle": "Recherchez dans les programmes, questions de journal et pages CMS.",
+    "placeholder": "Saisissez au moins 2 caracteres",
+    "action": "Rechercher",
+    "programs": "Programmes",
+    "journalQuestions": "Questions du journal",
+    "cmsPages": "Pages CMS",
+    "failed": "La recherche a echoue.",
+    "seoTitle": "Recherche Doisense",
+    "seoDescription": "Utilitaire de recherche pour les utilisateurs connectes sur Doisense."
+  }
+}

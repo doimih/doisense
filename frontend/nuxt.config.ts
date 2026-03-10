@@ -22,10 +22,12 @@ export default defineNuxtConfig({
   modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content"],
   i18n: {
     restructureDir: "",
+    lazy: true,
     locales: [
       { code: "ro", language: "ro-RO", name: "Română", file: "ro.json" },
       { code: "en", language: "en-US", name: "English", file: "en.json" },
       { code: "de", language: "de-DE", name: "Deutsch", file: "de.json" },
+      { code: "fr", language: "fr-FR", name: "Français", file: "fr.json" },
       { code: "it", language: "it-IT", name: "Italiano", file: "it.json" },
       { code: "es", language: "es-ES", name: "Español", file: "es.json" },
       { code: "pl", language: "pl-PL", name: "Polski", file: "pl.json" },

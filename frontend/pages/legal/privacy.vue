@@ -23,7 +23,7 @@
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 const { cmsPage, hasCmsContent } = useLegalCmsPage('privacy')
 
@@ -72,6 +72,19 @@ const privacyCopy: Record<string, {
     ],
     seoTitle: 'Datenschutz - Doisense',
     seoDescription: 'Erfahre, wie Doisense personenbezogene Daten verarbeitet: Erhebung, Zweck, Speicherdauer und kontrollierte Weitergabe.',
+  },
+  fr: {
+    title: 'Politique de confidentialite',
+    updated: 'Derniere mise a jour: 08 mars 2026',
+    sections: [
+      { title: '1. Donnees que nous collectons', body: 'Donnees de compte (email), contenu de journal/chat fourni par vous et metadonnees techniques necessaires a la securite et au fonctionnement.' },
+      { title: '2. Finalite du traitement', body: 'Nous traitons les donnees pour l\'authentification, la fourniture des fonctionnalites, la personnalisation des reponses IA et l\'amelioration du service.' },
+      { title: '3. Base legale', body: 'Execution du contrat, interet legitime pour la securite/l\'exploitation et consentement lorsque requis.' },
+      { title: '4. Stockage et retention', body: 'Les donnees sont conservees tant que le compte est actif ou selon les obligations legales et l\'audit minimum de securite.' },
+      { title: '5. Partage', body: 'Nous ne vendons pas de donnees personnelles. Des prestataires techniques (hebergement, paiements, IA) peuvent traiter les donnees uniquement pour fournir le service.' },
+    ],
+    seoTitle: 'Politique de confidentialite - Doisense',
+    seoDescription: 'Consultez comment Doisense traite les donnees personnelles: collecte, finalite, retention et partage controle.',
   },
   it: {
     title: 'Informativa sulla privacy',

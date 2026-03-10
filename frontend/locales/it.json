@@ -86,6 +86,9 @@
     "newsletterTitle": "Iscriviti alla newsletter",
     "newsletterPlaceholder": "Inserisci la tua email",
     "subscribe": "Iscriviti",
+    "newsletterSubscribed": "Iscrizione completata con successo.",
+    "newsletterSubscribeError": "Iscrizione non riuscita. Riprova.",
+    "newsletterInvalidEmail": "Inserisci un indirizzo email valido.",
     "builtWithNuxt": "Realizzato con Nuxt"
   },
   "common": {

@@ -92,7 +92,7 @@ usePublicSeo({
 
 function preferredLanguage() {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 }
 
 function loadScript(src: string, id: string) {

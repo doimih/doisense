@@ -47,7 +47,7 @@ const localePath = useLocalePath()
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 
 const featuresCopy: Record<string, {
@@ -129,6 +129,29 @@ const featuresCopy: Record<string, {
     gdprAction: 'DSGVO-Seite ansehen',
     seoTitle: 'Doisense Funktionen - Tagebuch, KI-Chat, Programme',
     seoDescription: 'Entdecke die wichtigsten Doisense-Funktionen mit geführtem Tagebuch, KI-Chat und DSGVO-Konformität.',
+  },
+  fr: {
+    badge: 'Plateforme complete',
+    title: 'Fonctionnalites pensees pour un bien-etre concret',
+    subtitle: 'Doisense combine journal guide, conversations IA et plans de progression dans un flux coherent.',
+    featureCards: [
+      { title: 'Journal guide quotidien', description: 'Prompts dynamiques et sauvegarde rapide pour des habitudes saines.' },
+      { title: 'Chat IA contextuel', description: 'Des reponses plus pertinentes grace a votre contexte.' },
+      { title: 'Programmes structures', description: 'Plans jour par jour avec des actions pratiques.' },
+      { title: 'Profil adaptatif', description: 'Le ton et les preferences evoluent selon votre activite.' },
+      { title: 'Premium simple', description: 'Parcours d\'upgrade transparent vers les fonctions avancees.' },
+      { title: 'Architecture evolutive', description: 'Nuxt, Django, PostgreSQL et Redis pour la fiabilite.' },
+    ],
+    gdprTitle: 'GDPR integre au produit',
+    gdprItems: [
+      'Transparence: quelles donnees nous collectons et pourquoi.',
+      'Controle: acces, rectification ou suppression.',
+      'Minimisation: nous stockons seulement les donnees necessaires.',
+      'Securite: separation des services et bonnes pratiques.',
+    ],
+    gdprAction: 'Voir la page GDPR',
+    seoTitle: 'Fonctionnalites Doisense - Journal, chat IA, programmes',
+    seoDescription: 'Decouvrez les fonctionnalites cle de Doisense: journal guide, chat IA contextuel et conformite GDPR.',
   },
   it: {
     badge: 'Piattaforma completa',

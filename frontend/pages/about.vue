@@ -27,7 +27,7 @@
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 const { cmsPage, hasCmsContent } = useCmsStaticPage('about')
 
@@ -78,6 +78,19 @@ const aboutCopy: Record<string, {
     ],
     seoTitle: 'Über Doisense - Mission, Werte, Kontext',
     seoDescription: 'Erfahre mehr über die Doisense-Mission, Produktwerte und den verantwortungsvollen Aufbau der Plattform.',
+  },
+  fr: {
+    title: 'A propos de Doisense',
+    p1: 'Doisense est une plateforme numerique de bien-etre qui combine reflexion personnelle, support conversationnel IA et programmes guides.',
+    p2: 'Le produit aide a construire des routines emotionnelles saines et a suivre les progres sans friction technique.',
+    p3: 'Nous construisons de facon responsable: transparence des donnees, controle utilisateur et architecture securisee.',
+    values: [
+      { title: 'Empathie', description: 'Interactions bienveillantes et utiles, sans ton robotique.' },
+      { title: 'Clarte', description: 'Interface simple, etapes explicites et informations faciles a comprendre.' },
+      { title: 'Responsabilite', description: 'Respect de la confidentialite, de la securite et de la conformite GDPR.' },
+    ],
+    seoTitle: 'A propos de Doisense - Mission, valeurs, contexte',
+    seoDescription: 'Decouvrez la mission de Doisense, les valeurs du produit et notre approche responsable du bien-etre numerique.',
   },
   it: {
     title: 'Chi è Doisense',

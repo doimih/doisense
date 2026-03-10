@@ -250,6 +250,7 @@
             <option value="ro">Romana</option>
             <option value="en">English</option>
             <option value="de">Deutsch</option>
+            <option value="fr">Francais</option>
             <option value="it">Italiano</option>
             <option value="es">Espanol</option>
             <option value="pl">Polski</option>
@@ -273,22 +274,25 @@
 
 <script setup lang="ts">
 const localePath = useLocalePath()
+const switchLocalePath = useSwitchLocalePath()
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const { locale, setLocale, t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
+const selectedLanguageCookie = useCookie<string | null>('i18n_redirect', { default: () => null })
 
 const mobileOpen = ref(false)
 const desktopLanguageMenuOpen = ref(false)
 const mobileLanguageMenuOpen = ref(false)
 const languageOptions = [
-  { code: 'ro', label: 'ro' },
-  { code: 'en', label: 'en' },
-  { code: 'de', label: 'de' },
-  { code: 'it', label: 'it' },
-  { code: 'es', label: 'es' },
-  { code: 'pl', label: 'pl' },
+  { code: 'ro', label: 'Romana' },
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'fr', label: 'Francais' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'es', label: 'Espanol' },
+  { code: 'pl', label: 'Polski' },
 ]
 const activeLanguageLabel = computed(() => {
   const current = languageOptions.find((lang) => locale.value.startsWith(lang.code))
@@ -479,6 +483,12 @@ function logout() {
 
 async function changeLanguage(code: string) {
   try {
+    selectedLanguageCookie.value = code
+    const targetPath = switchLocalePath(code)
+    if (targetPath && targetPath !== route.fullPath) {
+      await router.push(targetPath)
+      return
+    }
     await setLocale(code)
   } finally {
     desktopLanguageMenuOpen.value = false

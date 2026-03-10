@@ -86,6 +86,9 @@
     "newsletterTitle": "Newsletter abonnieren",
     "newsletterPlaceholder": "E-Mail eingeben",
     "subscribe": "Abonnieren",
+    "newsletterSubscribed": "Du wurdest erfolgreich abonniert.",
+    "newsletterSubscribeError": "Abonnement fehlgeschlagen. Bitte erneut versuchen.",
+    "newsletterInvalidEmail": "Bitte eine gultige E-Mail-Adresse eingeben.",
     "builtWithNuxt": "Erstellt mit Nuxt"
   },
   "common": {

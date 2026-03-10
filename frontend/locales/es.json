@@ -86,6 +86,9 @@
     "newsletterTitle": "Suscríbete al boletín",
     "newsletterPlaceholder": "Introduce tu correo",
     "subscribe": "Suscribirse",
+    "newsletterSubscribed": "Te has suscrito correctamente.",
+    "newsletterSubscribeError": "La suscripción falló. Inténtalo de nuevo.",
+    "newsletterInvalidEmail": "Introduce una dirección de correo válida.",
     "builtWithNuxt": "Construido con Nuxt"
   },
   "common": {

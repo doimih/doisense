@@ -86,6 +86,9 @@
     "newsletterTitle": "Abonează-te la newsletter",
     "newsletterPlaceholder": "Introdu emailul",
     "subscribe": "Abonare",
+    "newsletterSubscribed": "Abonarea a fost realizata cu succes.",
+    "newsletterSubscribeError": "Abonarea a esuat. Incearca din nou.",
+    "newsletterInvalidEmail": "Introdu o adresa de email valida.",
     "builtWithNuxt": "Construit cu Nuxt"
   },
   "common": {

@@ -10,6 +10,7 @@ urlpatterns = [
     re_path(r"^doisense/media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
     path("doisense/ro/admin/ckeditor5/", include("django_ckeditor_5.urls")),
     path("doisense/ro/admin/", admin.site.urls),
+    path("doisense/newsletter/", include("newsletter.urls")),
     path("api/auth/", include("users.urls")),
     path("api/", include("users.urls_me")),
     path("api/", include("core.urls")),

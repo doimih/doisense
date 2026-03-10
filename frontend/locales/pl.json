@@ -86,7 +86,10 @@
     "newsletterTitle": "Zapisz się do newslettera",
     "newsletterPlaceholder": "Wpisz e-mail",
     "subscribe": "Subskrybuj",
-    "builtWithNuxt": "Zbudowano w Nuxt"
+    "builtWithNuxt": "Zbudowano w Nuxt",
+    "newsletterSubscribed": "Zostales pomyslnie zapisany/a.",
+    "newsletterSubscribeError": "Subskrypcja nie powiodla sie. Sprobuj ponownie.",
+    "newsletterInvalidEmail": "Wpisz poprawny adres e-mail."
   },
   "common": {
     "loading": "Ładowanie",

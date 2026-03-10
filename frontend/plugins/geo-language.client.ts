@@ -12,6 +12,22 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   // Respect explicit user selection stored by nuxt-i18n.
   if (selectedLanguageCookie.value) return
 
+  const i18n = nuxtApp.$i18n as {
+    locale: { value: string }
+    setLocale: (locale: string) => Promise<void>
+    locales: Array<{ code: string }>
+    defaultLocale?: string
+  }
+  const supported = new Set((i18n.locales || []).map((item) => item.code))
+
+  // Respect locale present in route path (for prefix strategies like /ro, /de).
+  const currentPath = nuxtApp.$router?.currentRoute?.value?.path || ''
+  const firstSegment = currentPath.split('/').filter(Boolean)[0] || ''
+  if (supported.has(firstSegment)) {
+    selectedLanguageCookie.value = firstSegment
+    return
+  }
+
   function normalizeApiBase(base: string): string {
     const appPrefix = appBase.endsWith('/') ? appBase.slice(0, -1) : appBase
     if (!appPrefix || appPrefix === '/') return base
@@ -37,13 +53,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     })
 
     const language = (payload?.language || 'en').toLowerCase()
-    const i18n = nuxtApp.$i18n as {
-      locale: { value: string }
-      setLocale: (locale: string) => Promise<void>
-      locales: Array<{ code: string }>
-    }
-
-    const supported = new Set((i18n.locales || []).map((item) => item.code))
     const target = supported.has(language) ? language : 'en'
 
     if (i18n.locale.value !== target) {

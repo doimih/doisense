@@ -70,7 +70,7 @@ const { locale } = useI18n()
 const { cmsPage } = useCmsStaticPage('home')
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 
 const homeCopy: Record<string, {
@@ -167,6 +167,32 @@ const homeCopy: Record<string, {
     gdprRights: 'DSGVO-Rechte',
     seoTitle: 'Doisense - Digitales Wellbeing mit KI und Tagebuch',
     seoDescription: 'Doisense bietet geführtes Tagebuch, KI-Chat, strukturierte Programme und vollständige rechtliche Seiten.',
+  },
+  fr: {
+    heroBadge: 'Wellbeing + AI + GDPR',
+    heroTitle: 'Votre plateforme de bien-etre numerique, construite de facon responsable',
+    heroSubtitle: 'Doisense propose un journal guide, un chat IA contextuel et des programmes structures avec des pages legales completes.',
+    primaryCta: 'Creer un compte',
+    secondaryCta: 'Voir les fonctionnalites',
+    cards: [
+      { title: 'Experience guidee', description: 'Un parcours clair de l\'onboarding au progres quotidien.' },
+      { title: 'Design de confiance', description: 'Informations claires sur les donnees, la securite et les droits.' },
+      { title: 'Pret pour evoluer', description: 'Pages publiques essentielles pretes pour la croissance.' },
+    ],
+    quickLinks: [
+      { to: '/features', title: 'Fonctionnalites', description: 'Tout ce que la plateforme peut faire.' },
+      { to: '/pricing', title: 'Tarifs', description: 'Plans free et premium.' },
+      { to: '/about', title: 'A propos', description: 'Mission, valeurs et contexte produit.' },
+      { to: '/contact', title: 'Contact', description: 'Support et canaux de communication.' },
+    ],
+    gdprTitle: 'GDPR dans tout le systeme',
+    gdprSubtitle: 'Pages dediees a la confidentialite, aux conditions, aux cookies et aux droits des utilisateurs.',
+    privacy: 'Politique de confidentialite',
+    terms: 'Conditions',
+    cookies: 'Cookies',
+    gdprRights: 'Droits GDPR',
+    seoTitle: 'Doisense - Bien-etre numerique avec IA et journal guide',
+    seoDescription: 'Doisense offre un journal guide, un chat IA contextuel, des programmes structures et des pages legales completes.',
   },
   it: {
     heroBadge: 'Wellbeing + AI + GDPR',

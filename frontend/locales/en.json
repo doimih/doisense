@@ -86,6 +86,9 @@
     "newsletterTitle": "Subscribe to our newsletter",
     "newsletterPlaceholder": "Enter your email",
     "subscribe": "Subscribe",
+    "newsletterSubscribed": "You have been subscribed successfully.",
+    "newsletterSubscribeError": "Subscription failed. Please try again.",
+    "newsletterInvalidEmail": "Please enter a valid email address.",
     "builtWithNuxt": "Built with Nuxt"
   },
   "common": {
