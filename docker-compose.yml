@@ -65,6 +65,11 @@ services:
       - "traefik.http.routers.doisense-admin.tls=true"
       - "traefik.http.routers.doisense-admin.priority=200"
       - "traefik.http.routers.doisense-admin.service=doisense-api"
+      - "traefik.http.routers.doisense-wagtail.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/wagtail`)"
+      - "traefik.http.routers.doisense-wagtail.entrypoints=websecure"
+      - "traefik.http.routers.doisense-wagtail.tls=true"
+      - "traefik.http.routers.doisense-wagtail.priority=210"
+      - "traefik.http.routers.doisense-wagtail.service=doisense-api"
       - "traefik.http.services.doisense-api.loadbalancer.server.port=8000"
       # Strip prefix ca backend-ul să primească /api/...
       - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=/doisense"
