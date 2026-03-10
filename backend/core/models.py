@@ -1,21 +1,110 @@
 from django.core.cache import cache
 from django.db import models
-from wagtail.admin.panels import FieldPanel
-from wagtail.fields import RichTextField
+from wagtail import blocks
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
 
 from .validators import validate_language
 
 
-class WagtailHomePage(Page):
+class BaseWagtailLandingPage(Page):
+    subtitle = models.CharField(max_length=255, blank=True)
     intro = RichTextField(blank=True)
+    content = StreamField(
+        [
+            ("heading", blocks.CharBlock(form_classname="title", icon="title")),
+            ("paragraph", blocks.RichTextBlock(icon="doc-full")),
+            (
+                "cta",
+                blocks.StructBlock(
+                    [
+                        ("title", blocks.CharBlock(required=True)),
+                        ("text", blocks.TextBlock(required=False)),
+                        ("button_text", blocks.CharBlock(required=False)),
+                        ("button_url", blocks.URLBlock(required=False)),
+                    ],
+                    icon="placeholder",
+                ),
+            ),
+            (
+                "faq",
+                blocks.StructBlock(
+                    [
+                        ("question", blocks.CharBlock(required=True)),
+                        ("answer", blocks.RichTextBlock(required=True)),
+                    ],
+                    icon="help",
+                ),
+            ),
+        ],
+        blank=True,
+        use_json_field=True,
+    )
+    seo_title_override = models.CharField(max_length=255, blank=True)
+    seo_description = models.TextField(blank=True)
 
     content_panels = Page.content_panels + [
+        FieldPanel("subtitle"),
         FieldPanel("intro"),
+        FieldPanel("content"),
     ]
+
+    promote_panels = Page.promote_panels + [
+        MultiFieldPanel(
+            [
+                FieldPanel("seo_title_override"),
+                FieldPanel("seo_description"),
+            ],
+            heading="SEO",
+        )
+    ]
+
+    parent_page_types = ["wagtailcore.Page"]
+    subpage_types = []
+
+    class Meta:
+        abstract = True
+
+
+class WagtailHomePage(BaseWagtailLandingPage):
+    template = "core/wagtail_landing_page.html"
+    max_count = 1
 
     class Meta:
         verbose_name = "Wagtail Home Page"
+
+
+class WagtailFeaturesPage(BaseWagtailLandingPage):
+    template = "core/wagtail_landing_page.html"
+    max_count = 1
+
+    class Meta:
+        verbose_name = "Wagtail Features Page"
+
+
+class WagtailPricingPage(BaseWagtailLandingPage):
+    template = "core/wagtail_landing_page.html"
+    max_count = 1
+
+    class Meta:
+        verbose_name = "Wagtail Pricing Page"
+
+
+class WagtailAboutPage(BaseWagtailLandingPage):
+    template = "core/wagtail_landing_page.html"
+    max_count = 1
+
+    class Meta:
+        verbose_name = "Wagtail About Page"
+
+
+class WagtailContactPage(BaseWagtailLandingPage):
+    template = "core/wagtail_landing_page.html"
+    max_count = 1
+
+    class Meta:
+        verbose_name = "Wagtail Contact Page"
 
 
 class CMSPage(models.Model):
