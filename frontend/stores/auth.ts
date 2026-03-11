@@ -27,7 +27,14 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('doisense_user', JSON.stringify(user))
       }
     },
-    async register(email: string, password: string, language: string, firstName = '', lastName = '') {
+    async register(
+      email: string,
+      password: string,
+      language: string,
+      firstName = '',
+      lastName = '',
+      legalConsent = { acceptedTerms: true, acceptedPrivacy: true, acceptedAiUsage: true },
+    ) {
       const config = useRuntimeConfig()
       const base = config.public.apiBase as string
       return $fetch<{ detail: string }>(`${base}/auth/register`, {
@@ -38,6 +45,9 @@ export const useAuthStore = defineStore('auth', {
           language,
           first_name: firstName,
           last_name: lastName,
+          accepted_terms: legalConsent.acceptedTerms,
+          accepted_privacy: legalConsent.acceptedPrivacy,
+          accepted_ai_usage: legalConsent.acceptedAiUsage,
         },
       })
     },
@@ -51,12 +61,24 @@ export const useAuthStore = defineStore('auth', {
       this.setUser(res.user)
       this.setTokens(res.access, res.refresh)
     },
-    async loginWithSocial(provider: 'google' | 'apple', idToken: string, language: string) {
+    async loginWithSocial(
+      provider: 'google' | 'apple',
+      idToken: string,
+      language: string,
+      legalConsent = { acceptedTerms: false, acceptedPrivacy: false, acceptedAiUsage: false },
+    ) {
       const config = useRuntimeConfig()
       const base = config.public.apiBase as string
       const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/social`, {
         method: 'POST',
-        body: { provider, id_token: idToken, language },
+        body: {
+          provider,
+          id_token: idToken,
+          language,
+          accepted_terms: legalConsent.acceptedTerms,
+          accepted_privacy: legalConsent.acceptedPrivacy,
+          accepted_ai_usage: legalConsent.acceptedAiUsage,
+        },
       })
       this.setUser(res.user)
       this.setTokens(res.access, res.refresh)

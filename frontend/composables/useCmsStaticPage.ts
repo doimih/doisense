@@ -3,10 +3,9 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '#imports'
 import { useApi } from '~/composables/useApi'
 
-const cmsPageCache = new Map()
-
 export function useCmsStaticPage(baseSlug, prefix = '') {
   const { fetchApi } = useApi()
+  const cmsPageCache = useState('cmsPageCache', () => new Map())
   const { locale } = useI18n()
 
   const cmsPage = ref(null)
@@ -21,8 +20,8 @@ export function useCmsStaticPage(baseSlug, prefix = '') {
 
   async function load() {
     const cacheKey = `${normalizedBaseSlug.value}:${localeCode.value}`
-    if (cmsPageCache.has(cacheKey)) {
-      cmsPage.value = cmsPageCache.get(cacheKey) || null
+    if (cmsPageCache.value.has(cacheKey)) {
+      cmsPage.value = cmsPageCache.value.get(cacheKey) || null
       return
     }
 
@@ -32,13 +31,13 @@ export function useCmsStaticPage(baseSlug, prefix = '') {
       )
       if (page?.content?.trim()) {
         cmsPage.value = page
-        cmsPageCache.set(cacheKey, page)
+        cmsPageCache.value.set(cacheKey, page)
       } else {
-        cmsPageCache.set(cacheKey, null)
+        cmsPageCache.value.set(cacheKey, null)
       }
     } catch {
       // Keep null when CMS page is missing.
-      cmsPageCache.set(cacheKey, null)
+      cmsPageCache.value.set(cacheKey, null)
     }
   }
 

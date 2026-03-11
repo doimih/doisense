@@ -1,9 +1,9 @@
 <template>
   <article class="max-w-4xl mx-auto py-10 space-y-6">
-    <template v-if="hasCmsContent && cmsPage">
-      <h1 class="text-4xl font-bold text-stone-900">{{ cmsPage.title }}</h1>
+    <template v-if="hasCmsContent && cmsContent">
+      <h1 class="text-4xl font-bold text-stone-900">{{ cmsContent.title }}</h1>
       <section class="bg-white border border-stone-200 rounded-xl p-5">
-        <p class="text-stone-700 text-sm leading-7 whitespace-pre-line">{{ cmsPage.content }}</p>
+        <p class="text-stone-700 text-sm leading-7 whitespace-pre-line">{{ cmsContent.content }}</p>
       </section>
     </template>
 
@@ -35,6 +35,7 @@ const localeCode = computed(() => {
   return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
 })
 const { cmsPage, hasCmsContent } = useLegalCmsPage('gdpr')
+const cmsContent = computed(() => cmsPage.value as { title: string; content: string } | null)
 
 const copy: Record<string, {
   title: string
@@ -60,7 +61,7 @@ const copy: Record<string, {
       'Drept de opoziție la anumite tipuri de prelucrare.',
     ],
     requestTitle: 'Cum trimiți o solicitare',
-    requestText: 'Trimite un email cu subiectul "GDPR Request" și detalii despre cererea ta.',
+    requestText: 'Pentru exportul datelor și ștergerea contului poți folosi direct pagina Profil. Pentru rectificare, opoziție sau cereri speciale, trimite un email cu subiectul "GDPR Request" și detalii despre cererea ta.',
     requestNote: 'Putem solicita verificare suplimentară a identității pentru a proteja datele contului tău.',
     seoTitle: 'Drepturi GDPR - Doisense',
     seoDescription: 'Consultă drepturile tale GDPR în platforma Doisense și pașii pentru a trimite cereri privind datele personale.',
@@ -78,7 +79,7 @@ const copy: Record<string, {
       'Right to object to certain processing activities.',
     ],
     requestTitle: 'How to submit a request',
-    requestText: 'Send an email with subject "GDPR Request" and details of your request.',
+    requestText: 'For data export and account deletion you can use your Profile page directly. For rectification, objection, or special requests, send an email with subject "GDPR Request" and details of your request.',
     requestNote: 'We may request additional identity verification to protect your account data.',
     seoTitle: 'GDPR Rights - Doisense',
     seoDescription: 'Review your GDPR rights in Doisense and how to submit personal data requests.',

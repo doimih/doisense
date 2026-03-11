@@ -5,8 +5,8 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
         <!-- Brand Section -->
         <div class="lg:col-span-1">
-          <NuxtLink :to="localePath('/')" class="text-2xl font-bold text-white mb-4 block">
-            Doisense
+          <NuxtLink :to="localePath('/')" class="mb-5 block">
+            <BrandLogo size="md" :is-dark="true" show-tagline />
           </NuxtLink>
           <p class="text-sm leading-6 text-slate-400 mb-6 max-w-xs">
             {{ $t('footer.brandDescription') }}
@@ -67,6 +67,8 @@
             <li><NuxtLink :to="localePath('/legal/privacy')" class="text-slate-400 hover:text-white transition">{{ $t('footer.privacy') }}</NuxtLink></li>
             <li><NuxtLink :to="localePath('/legal/terms')" class="text-slate-400 hover:text-white transition">{{ $t('footer.terms') }}</NuxtLink></li>
             <li><NuxtLink :to="localePath('/legal/cookies')" class="text-slate-400 hover:text-white transition">{{ $t('footer.cookies') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal/ai-consent')" class="text-slate-400 hover:text-white transition">{{ aiConsentLabel }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal/payments-subscriptions')" class="text-slate-400 hover:text-white transition">{{ paymentsPolicyLabel }}</NuxtLink></li>
             <li>
               <button type="button" class="text-slate-400 hover:text-white transition" @click="openModal">
                 {{ $t('footer.gdpr') }}
@@ -78,6 +80,9 @@
 
       <!-- Bottom Footer -->
       <div class="border-t border-slate-800 pt-8">
+        <p class="mb-6 rounded-lg border border-slate-800 bg-slate-950/50 px-4 py-3 text-sm leading-6 text-slate-300 text-center">
+          Platforma oferă suport emoțional general și instrumente de auto-reflecție. Nu oferă sfaturi medicale, psihologice sau terapeutice. Dacă te confrunți cu o situație gravă, caută ajutor specializat.
+        </p>
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
           <p class="text-sm text-slate-500">
             {{ $t('footer.copyright') || 'Mental Health & Wellness Platform' }} · © 2026 Doisense
@@ -141,5 +146,32 @@ import { useLocalePath } from '#imports'
 import { useGdprConsent } from '~/composables/useGdprConsent'
 
 const localePath = useLocalePath()
+const { locale } = useI18n()
 const { openModal } = useGdprConsent()
+
+const aiConsentLabel = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: 'Acord de utilizare a AI-ului',
+    en: 'AI Usage Agreement',
+    de: 'Vereinbarung zur KI-Nutzung',
+    fr: 'Accord d\'utilisation de l\'IA',
+    it: 'Accordo di utilizzo dell\'IA',
+    es: 'Acuerdo de uso de la IA',
+    pl: 'Zgoda na korzystanie z AI',
+  }[code] || 'AI Usage Agreement'
+})
+
+const paymentsPolicyLabel = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: 'Politica de plăți și abonamente',
+    en: 'Payments and Subscriptions Policy',
+    de: 'Zahlungs- und Abonnementrichtlinie',
+    fr: 'Politique de paiements et abonnements',
+    it: 'Politica pagamenti e abbonamenti',
+    es: 'Política de pagos y suscripciones',
+    pl: 'Polityka płatności i subskrypcji',
+  }[code] || 'Payments and Subscriptions Policy'
+})
 </script>

@@ -69,7 +69,13 @@
     "noDescription": "Aucune description.",
     "premium": "Premium",
     "view": "Voir le programme",
-    "notFound": "Programme ou jour introuvable."
+    "notFound": "Programme ou jour introuvable.",
+    "day": "Jour",
+    "completed": "complété",
+    "prevDay": "Jour précédent",
+    "nextDay": "Jour suivant",
+    "markComplete": "Marquer comme complété",
+    "allComplete": "Programme terminé !"
   },
   "profile": {
     "premium": "Premium",

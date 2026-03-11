@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import GuidedProgram, GuidedProgramDay
+from .models import GuidedProgram, GuidedProgramDay, UserProgramProgress
 
 
 class GuidedProgramSerializer(serializers.ModelSerializer):
@@ -13,3 +13,23 @@ class GuidedProgramDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = GuidedProgramDay
         fields = ("id", "program", "day_number", "title", "content", "question", "ai_prompt")
+
+
+class UserProgramProgressSerializer(serializers.ModelSerializer):
+    total_days = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProgramProgress
+        fields = (
+            "id",
+            "program",
+            "current_day",
+            "completed_days",
+            "total_days",
+            "started_at",
+            "last_active_at",
+        )
+        read_only_fields = fields
+
+    def get_total_days(self, obj):
+        return obj.program.days.count()

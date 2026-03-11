@@ -69,7 +69,13 @@
     "noDescription": "Fără descriere.",
     "premium": "Premium",
     "view": "Vezi programul",
-    "notFound": "Programul sau ziua nu a fost găsită."
+    "notFound": "Programul sau ziua nu a fost găsit.",
+    "day": "Ziua",
+    "completed": "finalizat",
+    "prevDay": "Ziua anterioară",
+    "nextDay": "Ziua următoare",
+    "markComplete": "Marchează ca finalizat",
+    "allComplete": "Program finalizat!"
   },
   "profile": {
     "premium": "Premium",

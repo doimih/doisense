@@ -4,6 +4,37 @@ from django.db import models
 from core.validators import validate_language
 
 
+class Conversation(models.Model):
+    PLAN_CHOICES = [
+        ("free", "Free"),
+        ("trial", "Trial"),
+        ("basic", "Basic"),
+        ("premium", "Premium"),
+        ("vip", "VIP"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversations",
+    )
+    module = models.CharField(max_length=32, blank=True)
+    plan_tier = models.CharField(max_length=10, choices=PLAN_CHOICES, default="free")
+    user_message = models.TextField()
+    ai_response = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ai_conversation"
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["user", "created_at"])]
+
+    def __str__(self):
+        return f"Conversation #{self.pk}"
+
+
 class ConversationTemplate(models.Model):
     name = models.CharField(max_length=100)
     language = models.CharField(max_length=2, validators=[validate_language])

@@ -33,7 +33,7 @@
         </div>
 
         <!-- Questions Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <JournalCard
             v-for="q in category.questions"
             :key="q.id"
@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ middleware: ['auth', 'subscription'] as any })
 
 const { fetchApi } = useApi()
 const { locale, t } = useI18n()

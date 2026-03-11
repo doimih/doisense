@@ -6,7 +6,7 @@ from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
-from ai.models import AILog
+from ai.models import AILog, Conversation
 from journal.models import JournalEntry
 from payments.models import Payment
 from users.models import User
@@ -73,6 +73,73 @@ def _daily_user_conversion(days):
     return labels, rates
 
 
+def _tier_distribution():
+    rows = (
+        User.objects.values("plan_tier")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+    tier_order = ["vip", "premium", "basic", "trial", "free"]
+    tier_colors = {
+        "vip": "rgba(217, 119, 6, 0.85)",
+        "premium": "rgba(2, 132, 199, 0.85)",
+        "basic": "rgba(22, 163, 74, 0.85)",
+        "trial": "rgba(124, 58, 237, 0.72)",
+        "free": "rgba(120, 113, 108, 0.55)",
+    }
+    total = sum(r["total"] for r in rows)
+    result = []
+    counts_by_tier = {r["plan_tier"]: r["total"] for r in rows}
+    for tier in tier_order:
+        n = counts_by_tier.get(tier, 0)
+        pct = round((n / total) * 100) if total else 0
+        result.append({
+            "tier": tier.upper(),
+            "count": n,
+            "pct": pct,
+            "color": tier_colors.get(tier, "rgba(100,100,100,0.5)"),
+        })
+    return result, total
+
+
+def _mrr_estimate():
+    """Return estimated MRR in RON based on active subscriptions by tier."""
+    prices = {"basic": 59, "premium": 129, "vip": 249}
+    active = Payment.objects.filter(status__in=["active", "trialing"])
+    mrr = 0
+    for payment in active.iterator():
+        mrr += prices.get(payment.plan_tier, 0)
+    return mrr
+
+
+def _churn_rate_30d():
+    """Users whose subscription moved to cancelled/past_due in last 30 days."""
+    start_30d = timezone.now() - timedelta(days=30)
+    churned = Payment.objects.filter(
+        status__in=["cancelled", "past_due"],
+        updated_at__gte=start_30d,
+    ).count()
+    active_start = Payment.objects.filter(
+        status__in=["active", "trialing"],
+        created_at__lt=start_30d,
+    ).count()
+    if active_start <= 0:
+        return 0.0
+    return round((churned / active_start) * 100, 1)
+
+
+def _ai_usage_by_tier(days: int):
+    """Return AI conversation counts broken down by user plan_tier, over last N days."""
+    start = timezone.now() - timedelta(days=days)
+    rows = (
+        Conversation.objects.filter(created_at__gte=start)
+        .values("plan_tier")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+    return list(rows)
+
+
 def dashboard_callback(request, context):
     allowed_periods = [7, 30, 90]
     raw_period = request.GET.get("period", "30")
@@ -104,6 +171,19 @@ def dashboard_callback(request, context):
         .distinct()
         .count()
     )
+
+    tier_distribution, _ = _tier_distribution()
+    mrr = _mrr_estimate()
+    churn_rate_30d = _churn_rate_30d()
+    ai_by_tier = _ai_usage_by_tier(selected_period)
+    gdpr_delete_count = User.objects.filter(
+        email__startswith="deleted.user.",
+        is_active=False,
+    ).count()
+    upgrade_count_30d = Payment.objects.filter(
+        created_at__gte=start_30d,
+        status__in=["active", "trialing"],
+    ).count()
 
     user_labels, user_values = _daily_counts(User.objects.all(), "created_at", selected_period)
     journal_labels, journal_values = _daily_counts(
@@ -261,7 +341,13 @@ def dashboard_callback(request, context):
                 "active_users_7d": active_users_7d,
                 "premium_rate": round((premium_users / total_users) * 100) if total_users else 0,
                 "premium_conversion_period": premium_conversion_period,
+                "mrr": mrr,
+                "churn_rate_30d": churn_rate_30d,
+                "gdpr_delete_count": gdpr_delete_count,
+                "upgrade_count_30d": upgrade_count_30d,
+                "ai_by_tier": ai_by_tier,
             },
+            "tier_distribution": tier_distribution,
             "period_filters": period_filters,
             "user_chart_data": user_chart_data,
             "journal_chart_data": journal_chart_data,

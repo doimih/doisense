@@ -1,110 +1,7 @@
 from django.core.cache import cache
 from django.db import models
-from wagtail import blocks
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel
-from wagtail.fields import RichTextField, StreamField
-from wagtail.models import Page
 
 from .validators import validate_language
-
-
-class BaseWagtailLandingPage(Page):
-    subtitle = models.CharField(max_length=255, blank=True)
-    intro = RichTextField(blank=True)
-    content = StreamField(
-        [
-            ("heading", blocks.CharBlock(form_classname="title", icon="title")),
-            ("paragraph", blocks.RichTextBlock(icon="doc-full")),
-            (
-                "cta",
-                blocks.StructBlock(
-                    [
-                        ("title", blocks.CharBlock(required=True)),
-                        ("text", blocks.TextBlock(required=False)),
-                        ("button_text", blocks.CharBlock(required=False)),
-                        ("button_url", blocks.URLBlock(required=False)),
-                    ],
-                    icon="placeholder",
-                ),
-            ),
-            (
-                "faq",
-                blocks.StructBlock(
-                    [
-                        ("question", blocks.CharBlock(required=True)),
-                        ("answer", blocks.RichTextBlock(required=True)),
-                    ],
-                    icon="help",
-                ),
-            ),
-        ],
-        blank=True,
-        use_json_field=True,
-    )
-    seo_title_override = models.CharField(max_length=255, blank=True)
-    seo_description = models.TextField(blank=True)
-
-    content_panels = Page.content_panels + [
-        FieldPanel("subtitle"),
-        FieldPanel("intro"),
-        FieldPanel("content"),
-    ]
-
-    promote_panels = Page.promote_panels + [
-        MultiFieldPanel(
-            [
-                FieldPanel("seo_title_override"),
-                FieldPanel("seo_description"),
-            ],
-            heading="SEO",
-        )
-    ]
-
-    parent_page_types = ["wagtailcore.Page"]
-    subpage_types = []
-
-    class Meta:
-        abstract = True
-
-
-class WagtailHomePage(BaseWagtailLandingPage):
-    template = "core/wagtail_landing_page.html"
-    max_count = 1
-
-    class Meta:
-        verbose_name = "Wagtail Home Page"
-
-
-class WagtailFeaturesPage(BaseWagtailLandingPage):
-    template = "core/wagtail_landing_page.html"
-    max_count = 1
-
-    class Meta:
-        verbose_name = "Wagtail Features Page"
-
-
-class WagtailPricingPage(BaseWagtailLandingPage):
-    template = "core/wagtail_landing_page.html"
-    max_count = 1
-
-    class Meta:
-        verbose_name = "Wagtail Pricing Page"
-
-
-class WagtailAboutPage(BaseWagtailLandingPage):
-    template = "core/wagtail_landing_page.html"
-    max_count = 1
-
-    class Meta:
-        verbose_name = "Wagtail About Page"
-
-
-class WagtailContactPage(BaseWagtailLandingPage):
-    template = "core/wagtail_landing_page.html"
-    max_count = 1
-
-    class Meta:
-        verbose_name = "Wagtail Contact Page"
 
 
 class CMSPage(models.Model):
@@ -158,7 +55,22 @@ class SystemConfig(models.Model):
     # Stripe settings
     stripe_secret_key = models.CharField(max_length=255, blank=True)
     stripe_webhook_secret = models.CharField(max_length=255, blank=True)
+    stripe_price_id_basic = models.CharField(max_length=255, blank=True)
     stripe_price_id_premium = models.CharField(max_length=255, blank=True)
+    stripe_price_id_vip = models.CharField(max_length=255, blank=True)
+
+    # WAL-G / PostgreSQL backup settings (Hetzner S3 compatible)
+    backup_enabled = models.BooleanField(default=False)
+    backup_s3_endpoint = models.CharField(max_length=255, blank=True)
+    backup_s3_bucket = models.CharField(max_length=255, blank=True)
+    backup_s3_path_prefix = models.CharField(max_length=255, blank=True, default="postgresql")
+    backup_access_key_id = models.CharField(max_length=255, blank=True)
+    backup_secret_access_key = models.CharField(max_length=255, blank=True)
+    backup_region = models.CharField(max_length=64, blank=True, default="eu-central")
+    backup_force_path_style = models.BooleanField(default=True)
+    backup_schedule_minutes = models.PositiveSmallIntegerField(default=10)
+    backup_delta_max_steps = models.PositiveSmallIntegerField(default=6)
+    backup_retention_full_count = models.PositiveSmallIntegerField(default=14)
 
     # AI settings
     ai_provider = models.CharField(
@@ -279,3 +191,41 @@ class UserWellbeingCheckin(models.Model):
 
     def __str__(self):
         return f"Wellbeing checkin for {self.user_id} at {self.created_at}"
+
+
+class NotificationDelivery(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="notification_deliveries",
+    )
+    notification_type = models.CharField(max_length=64)
+    sent_for_date = models.DateField()
+    context_key = models.CharField(max_length=64, blank=True, default="")
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_notificationdelivery"
+        ordering = ["-sent_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "notification_type", "sent_for_date", "context_key"],
+                name="core_notificationdelivery_unique_send",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["notification_type", "sent_for_date"],
+                name="core_notifi_notific_e5c13f_idx",
+            ),
+            models.Index(
+                fields=["user", "sent_at"],
+                name="core_notifi_user_id_b4b702_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.notification_type} for {self.user_id} on "
+            f"{self.sent_for_date} ({self.context_key or 'default'})"
+        )

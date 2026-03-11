@@ -83,7 +83,6 @@
             <!-- Additional Paragraphs -->
             <div class="space-y-4 pt-6 border-t border-slate-200">
               <p class="text-slate-700 text-base leading-7">{{ text.p2 }}</p>
-              <p class="text-slate-700 text-base leading-7">{{ text.p3 }}</p>
             </div>
           </div>
         </div>
@@ -118,7 +117,6 @@ const aboutCopy: Record<string, {
   mainTitle: string
   p1: string
   p2: string
-  p3: string
   values: Array<{ title: string; description: string }>
   images?: string[]
   seoTitle: string
@@ -130,7 +128,6 @@ const aboutCopy: Record<string, {
     mainTitle: 'Construind spații sigure pentru creștere emoțională',
     p1: 'Doisense este o platformă digitală pentru wellbeing care combină reflecția personală, suportul conversațional AI și programe ghidate într-o experiență simplă.',
     p2: 'Scopul produsului este să ajute oamenii să își construiască rutine emoționale sănătoase și să observe progresul în timp, fără fricțiune tehnică.',
-    p3: 'Construim responsabil: transparență pe date, control pentru utilizator și o arhitectură care poate evolua în siguranță.',
     values: [
       { title: 'Empatie', description: 'Interacțiuni prietenoase și suportive, fără ton rigid.' },
       { title: 'Claritate', description: 'Interfață simplă, pași expliciți și informații ușor de înțeles.' },
@@ -146,7 +143,6 @@ const aboutCopy: Record<string, {
     mainTitle: 'Building Safe Spaces For Emotional Growth',
     p1: 'Doisense is a digital wellbeing platform combining personal reflection, AI conversational support, and guided programs into one simple experience.',
     p2: 'The product helps people build healthier emotional routines and track progress over time without technical friction.',
-    p3: 'We build responsibly: data transparency, user control, and architecture designed for safe evolution.',
     values: [
       { title: 'Empathy', description: 'Supportive interactions without a robotic tone.' },
       { title: 'Clarity', description: 'Simple interface, explicit steps, and understandable information.' },
@@ -162,7 +158,6 @@ const aboutCopy: Record<string, {
     mainTitle: 'Sichere Räume für emotionales Wachstum schaffen',
     p1: 'Doisense ist eine digitale Wellbeing-Plattform, die persönliche Reflexion, KI-Konversationen und geführte Programme verbindet.',
     p2: 'Unser Ziel ist es, gesunde emotionale Routinen aufzubauen und Fortschritt ohne technische Hürden sichtbar zu machen.',
-    p3: 'Wir bauen verantwortungsvoll: Datentransparenz, Nutzerkontrolle und sichere, skalierbare Architektur.',
     values: [
       { title: 'Empathie', description: 'Unterstützende und freundliche Interaktionen ohne starre Sprache.' },
       { title: 'Klarheit', description: 'Einfache Oberfläche, klare Schritte und verständliche Informationen.' },
@@ -178,7 +173,6 @@ const aboutCopy: Record<string, {
     mainTitle: 'Créer des espaces sûrs pour la croissance émotionnelle',
     p1: 'Doisense est une plateforme numérique de bien-être qui combine réflexion personnelle, support conversationnel IA et programmes guidés.',
     p2: 'Le produit aide à construire des routines émotionnelles saines et à suivre les progrès sans friction technique.',
-    p3: 'Nous construisons de façon responsable: transparence des données, contrôle utilisateur et architecture sécurisée.',
     values: [
       { title: 'Empathie', description: 'Interactions bienveillantes et utiles, sans ton robotique.' },
       { title: 'Clarté', description: 'Interface simple, étapes explicites et informations faciles à comprendre.' },
@@ -194,7 +188,6 @@ const aboutCopy: Record<string, {
     mainTitle: 'Creare spazi sicuri per la crescita emotiva',
     p1: 'Doisense è una piattaforma digitale di benessere che unisce riflessione personale, supporto AI conversazionale e programmi guidati.',
     p2: 'Il prodotto aiuta a costruire routine emotive sane e a monitorare i progressi senza attrito tecnico.',
-    p3: 'Costruiamo in modo responsabile: trasparenza sui dati, controllo utente e architettura sicura.',
     values: [
       { title: 'Empatia', description: 'Interazioni di supporto, con tono naturale e umano.' },
       { title: 'Chiarezza', description: 'Interfaccia semplice, passi espliciti e informazioni comprensibili.' },
@@ -210,7 +203,6 @@ const aboutCopy: Record<string, {
     mainTitle: 'Crear espacios seguros para el crecimiento emocional',
     p1: 'Doisense es una plataforma digital de bienestar que combina reflexión personal, soporte conversacional AI y programas guiados.',
     p2: 'El producto ayuda a construir rutinas emocionales saludables y seguir el progreso sin fricción técnica.',
-    p3: 'Construimos con responsabilidad: transparencia de datos, control del usuario y arquitectura segura.',
     values: [
       { title: 'Empatía', description: 'Interacciones cercanas y de apoyo, sin tono robótico.' },
       { title: 'Claridad', description: 'Interfaz simple, pasos claros e información fácil de entender.' },
@@ -226,7 +218,6 @@ const aboutCopy: Record<string, {
     mainTitle: 'Tworzenie bezpiecznych przestrzeni dla rozwoju emocjonalnego',
     p1: 'Doisense to cyfrowa platforma wellbeing łącząca refleksję osobistą, wsparcie konwersacyjne AI i programy prowadzone.',
     p2: 'Produkt pomaga budować zdrowe nawyki emocjonalne i śledzić postępy bez technicznych barier.',
-    p3: 'Tworzymy odpowiedzialnie: przejrzystość danych, kontrola użytkownika i bezpieczna architektura.',
     values: [
       { title: 'Empatia', description: 'Wspierające interakcje bez sztywnego, technicznego tonu.' },
       { title: 'Przejrzystość', description: 'Prosty interfejs, jasne kroki i zrozumiałe informacje.' },

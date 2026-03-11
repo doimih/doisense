@@ -28,6 +28,16 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     routeRules: {
+      "/**": {
+        headers: {
+          "cache-control": "no-store",
+        },
+      },
+      "/doisense/**": {
+        headers: {
+          "cache-control": "no-store",
+        },
+      },
       "/_nuxt/**": {
         headers: {
           "cache-control": "public, max-age=31536000, immutable",
@@ -74,22 +84,11 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/doisense/offline.html",
-      globPatterns: ["**/*.{js,css,html,ico,png,svg,json,txt,woff2}"],
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/projects\.doimih\.net\/doisense\/.*/i,
-          handler: "NetworkFirst",
-          options: {
-            cacheName: "doisense-pages",
-            networkTimeoutSeconds: 5,
-            expiration: {
-              maxEntries: 80,
-              maxAgeSeconds: 60 * 60 * 24 * 7,
-            },
-          },
-        },
+      navigateFallback: "/doisense/offline",
+      navigateFallbackDenylist: [
+        /^\/doisense\/(?:[a-z]{2}\/)?admin(?:\/|$)/,
       ],
+      globPatterns: ["**/*.{js,css,html,ico,png,svg,json,txt,woff2}"],
     },
     client: {
       installPrompt: true,

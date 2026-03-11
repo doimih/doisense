@@ -1,41 +1,156 @@
 <template>
-  <div class="max-w-2xl mx-auto">
-    <NuxtLink :to="localePath('/programs')" class="text-amber-600 hover:underline mb-4 inline-block">
-      {{ $t('common.back') }}
+  <div class="max-w-2xl mx-auto space-y-6">
+    <NuxtLink :to="localePath('/programs')" class="text-amber-600 hover:underline inline-block">
+      ← {{ $t('common.back') }}
     </NuxtLink>
+
     <p v-if="loading" class="text-stone-500">{{ $t('common.loading') }}</p>
-    <div v-else-if="day">
-      <h1 class="text-2xl font-bold text-stone-800">{{ day.title }}</h1>
-      <p class="text-stone-600 mt-2 whitespace-pre-wrap">{{ day.content }}</p>
-      <p v-if="day.question" class="mt-4 font-medium text-stone-700">{{ day.question }}</p>
-    </div>
+
+    <template v-else-if="day">
+      <!-- Progress bar -->
+      <div class="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+        <div class="mb-2 flex items-center justify-between text-sm text-stone-600">
+          <span>{{ $t('programs.day') }} {{ currentDay }} / {{ totalDays }}</span>
+          <span class="font-semibold text-amber-600">
+            {{ Math.round((completedDays.length / Math.max(totalDays, 1)) * 100) }}% {{ $t('programs.completed') }}
+          </span>
+        </div>
+        <div class="h-2 w-full overflow-hidden rounded-full bg-stone-100">
+          <div
+            class="h-2 rounded-full bg-amber-500 transition-all"
+            :style="{ width: `${Math.round((completedDays.length / Math.max(totalDays, 1)) * 100)}%` }"
+          />
+        </div>
+      </div>
+
+      <!-- Day content -->
+      <div class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+        <p class="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-400">{{ $t('programs.day') }} {{ currentDay }}</p>
+        <h1 class="text-2xl font-bold text-stone-800">{{ day.title }}</h1>
+        <p class="mt-4 text-stone-600 whitespace-pre-wrap leading-relaxed">{{ day.content }}</p>
+        <p v-if="day.question" class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 font-medium text-stone-700">
+          {{ day.question }}
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-3">
+        <button
+          v-if="currentDay > 1"
+          class="flex-1 rounded-full border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition"
+          @click="navigateDay(currentDay - 1)"
+        >
+          ← {{ $t('programs.prevDay') }}
+        </button>
+        <button
+          v-if="!isDayCompleted(currentDay) && currentDay <= totalDays"
+          :disabled="completing"
+          class="flex-1 rounded-full bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition disabled:opacity-50"
+          @click="completeDay"
+        >
+          {{ completing ? $t('common.loading') : $t('programs.markComplete') }}
+        </button>
+        <button
+          v-else-if="isDayCompleted(currentDay) && currentDay < totalDays"
+          class="flex-1 rounded-full bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-black transition"
+          @click="navigateDay(currentDay + 1)"
+        >
+          {{ $t('programs.nextDay') }} →
+        </button>
+        <span
+          v-else-if="isDayCompleted(currentDay) && currentDay >= totalDays"
+          class="flex-1 rounded-full bg-emerald-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
+        >
+          🎉 {{ $t('programs.allComplete') }}
+        </span>
+      </div>
+    </template>
+
     <p v-else class="text-red-600">{{ $t('programs.notFound') }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ middleware: ['auth', 'subscription'] as any })
 
 const route = useRoute()
 const { fetchApi } = useApi()
+const { t } = useI18n()
 
-const day = ref<{ title: string; content: string; question: string } | null>(null)
+const programId = route.params.id as string
+
+type DayData = { title: string; content: string; question: string }
+type ProgressData = { current_day: number; completed_days: number[]; total_days: number }
+
+const day = ref<DayData | null>(null)
 const loading = ref(true)
+const completing = ref(false)
+const currentDay = ref(1)
+const completedDays = ref<number[]>([])
+const totalDays = ref(0)
 
 usePublicSeo({
-  title: 'Program ghidat - Doisense',
-  description: 'Detalii program ghidat pentru utilizatori autentificati.',
+  title: computed(() => day.value ? `${day.value.title} - Doisense` : 'Program ghidat - Doisense'),
+  description: 'Progres program ghidat.',
   noindex: true,
 })
 
-onMounted(async () => {
-  const id = route.params.id as string
+async function loadProgress() {
   try {
-    day.value = await fetchApi<typeof day.value>(`/programs/${id}/days/1`)
+    const progress = await fetchApi<ProgressData>(`/programs/${programId}/progress`)
+    if (progress) {
+      currentDay.value = progress.current_day
+      completedDays.value = progress.completed_days
+      totalDays.value = progress.total_days
+    }
+  } catch {
+    // fallback: start from day 1
+  }
+}
+
+async function loadDay(dayNum: number) {
+  loading.value = true
+  try {
+    day.value = await fetchApi<DayData>(`/programs/${programId}/days/${dayNum}`)
   } catch {
     day.value = null
   } finally {
     loading.value = false
   }
+}
+
+function isDayCompleted(dayNum: number) {
+  return completedDays.value.includes(dayNum)
+}
+
+async function navigateDay(dayNum: number) {
+  currentDay.value = dayNum
+  await loadDay(dayNum)
+}
+
+async function completeDay() {
+  completing.value = true
+  try {
+    const progress = await fetchApi<ProgressData>(`/programs/${programId}/progress`, {
+      method: 'POST',
+      body: { day_number: currentDay.value },
+    })
+    if (progress) {
+      completedDays.value = progress.completed_days
+      totalDays.value = progress.total_days
+      // Auto-advance if there are more days
+      if (currentDay.value < progress.total_days) {
+        await navigateDay(currentDay.value + 1)
+        currentDay.value = progress.current_day
+      }
+    }
+  } finally {
+    completing.value = false
+  }
+}
+
+onMounted(async () => {
+  await loadProgress()
+  await loadDay(currentDay.value)
 })
 </script>

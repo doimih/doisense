@@ -101,6 +101,11 @@ class JournalQuestionsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        if not request.user.has_paid_access():
+            return Response(
+                {"detail": "Your trial or subscription has expired."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         language = request.query_params.get("language") or request.user.language or "en"
         if language not in settings.SUPPORTED_LANGUAGES:
             language = "en"
@@ -115,6 +120,11 @@ class JournalEntriesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        if not request.user.has_paid_access():
+            return Response(
+                {"detail": "Your trial or subscription has expired."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = JournalEntrySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)

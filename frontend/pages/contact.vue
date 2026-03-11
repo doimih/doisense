@@ -1,16 +1,24 @@
 <template>
-  <section class="max-w-5xl mx-auto py-8 md:py-12">
-    <div class="rounded-3xl border border-stone-300 bg-stone-100/70 p-6 md:p-10 lg:p-14 space-y-8">
-      <p class="inline-flex items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-800">
-        {{ text.badge }}
-      </p>
+  <div class="-mt-6 pb-8">
+    <section class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-stone-100 text-stone-900">
+      <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,#f8fafc_0%,#f1f5f9_42%,#e0f2fe_100%)]" />
+      <div class="pointer-events-none absolute -right-20 -top-16 h-52 w-52 rounded-full bg-sky-200/50 blur-3xl" />
+      <div class="pointer-events-none absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-amber-100/60 blur-3xl" />
+      <div class="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
+        <div class="w-full space-y-6 rounded-[2rem] border border-stone-200 bg-white/86 p-6 shadow-[0_30px_90px_-40px_rgba(12,74,110,0.35)] backdrop-blur-[1px] md:p-9">
+          <p class="inline-flex items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-900">
+            {{ text.badge }}
+          </p>
+          <h1 class="text-4xl font-bold leading-[1.05] tracking-tight text-stone-900 md:text-6xl lg:text-7xl">{{ text.title }}</h1>
+          <p class="max-w-2xl text-base leading-8 text-stone-800 md:text-lg">{{ text.subtitle }}</p>
+        </div>
+      </div>
+    </section>
 
-      <header class="space-y-4 max-w-3xl">
-        <h1 class="text-4xl md:text-6xl font-bold leading-tight text-stone-900">{{ text.title }}</h1>
-        <p class="text-stone-600 text-lg leading-8">{{ text.subtitle }}</p>
-      </header>
+    <section class="max-w-5xl mx-auto py-8 md:py-12">
+      <div class="rounded-3xl border border-stone-300 bg-stone-100/70 p-6 md:p-10 lg:p-14 space-y-8">
 
-      <form class="space-y-6" @submit.prevent="submitForm">
+        <form class="space-y-6" @submit.prevent="submitForm">
         <div class="grid gap-5 md:grid-cols-2">
           <label class="space-y-2">
             <span class="text-base font-semibold text-stone-900">{{ text.fullNameLabel }}</span>
@@ -73,9 +81,9 @@
         >
           {{ submitting ? text.sendingAction : text.sendAction }}
         </button>
-      </form>
+        </form>
 
-      <div class="grid gap-4 md:grid-cols-3 pt-2">
+        <div class="grid gap-4 md:grid-cols-3 pt-2">
         <article class="rounded-xl border border-stone-300 bg-white px-4 py-4">
           <h2 class="text-sm font-semibold text-stone-900">{{ text.supportTitle }}</h2>
           <p class="text-sm text-stone-700 mt-1">{{ text.supportText }}</p>
@@ -88,14 +96,15 @@
           <h2 class="text-sm font-semibold text-stone-900">{{ text.responseTitle }}</h2>
           <p class="text-sm text-stone-700 mt-1">{{ text.responseText }}</p>
         </article>
-      </div>
+        </div>
 
-      <p class="text-xs text-stone-500">
-        {{ text.note }}
-        <NuxtLink :to="localePath('/legal/gdpr')" class="underline">{{ text.gdprLink }}</NuxtLink>
-      </p>
-    </div>
-  </section>
+        <p class="text-xs text-stone-500">
+          {{ text.note }}
+          <NuxtLink :to="localePath('/legal/gdpr')" class="underline">{{ text.gdprLink }}</NuxtLink>
+        </p>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">

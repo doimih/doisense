@@ -22,7 +22,7 @@ def _log_call(user_id, model: str, prompt: str):
     )
 
 
-def complete(prompt: str, system: str | None = None, user_id=None) -> str:
+def complete(prompt: str, system: str | None = None, user_id=None, max_tokens: int | None = None) -> str:
     """
     Send prompt to AI and return reply text.
     Prefer OpenAI (GPT) if key is set, else Anthropic (Claude).
@@ -44,7 +44,7 @@ def complete(prompt: str, system: str | None = None, user_id=None) -> str:
     if provider == "openai":
         if not openai_key:
             return "[AI not configured. Set OpenAI API key in Admin or OPENAI_API_KEY.]"
-        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key)
+        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens)
     if provider == "anthropic":
         if not anthropic_key:
             return "[AI not configured. Set Anthropic API key in Admin or ANTHROPIC_API_KEY.]"
@@ -53,21 +53,23 @@ def complete(prompt: str, system: str | None = None, user_id=None) -> str:
             system=system,
             user_id=user_id,
             api_key=anthropic_key,
+            max_tokens=max_tokens,
         )
 
     if openai_key:
-        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key)
+        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens)
     if anthropic_key:
         return _complete_anthropic(
             prompt,
             system=system,
             user_id=user_id,
             api_key=anthropic_key,
+            max_tokens=max_tokens,
         )
     return "[AI not configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY.]"
 
 
-def _complete_openai(prompt: str, system: str | None = None, user_id=None, api_key: str = "") -> str:
+def _complete_openai(prompt: str, system: str | None = None, user_id=None, api_key: str = "", max_tokens: int | None = None) -> str:
     try:
         from openai import OpenAI
 
@@ -81,7 +83,7 @@ def _complete_openai(prompt: str, system: str | None = None, user_id=None, api_k
         resp = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=1024,
+            max_tokens=max_tokens or 1024,
         )
         text = (resp.choices[0].message.content or "").strip()
         _log_call(user_id, "openai", prompt)
@@ -90,7 +92,7 @@ def _complete_openai(prompt: str, system: str | None = None, user_id=None, api_k
         return f"[OpenAI error: {e}]"
 
 
-def _complete_anthropic(prompt: str, system: str | None = None, user_id=None, api_key: str = "") -> str:
+def _complete_anthropic(prompt: str, system: str | None = None, user_id=None, api_key: str = "", max_tokens: int | None = None) -> str:
     try:
         from anthropic import Anthropic
 
@@ -99,7 +101,7 @@ def _complete_anthropic(prompt: str, system: str | None = None, user_id=None, ap
         client = Anthropic(api_key=api_key)
         kwargs = {
             "model": model,
-            "max_tokens": 1024,
+            "max_tokens": max_tokens or 1024,
             "messages": [{"role": "user", "content": prompt}],
         }
         if system:

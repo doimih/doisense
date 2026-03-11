@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from core.validators import validate_language
@@ -34,3 +35,32 @@ class GuidedProgramDay(models.Model):
 
     def __str__(self):
         return f"{self.program.title} - Day {self.day_number}"
+
+
+class UserProgramProgress(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="program_progress",
+    )
+    program = models.ForeignKey(
+        GuidedProgram, on_delete=models.CASCADE, related_name="progress"
+    )
+    current_day = models.PositiveIntegerField(default=1)
+    completed_days = models.JSONField(default=list)
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_active_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "programs_userprogramprogress"
+        unique_together = [("user", "program")]
+
+    def __str__(self):
+        return f"{self.user} - {self.program.title} (day {self.current_day})"
+
+    def mark_day_complete(self, day_number: int) -> None:
+        if day_number not in self.completed_days:
+            self.completed_days.append(day_number)
+        if day_number >= self.current_day:
+            self.current_day = day_number + 1
+        self.save(update_fields=["completed_days", "current_day", "last_active_at"])

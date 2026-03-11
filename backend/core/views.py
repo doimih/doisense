@@ -24,6 +24,7 @@ from rest_framework.views import APIView
 from journal.models import JournalQuestion
 from programs.models import GuidedProgram
 
+from .image_utils import convert_uploaded_image_to_webp
 from .models import CMSPage, SystemConfig, UserWellbeingCheckin
 from .serializers import CMSPageSerializer, WellbeingCheckinCreateSerializer
 
@@ -254,7 +255,7 @@ class SearchView(APIView):
             active=True,
             language=language,
         ).filter(Q(title__icontains=query) | Q(description__icontains=query))
-        if not user or not user.is_premium:
+        if not user or not user.has_paid_access():
             programs_qs = programs_qs.filter(is_premium=False)
 
         programs = [
@@ -330,7 +331,13 @@ class WellbeingSummaryView(APIView):
 
     def get(self, request):
         user = request.user
-        plan_days = 30 if user.is_premium else 7
+        effective_tier = user.effective_plan_tier()
+        if effective_tier in ("vip", "premium", "trial"):
+            plan_days = 30
+        elif effective_tier == "basic":
+            plan_days = 14
+        else:
+            plan_days = 7
 
         checkins = UserWellbeingCheckin.objects.filter(user=user)
         mood_items = list(
@@ -379,7 +386,7 @@ class WellbeingSummaryView(APIView):
 
         return Response(
             {
-                "plan": "premium" if user.is_premium else "free",
+                "plan": effective_tier,
                 "plan_days": plan_days,
                 "streak_days": streak_days,
                 "current_mood": latest_mood,
@@ -456,14 +463,15 @@ class SettingsImageLibraryView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        original_name = str(upload.name or "image").strip()
-        stem = Path(original_name).stem
-        stem = re.sub(r"[^a-zA-Z0-9_-]+", "-", stem).strip("-") or "image"
-        extension = "jpg" if image_type == "jpeg" else image_type
+        upload.seek(0)
+        try:
+            webp_file, stem = convert_uploaded_image_to_webp(upload)
+        except ValueError:
+            return Response({"detail": "Failed to process image."}, status=status.HTTP_400_BAD_REQUEST)
 
         path = default_storage.save(
-            f"{self.FOLDER}/{stem}.{extension}",
-            upload,
+            f"{self.FOLDER}/{stem}.webp",
+            webp_file,
         )
         filename = Path(path).name
 

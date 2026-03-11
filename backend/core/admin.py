@@ -14,7 +14,15 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from unfold.admin import ModelAdmin
 
-from .models import AIConfig, OAuthConfig, RecaptchaConfig, StripeConfig, SystemConfig
+from .image_utils import convert_uploaded_image_to_webp
+from .models import (
+    AIConfig,
+    NotificationDelivery,
+    OAuthConfig,
+    RecaptchaConfig,
+    StripeConfig,
+    SystemConfig,
+)
 
 _MEDIA_LIBRARY_FOLDER = "settings-images"
 _MEDIA_LIBRARY_ALLOWED_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
@@ -37,6 +45,8 @@ class SystemConfigAdminForm(forms.ModelForm):
             "stripe_secret_key",
             "stripe_webhook_secret",
             "stripe_price_id_premium",
+            "backup_access_key_id",
+            "backup_secret_access_key",
             "ai_openai_api_key",
             "ai_anthropic_api_key",
             "recaptcha_secret_key",
@@ -84,6 +94,24 @@ class SystemConfigAdmin(ModelAdmin):
                     "email_host_password",
                     "email_use_tls",
                     "email_use_ssl",
+                )
+            },
+        ),
+        (
+            "WAL-G Backup (Hetzner Object Storage)",
+            {
+                "fields": (
+                    "backup_enabled",
+                    "backup_s3_endpoint",
+                    "backup_s3_bucket",
+                    "backup_s3_path_prefix",
+                    "backup_access_key_id",
+                    "backup_secret_access_key",
+                    "backup_region",
+                    "backup_force_path_style",
+                    "backup_schedule_minutes",
+                    "backup_delta_max_steps",
+                    "backup_retention_full_count",
                 )
             },
         ),
@@ -141,13 +169,18 @@ class SystemConfigAdmin(ModelAdmin):
                         errors.append(f"{uploaded.name}: file content does not match an allowed image type.")
                         continue
 
-                    safe_name = re.sub(r"[^\w.\-]", "_", uploaded.name)
-                    dest = f"{_MEDIA_LIBRARY_FOLDER}/{safe_name}"
-                    if default_storage.exists(dest):
-                        base, dot_ext = safe_name.rsplit(".", 1) if "." in safe_name else (safe_name, "")
-                        dest = f"{_MEDIA_LIBRARY_FOLDER}/{base}_{int(time.time())}.{dot_ext}"
+                    uploaded.seek(0)
+                    try:
+                        webp_file, stem = convert_uploaded_image_to_webp(uploaded)
+                    except ValueError:
+                        errors.append(f"{uploaded.name}: failed to process image.")
+                        continue
 
-                    default_storage.save(dest, uploaded)
+                    dest = f"{_MEDIA_LIBRARY_FOLDER}/{stem}.webp"
+                    if default_storage.exists(dest):
+                        dest = f"{_MEDIA_LIBRARY_FOLDER}/{stem}_{int(time.time())}.webp"
+
+                    default_storage.save(dest, webp_file)
                     uploaded_names.append(os.path.basename(dest))
 
                 if uploaded_names:
@@ -253,6 +286,14 @@ class SystemConfigAdmin(ModelAdmin):
     def has_add_permission(self, request):
         # Only one configuration row should exist.
         return not SystemConfig.objects.exists()
+
+
+@admin.register(NotificationDelivery)
+class NotificationDeliveryAdmin(ModelAdmin):
+    list_display = ("notification_type", "user", "sent_for_date", "context_key", "sent_at")
+    list_filter = ("notification_type", "sent_for_date")
+    search_fields = ("user__email", "context_key")
+    ordering = ("-sent_at",)
 
 
 class SingletonProxyConfigAdmin(ModelAdmin):

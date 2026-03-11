@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0009_wagtail_landing_pages"),
+        ("core", "0009_landing_pages"),
     ]
 
     operations = [

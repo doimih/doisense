@@ -53,16 +53,6 @@
       </div>
     </div>
 
-    <section v-if="extraCards.length" class="grid gap-4 md:grid-cols-2">
-      <article
-        v-for="feature in extraCards"
-        :key="feature.title"
-        class="rounded-xl border border-stone-200 bg-white px-5 py-5"
-      >
-        <h3 class="text-lg font-semibold text-stone-900 mb-2">{{ feature.title }}</h3>
-        <p class="text-stone-600">{{ feature.description }}</p>
-      </article>
-    </section>
   </section>
 </template>
 
@@ -250,7 +240,6 @@ const featuresCopy: Record<string, {
 const text = computed(() => featuresCopy[localeCode.value] || featuresCopy.en)
 const featureIcons = ['🧠', '👥', '🧾', '💬']
 const spotlightCards = computed(() => text.value.featureCards.slice(0, 4))
-const extraCards = computed(() => text.value.featureCards.slice(4))
 const seoTitle = computed(() => text.value.seoTitle)
 const seoDescription = computed(() => text.value.seoDescription)
 

@@ -7,7 +7,9 @@
 
 services:
   db:
-    image: postgres:16-alpine
+    build:
+      context: ./docker/db
+      dockerfile: Dockerfile
     environment:
       POSTGRES_USER: doisense
       POSTGRES_PASSWORD: doisense
@@ -32,6 +34,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    volumes:
+      - doisense_media:/app/media
     networks:
       - default
       - traefik
@@ -59,17 +63,18 @@ services:
       - "traefik.http.routers.doisense-api.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/api`)"
       - "traefik.http.routers.doisense-api.entrypoints=websecure"
       - "traefik.http.routers.doisense-api.tls=true"
+      - "traefik.http.routers.doisense-api.priority=220"
       - "traefik.http.routers.doisense-api.service=doisense-api"
-      - "traefik.http.routers.doisense-admin.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/ro/admin`)"
+      - "traefik.http.routers.doisense-admin.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && (PathPrefix(`/doisense/admin`) || PathPrefix(`/doisense/ro/admin`))"
       - "traefik.http.routers.doisense-admin.entrypoints=websecure"
       - "traefik.http.routers.doisense-admin.tls=true"
       - "traefik.http.routers.doisense-admin.priority=200"
       - "traefik.http.routers.doisense-admin.service=doisense-api"
-      - "traefik.http.routers.doisense-wagtail.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/wagtail`)"
-      - "traefik.http.routers.doisense-wagtail.entrypoints=websecure"
-      - "traefik.http.routers.doisense-wagtail.tls=true"
-      - "traefik.http.routers.doisense-wagtail.priority=210"
-      - "traefik.http.routers.doisense-wagtail.service=doisense-api"
+      - "traefik.http.routers.doisense-media.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/media`)"
+      - "traefik.http.routers.doisense-media.entrypoints=websecure"
+      - "traefik.http.routers.doisense-media.tls=true"
+      - "traefik.http.routers.doisense-media.priority=205"
+      - "traefik.http.routers.doisense-media.service=doisense-api"
       - "traefik.http.services.doisense-api.loadbalancer.server.port=8000"
       # Strip prefix ca backend-ul să primească /api/...
       - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=/doisense"
@@ -96,6 +101,7 @@ services:
       - "traefik.http.routers.doisense-web.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense`)"
       - "traefik.http.routers.doisense-web.entrypoints=websecure"
       - "traefik.http.routers.doisense-web.tls=true"
+      - "traefik.http.routers.doisense-web.priority=150"
       - "traefik.http.routers.doisense-web.service=doisense-web"
       - "traefik.http.services.doisense-web.loadbalancer.server.port=3000"
       # Nu strip prefix – Nuxt servește cu baseURL /doisense
@@ -106,3 +112,4 @@ networks:
     name: ${TRAEFIK_NETWORK:-traefik}
 volumes:
   doisense_pgdata:
+  doisense_media:

@@ -22,8 +22,8 @@ def test_journal_questions_requires_auth(api_client):
 
 
 @pytest.mark.django_db
-def test_journal_questions_list(authenticated_client, journal_question):
-    response = authenticated_client.get(reverse("journal-questions") + "?language=en")
+def test_journal_questions_list(paid_client, journal_question):
+    response = paid_client.get(reverse("journal-questions") + "?language=en")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) >= 1
     assert response.data[0]["text"] == journal_question.text
@@ -40,8 +40,8 @@ def test_journal_entries_post_requires_auth(api_client, journal_question):
 
 
 @pytest.mark.django_db
-def test_journal_entries_post_success(authenticated_client, user, journal_question):
-    response = authenticated_client.post(
+def test_journal_entries_post_success(paid_client, paid_user, journal_question):
+    response = paid_client.post(
         reverse("journal-entries"),
         {"question": journal_question.id, "content": "I feel good.", "emotions": []},
         format="json",

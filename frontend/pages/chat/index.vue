@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth', layout: 'chat' })
+definePageMeta({ middleware: ['auth', 'onboarding', 'subscription'] as any, layout: 'chat' })
 
 const { locale } = useI18n()
 const localeCode = computed(() => {

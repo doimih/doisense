@@ -46,6 +46,26 @@ def get_stripe_price_id_premium() -> str:
     return (config.stripe_price_id_premium or settings.STRIPE_PRICE_ID_PREMIUM or "").strip()
 
 
+def get_stripe_price_id_basic() -> str:
+    config = get_system_config()
+    return (config.stripe_price_id_basic or getattr(settings, "STRIPE_PRICE_ID_BASIC", "") or "").strip()
+
+
+def get_stripe_price_id_vip() -> str:
+    config = get_system_config()
+    return (config.stripe_price_id_vip or getattr(settings, "STRIPE_PRICE_ID_VIP", "") or "").strip()
+
+
+def get_stripe_price_id_for_tier(plan_tier: str) -> str:
+    mapping = {
+        "basic": get_stripe_price_id_basic,
+        "premium": get_stripe_price_id_premium,
+        "vip": get_stripe_price_id_vip,
+    }
+    getter = mapping.get(plan_tier, get_stripe_price_id_premium)
+    return getter()
+
+
 def get_enabled_languages() -> list[str]:
     config = get_system_config()
     langs = config.enabled_languages or []

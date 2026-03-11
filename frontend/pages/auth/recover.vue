@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-md mx-auto py-12">
+    <BrandLogo class="mx-auto mb-6" size="md" centered show-tagline />
     <h1 class="text-2xl font-bold text-stone-800 mb-6">{{ title }}</h1>
 
     <form v-if="!isResetMode" @submit.prevent="requestRecovery" class="space-y-4">

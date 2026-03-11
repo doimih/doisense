@@ -22,19 +22,6 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 INSTALLED_APPS = [
     "unfold",
     "unfold.contrib.forms",
-    "wagtail.contrib.forms",
-    "wagtail.contrib.redirects",
-    "wagtail.embeds",
-    "wagtail.sites",
-    "wagtail.users",
-    "wagtail.snippets",
-    "wagtail.documents",
-    "wagtail.images",
-    "wagtail.search",
-    "wagtail.admin",
-    "wagtail",
-    "modelcluster",
-    "taggit",
     "django_ckeditor_5",
     "crispy_forms",
     "crispy_tailwind",
@@ -262,7 +249,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -319,8 +305,6 @@ MEDIA_URL = env("MEDIA_URL", default="/doisense/media/")
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
-WAGTAIL_SITE_NAME = "Doisense Wagtail"
-WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", default="https://projects.doimih.net/doisense/wagtail/admin")
 
 AUTH_USER_MODEL = "users.User"
 

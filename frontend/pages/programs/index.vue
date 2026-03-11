@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ middleware: ['auth', 'subscription'] as any })
 
 const { fetchApi } = useApi()
 const { locale } = useI18n()

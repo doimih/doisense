@@ -69,7 +69,13 @@
     "noDescription": "Keine Beschreibung.",
     "premium": "Premium",
     "view": "Programm ansehen",
-    "notFound": "Programm oder Tag nicht gefunden."
+    "notFound": "Programm oder Tag nicht gefunden.",
+    "day": "Tag",
+    "completed": "abgeschlossen",
+    "prevDay": "Vorheriger Tag",
+    "nextDay": "Nächster Tag",
+    "markComplete": "Als abgeschlossen markieren",
+    "allComplete": "Programm abgeschlossen!"
   },
   "profile": {
     "premium": "Premium",

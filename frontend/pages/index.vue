@@ -139,7 +139,7 @@
             index === 1 ? 'border-sky-200 bg-sky-100/70' : 'border-stone-200 bg-white',
           ]"
         >
-          <div class="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-stone-50 text-xl">
+          <div class="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-stone-50 text-[1.95rem] leading-none">
             ✹
           </div>
           <p class="mt-5 text-5xl font-bold tracking-tight text-stone-900">{{ item.value }}</p>
