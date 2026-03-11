@@ -1,20 +1,17 @@
+// @ts-nocheck
 import { computed, ref, watch } from 'vue'
 import { useI18n } from '#imports'
 import { useApi } from '~/composables/useApi'
 
-interface CmsPublicPage {
-  slug: string
-  title: string
-  content: string
-}
+const cmsPageCache = new Map()
 
-export function useCmsStaticPage(baseSlug: string, prefix = '') {
+export function useCmsStaticPage(baseSlug, prefix = '') {
   const { fetchApi } = useApi()
   const { locale } = useI18n()
 
-  const cmsPage = ref<CmsPublicPage | null>(null)
+  const cmsPage = ref(null)
 
-  const localeCode = computed(() => (locale.value || 'ro').slice(0, 2).toLowerCase())
+  const localeCode = computed(() => (locale.value || 'en').slice(0, 2).toLowerCase())
 
   const normalizedBaseSlug = computed(() => {
     const cleanPrefix = prefix.trim().replace(/^-+|-+$/g, '')
@@ -23,17 +20,25 @@ export function useCmsStaticPage(baseSlug: string, prefix = '') {
   })
 
   async function load() {
-    cmsPage.value = null
+    const cacheKey = `${normalizedBaseSlug.value}:${localeCode.value}`
+    if (cmsPageCache.has(cacheKey)) {
+      cmsPage.value = cmsPageCache.get(cacheKey) || null
+      return
+    }
 
     try {
-      const page = await fetchApi<CmsPublicPage>(
+      const page = await fetchApi(
         `/cms/public/${normalizedBaseSlug.value}?language=${localeCode.value}`,
       )
       if (page?.content?.trim()) {
         cmsPage.value = page
+        cmsPageCache.set(cacheKey, page)
+      } else {
+        cmsPageCache.set(cacheKey, null)
       }
     } catch {
       // Keep null when CMS page is missing.
+      cmsPageCache.set(cacheKey, null)
     }
   }
 

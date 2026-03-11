@@ -10,7 +10,9 @@ urlpatterns = [
     path("cms/menu-links", views.CMSMenuLinksView.as_view(), name="cms-menu-links"),
     path("geo/language", views.GeoLanguageView.as_view(), name="geo-language"),
     path("search", views.SearchView.as_view(), name="full-search"),
-    path("newsletter/subscribe", views.NewsletterSubscribeView.as_view(), name="newsletter-subscribe"),
+    path("contact/config", views.ContactConfigView.as_view(), name="contact-config"),
+    path("contact/submit", views.ContactSubmitView.as_view(), name="contact-submit"),
+    path("settings/images", views.SettingsImageLibraryView.as_view(), name="settings-images"),
     path("wellbeing/checkins", views.WellbeingCheckinView.as_view(), name="wellbeing-checkins"),
     path("wellbeing/summary", views.WellbeingSummaryView.as_view(), name="wellbeing-summary"),
 ]

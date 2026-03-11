@@ -1,63 +1,152 @@
 <template>
-  <div class="space-y-12 py-8">
-    <section class="relative overflow-hidden rounded-2xl border border-stone-200 bg-gradient-to-br from-amber-50 via-white to-stone-50 p-8 md:p-12">
-      <div class="absolute -top-10 -right-10 h-48 w-48 rounded-full bg-amber-200/40 blur-2xl" />
-      <div class="absolute -bottom-16 -left-10 h-56 w-56 rounded-full bg-stone-300/30 blur-2xl" />
-      <div class="relative max-w-3xl">
-        <p class="inline-block rounded-full bg-stone-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-          {{ text.heroBadge }}
-        </p>
-        <h1 class="mt-4 text-4xl md:text-5xl font-bold text-stone-900 leading-tight">{{ text.heroTitle }}</h1>
-        <p class="mt-4 text-stone-700 text-lg">{{ text.heroSubtitle }}</p>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <NuxtLink
-            v-if="!authStore.isLoggedIn"
-            :to="localePath('/auth/register')"
-            class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-          >
-            {{ text.primaryCta }}
-          </NuxtLink>
-          <NuxtLink
-            v-if="!authStore.isLoggedIn"
-            :to="localePath('/auth/login')"
-            class="px-6 py-3 border border-stone-300 rounded-lg hover:bg-stone-100"
-          >
-            {{ $t('auth.login') }}
-          </NuxtLink>
-          <NuxtLink
-            v-if="authStore.isLoggedIn"
-            :to="localePath('/chat')"
-            class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-          >
-            {{ $t('nav.chat') }}
-          </NuxtLink>
-          <NuxtLink
-            :to="localePath('/features')"
-            class="px-6 py-3 border border-stone-300 rounded-lg hover:bg-stone-100"
-          >
-            {{ text.secondaryCta }}
-          </NuxtLink>
+  <div class="-mt-6 pb-8">
+    <section data-nav-theme="dark" class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-stone-900 text-white">
+      <img
+        src="/hero-zen.jpg"
+        alt="Doisense wellbeing support"
+        loading="eager"
+        decoding="async"
+        width="2200"
+        height="1400"
+        class="absolute inset-0 h-full w-full object-cover object-[50%_18%]"
+      >
+      <div class="absolute inset-0 bg-stone-950/62" />
+      <div class="absolute inset-0 bg-gradient-to-r from-stone-950/94 via-stone-900/74 to-stone-900/48" />
+      <div class="pointer-events-none absolute inset-0">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(125,211,252,0.35),transparent_42%),radial-gradient(circle_at_86%_82%,rgba(56,189,248,0.32),transparent_45%)]" />
+      </div>
+
+      <div class="relative mx-auto max-w-[1440px] px-4 py-10 sm:px-6 md:py-14 lg:px-8">
+        <div class="relative overflow-hidden rounded-[2.4rem] border border-white/20 bg-black/28 p-5 shadow-[0_32px_90px_-35px_rgba(14,116,144,0.65)] backdrop-blur-[1px] md:p-8 lg:p-10">
+
+          <div class="relative grid gap-8 lg:grid-cols-[1.18fr_0.82fr] lg:items-end">
+            <div class="space-y-7">
+              <p class="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white/95 md:text-sm">
+                {{ text.heroBadge }}
+              </p>
+
+              <h1 class="max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl lg:text-7xl">
+                {{ text.heroTitle }}
+              </h1>
+
+              <p class="max-w-2xl text-base leading-8 text-white/85 md:text-lg">
+                {{ text.heroSubtitle }}
+              </p>
+
+              <div class="flex flex-wrap gap-3">
+                <NuxtLink
+                  v-if="!authStore.isLoggedIn"
+                  :to="localePath('/auth/register')"
+                  class="rounded-full bg-sky-300 px-6 py-3 text-sm font-semibold text-stone-900 transition hover:bg-sky-200"
+                >
+                  {{ text.primaryCta }}
+                </NuxtLink>
+                <NuxtLink
+                  v-if="!authStore.isLoggedIn"
+                  :to="localePath('/auth/login')"
+                  class="rounded-full border border-white/35 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                >
+                  {{ $t('auth.login') }}
+                </NuxtLink>
+                <NuxtLink
+                  v-if="authStore.isLoggedIn"
+                  :to="localePath('/chat')"
+                  class="rounded-full bg-sky-300 px-6 py-3 text-sm font-semibold text-stone-900 transition hover:bg-sky-200"
+                >
+                  {{ $t('nav.chat') }}
+                </NuxtLink>
+                <NuxtLink
+                  :to="localePath('/features')"
+                  class="rounded-full border border-white/35 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                >
+                  {{ text.secondaryCta }}
+                </NuxtLink>
+              </div>
+            </div>
+
+            <div class="space-y-4 lg:justify-self-end lg:max-w-md">
+              <article class="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur">
+                <h2 class="text-2xl font-semibold tracking-tight text-white md:text-3xl">{{ heroCard.title }}</h2>
+                <p class="mt-2 text-base leading-7 text-white/85 md:text-lg">{{ heroCard.description }}</p>
+              </article>
+
+              <div class="flex flex-wrap gap-3">
+                <p class="rounded-full border border-white/25 bg-white/10 px-5 py-2 text-sm font-semibold text-white/90 shadow-sm md:text-base">
+                  {{ heroPillLeft }}
+                </p>
+                <p class="rounded-full border border-white/25 bg-white/10 px-5 py-2 text-sm font-semibold text-white/90 shadow-sm md:text-base">
+                  {{ heroPillRight }}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="grid gap-4 md:grid-cols-3">
-      <article v-for="card in homeCards" :key="card.title" class="bg-white border border-stone-200 rounded-xl px-5 py-[70px]">
-        <h2 class="mb-2 text-[19px] font-semibold text-stone-900">{{ card.title }}</h2>
-        <p class="text-[15px] text-stone-600">{{ card.description }}</p>
-      </article>
+    <section class="mt-[120px] rounded-3xl border border-stone-200 bg-stone-100/70 px-5 py-8 md:px-8 md:py-10">
+      <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+        <div class="space-y-6">
+          <p class="inline-flex items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-xs font-semibold text-stone-700 md:text-sm">
+            {{ text.heroBadge }}
+          </p>
+          <h2 class="max-w-4xl text-4xl font-bold leading-tight text-stone-900 md:text-6xl">
+            {{ sectionTwoTitle }}
+          </h2>
+        </div>
+
+        <div class="space-y-6 lg:pt-4">
+          <p class="max-w-lg text-lg leading-8 text-stone-600">
+            {{ sectionTwoDescription }}
+          </p>
+          <NuxtLink
+            :to="sectionTwoCta.to"
+            class="inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-stone-900"
+          >
+            {{ sectionTwoCta.label }}
+          </NuxtLink>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap gap-3">
+        <NuxtLink
+          v-for="link in text.quickLinks"
+          :key="link.to"
+          :to="localePath(link.to)"
+          class="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+        >
+          {{ link.title }}
+        </NuxtLink>
+      </div>
     </section>
 
-    <section class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <NuxtLink
-        v-for="link in text.quickLinks"
-        :key="link.to"
-        :to="localePath(link.to)"
-        class="bg-white border border-stone-200 rounded-xl px-4 py-[66px] transition hover:bg-stone-50"
-      >
-        <h3 class="text-[19px] font-semibold text-stone-900">{{ link.title }}</h3>
-        <p class="mt-1 text-[15px] text-stone-600">{{ link.description }}</p>
-      </NuxtLink>
+    <section class="mt-[120px] rounded-3xl border border-stone-200 bg-stone-100/70 px-5 py-8 md:px-8 md:py-10">
+      <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <p class="inline-flex h-fit w-fit justify-self-start items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-xs font-semibold text-stone-700 md:text-sm">
+          {{ impactText.badge }}
+        </p>
+        <h2 class="max-w-4xl text-4xl font-bold leading-tight text-stone-900 md:text-6xl">
+          {{ impactText.title }}
+        </h2>
+      </div>
+
+      <div class="mt-8 grid gap-4 lg:grid-cols-4">
+        <article
+          v-for="(item, index) in impactCards"
+          :key="item.label"
+          :class="[
+            'rounded-2xl border p-5 md:p-6',
+            index === 1 ? 'border-sky-200 bg-sky-100/70' : 'border-stone-200 bg-white',
+          ]"
+        >
+          <div class="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-stone-50 text-xl">
+            ✹
+          </div>
+          <p class="mt-5 text-5xl font-bold tracking-tight text-stone-900">{{ item.value }}</p>
+          <h3 class="mt-2 text-3xl font-semibold leading-tight text-stone-900">{{ item.label }}</h3>
+          <p class="mt-4 text-xl leading-8 text-stone-600">{{ item.description }}</p>
+        </article>
+      </div>
     </section>
 
   </div>
@@ -68,9 +157,10 @@ const localePath = useLocalePath()
 const authStore = useAuthStore()
 const { locale } = useI18n()
 const { cmsPage } = useCmsStaticPage('home')
+const SUPPORTED_LOCALES = ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'] as const
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+  return SUPPORTED_LOCALES.includes(code as (typeof SUPPORTED_LOCALES)[number]) ? code : 'en'
 })
 
 const homeCopy: Record<string, {
@@ -326,6 +416,100 @@ function extractCardsFromCms(html: string): HomeCard[] {
 const homeCards = computed(() => {
   const parsed = extractCardsFromCms(cmsPage.value?.content || "")
   return parsed.length ? parsed : text.value.cards
+})
+
+const heroCard = computed(() => homeCards.value[0] || text.value.cards[0])
+const heroPillLeft = computed(() => `${homeCards.value.length}+ ${text.value.cards[0]?.title || 'Highlights'}`)
+const heroPillRight = computed(() => text.value.quickLinks[0]?.title || 'Features')
+const sectionTwoTitle = computed(() => {
+  const titles: Record<string, string> = {
+    ro: 'Sprijin ghidat pentru wellbeing mental, zi de zi',
+    en: 'Guided support for everyday mental wellbeing',
+    de: 'Gefuhrte Unterstutzung fur mentales Wohlbefinden im Alltag',
+    fr: 'Un accompagnement guide pour le bien-etre mental au quotidien',
+    it: 'Supporto guidato per il benessere mentale di ogni giorno',
+    es: 'Apoyo guiado para el bienestar mental de cada dia',
+    pl: 'Prowadzone wsparcie dla codziennego dobrostanu psychicznego',
+  }
+  return titles[localeCode.value] || titles.en
+})
+const sectionTwoDescription = computed(() => {
+  const descriptions: Record<string, string> = {
+    ro: 'Platforma Doisense combină jurnalul ghidat, conversațiile AI și programele structurate pentru progres real și consecvent.',
+    en: 'Doisense combines guided journaling, AI conversations, and structured programs for real and sustainable progress.',
+    de: 'Doisense verbindet gefuhrtes Journaling, KI-Gesprach und strukturierte Programme fur echten, nachhaltigen Fortschritt.',
+    fr: 'Doisense combine journal guide, conversations IA et programmes structures pour un progres reel et durable.',
+    it: 'Doisense unisce diario guidato, conversazioni AI e programmi strutturati per un progresso reale e costante.',
+    es: 'Doisense combina diario guiado, conversaciones AI y programas estructurados para un progreso real y sostenible.',
+    pl: 'Doisense laczy dziennik prowadzony, rozmowy AI i programy strukturalne, aby wspierac realny i trwaly progres.',
+  }
+  return descriptions[localeCode.value] || descriptions.en
+})
+const sectionTwoCta = computed(() => {
+  const first = text.value.quickLinks[0]
+  return {
+    to: first ? localePath(first.to) : localePath('/features'),
+    label: first?.title || text.value.secondaryCta,
+  }
+})
+
+const impactCopy: Record<string, { badge: string; title: string }> = {
+  ro: {
+    badge: 'Impactul nostru în cifre',
+    title: 'Vezi acoperirea, rezultatele și progresul construit cu utilizatorii noștri',
+  },
+  en: {
+    badge: 'Our Impact In Numbers',
+    title: "See The Reach, Results, And Growth We've Helped Facilitate",
+  },
+  de: {
+    badge: 'Unser Impact in Zahlen',
+    title: 'Sieh Reichweite, Ergebnisse und Wachstum, pe care le susținem împreună',
+  },
+  fr: {
+    badge: 'Notre impact en chiffres',
+    title: 'Decouvrez la portee, les resultats et la progression que nous facilitons',
+  },
+  it: {
+    badge: 'Il nostro impatto in numeri',
+    title: 'Scopri portata, risultati e crescita che aiutiamo a costruire',
+  },
+  es: {
+    badge: 'Nuestro impacto en cifras',
+    title: 'Mira el alcance, los resultados y el crecimiento que facilitamos',
+  },
+  pl: {
+    badge: 'Nasz wpływ w liczbach',
+    title: 'Zobacz zasięg, rezultaty i rozwój, które wspieramy',
+  },
+}
+
+const impactText = computed(() => impactCopy[localeCode.value] || impactCopy.en)
+const impactCards = computed(() => {
+  const cards = homeCards.value.length ? homeCards.value : text.value.cards
+  const links = text.value.quickLinks
+  return [
+    {
+      value: `${cards.length}+`,
+      label: cards[0]?.title || 'Guided experience',
+      description: cards[0]?.description || text.value.heroSubtitle,
+    },
+    {
+      value: `${links.length}+`,
+      label: cards[1]?.title || 'Trust-focused design',
+      description: cards[1]?.description || text.value.heroSubtitle,
+    },
+    {
+      value: `${SUPPORTED_LOCALES.length}+`,
+      label: cards[2]?.title || 'Product-ready scale',
+      description: cards[2]?.description || text.value.heroSubtitle,
+    },
+    {
+      value: `${links.length * 15}+`,
+      label: links[0]?.title || 'Features',
+      description: links[0]?.description || text.value.secondaryCta,
+    },
+  ]
 })
 
 const seoTitle = computed(() => text.value.seoTitle)

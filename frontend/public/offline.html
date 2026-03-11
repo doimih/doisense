@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doisense - Offline</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top right, #d8f3f0 0%, #f3f5f8 42%, #edf1f6 100%);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: #1e293b;
+      }
+
+      .card {
+        width: min(92vw, 520px);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid #cbd5e1;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 1.35rem;
+      }
+
+      p {
+        margin: 0 0 16px;
+        line-height: 1.55;
+        color: #334155;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: #0f766e;
+        color: #fff;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>You are offline</h1>
+      <p>
+        Doisense cannot reach the network right now. You can retry when your connection is restored.
+      </p>
+      <a href="/doisense/">Return to Doisense</a>
+    </main>
+  </body>
+</html>

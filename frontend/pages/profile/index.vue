@@ -1,11 +1,13 @@
 <template>
-  <div class="max-w-xl mx-auto space-y-4">
-    <h1 class="text-2xl font-bold text-stone-800 mb-4">{{ $t('nav.profile') }}</h1>
+  <div class="max-w-xl mx-auto space-y-4 rounded-2xl border border-sky-100 bg-gradient-to-br from-[#f7fbff] via-[#f5f9fc] to-[#eef4f8] p-4 md:p-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-2xl font-bold text-slate-900">{{ $t('nav.profile') }}</h1>
+    </div>
 
-    <div v-if="authStore.user" class="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
+    <div v-if="authStore.user" class="space-y-4 rounded-xl border border-sky-200 bg-white/95 p-4 shadow-sm">
       <div class="flex items-center justify-between">
         <p><span class="font-medium">{{ $t('auth.email') }}:</span> {{ authStore.user.email }}</p>
-        <span class="inline-flex items-center gap-2 rounded-full border border-stone-200 px-3 py-1 text-xs font-medium text-stone-700">
+        <span class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-slate-700">
           <span class="h-2.5 w-2.5 rounded-full bg-emerald-500" />
           {{ authStore.user.membership_tier === 'premium' ? text.membershipPremium : text.membershipStandard }}
         </span>
@@ -13,29 +15,29 @@
 
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.firstName }}</label>
-          <input v-model="firstName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.firstName }}</label>
+          <input v-model="firstName" type="text" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.lastName }}</label>
-          <input v-model="lastName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.lastName }}</label>
+          <input v-model="lastName" type="text" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100" />
         </div>
       </div>
 
       <div>
-        <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.phone }}</label>
+        <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.phone }}</label>
         <input
           v-model="phoneContact"
           type="tel"
           placeholder="+40 712 345 678"
-          class="w-full rounded-lg border border-stone-300 px-3 py-2"
+          class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
         />
         <div class="mt-2 flex flex-wrap gap-2">
           <button
             v-for="dialCode in dialCodeOptions"
             :key="dialCode.value"
             type="button"
-            class="rounded-md border border-stone-300 px-2 py-1 text-xs text-stone-700 hover:bg-stone-50"
+            class="rounded-md border border-sky-200 bg-white px-2 py-1 text-xs text-slate-700 transition hover:bg-sky-50"
             @click="setPhoneDialCode(dialCode.value)"
           >
             {{ dialCode.label }}
@@ -43,8 +45,8 @@
         </div>
       </div>
 
-      <div class="rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-700">
-        <p class="font-medium text-stone-800">{{ text.savedCard }}</p>
+      <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-3 text-sm text-slate-700">
+        <p class="font-medium text-slate-900">{{ text.savedCard }}</p>
         <p v-if="cardLoading" class="mt-1">{{ $t('common.loading') }}</p>
         <template v-else-if="savedCard?.has_saved_card && savedCard.card">
           <p class="mt-1">{{ savedCard.card.brand?.toUpperCase() }} •••• {{ savedCard.card.last4 }}</p>
@@ -52,7 +54,7 @@
           <button
             type="button"
             :disabled="billingPortalLoading"
-            class="mt-3 inline-flex px-3 py-1.5 rounded-md border border-stone-300 hover:bg-white disabled:opacity-50"
+            class="mt-3 inline-flex rounded-md border border-sky-200 bg-white px-3 py-1.5 text-slate-700 transition hover:bg-sky-50 disabled:opacity-50"
             @click="openBillingPortal"
           >
             {{ billingPortalLoading ? $t('common.loading') : text.manageCard }}
@@ -67,7 +69,7 @@
       <button
         type="button"
         :disabled="saveLoading"
-        class="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 disabled:opacity-50"
+        class="rounded-lg bg-sky-300 px-4 py-2 font-medium text-stone-900 transition hover:bg-sky-200 disabled:opacity-50"
         @click="saveProfile"
       >
         {{ saveLoading ? $t('common.loading') : text.saveProfile }}
@@ -77,39 +79,39 @@
       <button
         v-if="!authStore.user.is_premium"
         :disabled="checkoutLoading"
-        class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
+        class="rounded-lg bg-sky-300 px-4 py-2 font-medium text-stone-900 transition hover:bg-sky-200 disabled:opacity-50"
         @click="createCheckout"
       >
         {{ checkoutLoading ? $t('common.loading') : $t('profile.upgrade') }}
       </button>
 
-      <div class="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-4">
-        <h2 class="text-base font-semibold text-stone-800">{{ text.passwordChange }}</h2>
+      <div class="space-y-3 rounded-lg border border-sky-200 bg-sky-50/70 p-4">
+        <h2 class="text-base font-semibold text-slate-900">{{ text.passwordChange }}</h2>
 
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.currentPassword }}</label>
+          <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.currentPassword }}</label>
           <input
             v-model="currentPassword"
             type="password"
-            class="w-full rounded-lg border border-stone-300 px-3 py-2"
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
           />
         </div>
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.newPassword }}</label>
+            <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.newPassword }}</label>
             <input
               v-model="newPassword"
               type="password"
-              class="w-full rounded-lg border border-stone-300 px-3 py-2"
+              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.confirmNewPassword }}</label>
+            <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.confirmNewPassword }}</label>
             <input
               v-model="newPasswordConfirm"
               type="password"
-              class="w-full rounded-lg border border-stone-300 px-3 py-2"
+              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
             />
           </div>
         </div>
@@ -120,7 +122,7 @@
         <button
           type="button"
           :disabled="passwordLoading"
-          class="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-900 disabled:opacity-50"
+          class="rounded-lg bg-sky-300 px-4 py-2 font-medium text-stone-900 transition hover:bg-sky-200 disabled:opacity-50"
           @click="changePassword"
         >
           {{ passwordLoading ? $t('common.loading') : text.changePassword }}
@@ -136,6 +138,7 @@ definePageMeta({ middleware: 'auth' })
 const authStore = useAuthStore()
 const { fetchApi } = useApi()
 const { locale } = useI18n()
+const localePath = useLocalePath()
 const checkoutLoading = ref(false)
 const saveLoading = ref(false)
 const cardLoading = ref(false)

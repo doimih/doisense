@@ -1,49 +1,72 @@
 <template>
-  <section class="max-w-6xl mx-auto py-10 space-y-10">
-    <header class="space-y-4 text-center">
-      <p class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold tracking-wide">
-        {{ text.badge }}
-      </p>
-      <h1 class="text-4xl md:text-5xl font-bold text-stone-900">{{ text.title }}</h1>
-      <p class="text-stone-600 max-w-3xl mx-auto">{{ text.subtitle }}</p>
-    </header>
+  <section class="max-w-6xl mx-auto py-8 md:py-12 space-y-10">
+    <div class="grid gap-8 lg:grid-cols-2 lg:gap-14 items-start">
+      <div class="space-y-7">
+        <p class="inline-flex items-center rounded-full border border-stone-300 bg-white/80 px-4 py-2 text-xs font-semibold tracking-wide text-stone-700">
+          {{ text.badge }}
+        </p>
 
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <article
-        v-for="feature in text.featureCards"
-        :key="feature.title"
-        class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm"
-      >
-        <h2 class="text-lg font-semibold text-stone-900 mb-2">{{ feature.title }}</h2>
-        <p class="text-stone-600 text-sm">{{ feature.description }}</p>
-      </article>
+        <p class="max-w-xl text-lg leading-9 text-stone-600">
+          {{ text.subtitle }}
+        </p>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <article class="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+            <img
+              src="https://images.unsplash.com/photo-1493836512294-502baa1986e2?auto=format&fit=crop&w=1200&q=80"
+              alt="Wellbeing support session"
+              loading="lazy"
+              decoding="async"
+              width="960"
+              height="760"
+              class="h-56 w-full object-cover"
+            >
+          </article>
+          <article class="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+            <img
+              src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80"
+              alt="Emotional wellbeing moment"
+              loading="lazy"
+              decoding="async"
+              width="960"
+              height="760"
+              class="h-56 w-full object-cover"
+            >
+          </article>
+        </div>
+      </div>
+
+      <div class="space-y-10">
+        <h1 class="text-4xl md:text-6xl font-bold leading-tight text-stone-900">
+          {{ text.title }}
+        </h1>
+
+        <div class="grid gap-8 sm:grid-cols-2">
+          <article v-for="(feature, index) in spotlightCards" :key="feature.title" class="space-y-3">
+            <div class="flex h-14 w-14 items-center justify-center rounded-full border border-stone-300 bg-white text-2xl">
+              {{ featureIcons[index] }}
+            </div>
+            <h2 class="text-3xl font-semibold text-stone-900 tracking-tight leading-tight">{{ feature.title }}</h2>
+            <p class="text-stone-600 text-xl leading-8">{{ feature.description }}</p>
+          </article>
+        </div>
+      </div>
     </div>
 
-    <section class="bg-white border border-stone-200 rounded-xl p-6">
-      <h2 class="text-2xl font-semibold text-stone-900 mb-4">{{ text.gdprTitle }}</h2>
-      <ul class="grid gap-3 md:grid-cols-2">
-        <li
-          v-for="item in text.gdprItems"
-          :key="item"
-          class="text-stone-700 text-sm bg-stone-50 border border-stone-200 rounded-lg px-4 py-3"
-        >
-          {{ item }}
-        </li>
-      </ul>
-      <div class="mt-5">
-        <NuxtLink
-          :to="localePath('/legal/gdpr')"
-          class="inline-block px-4 py-2 rounded-lg bg-stone-900 text-white hover:bg-black"
-        >
-          {{ text.gdprAction }}
-        </NuxtLink>
-      </div>
+    <section v-if="extraCards.length" class="grid gap-4 md:grid-cols-2">
+      <article
+        v-for="feature in extraCards"
+        :key="feature.title"
+        class="rounded-xl border border-stone-200 bg-white px-5 py-5"
+      >
+        <h3 class="text-lg font-semibold text-stone-900 mb-2">{{ feature.title }}</h3>
+        <p class="text-stone-600">{{ feature.description }}</p>
+      </article>
     </section>
   </section>
 </template>
 
 <script setup lang="ts">
-const localePath = useLocalePath()
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
@@ -225,6 +248,9 @@ const featuresCopy: Record<string, {
 }
 
 const text = computed(() => featuresCopy[localeCode.value] || featuresCopy.en)
+const featureIcons = ['🧠', '👥', '🧾', '💬']
+const spotlightCards = computed(() => text.value.featureCards.slice(0, 4))
+const extraCards = computed(() => text.value.featureCards.slice(4))
 const seoTitle = computed(() => text.value.seoTitle)
 const seoDescription = computed(() => text.value.seoDescription)
 

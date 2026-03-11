@@ -58,9 +58,12 @@
     "send": "Senden"
   },
   "journal": {
-    "contentPlaceholder": "Schreibe deine Gedanken...",
+    "description": "Reflektiere über deine täglichen Erfahrungen mit geführten Fragen.",
+    "contentPlaceholder": "Schreibe deine Gedanken hier...",
     "save": "Speichern",
-    "saved": "Gespeichert."
+    "saving": "Wird gespeichert...",
+    "saved": "Gespeichert.",
+    "noQuestions": "Keine Fragen verfügbar"
   },
   "programs": {
     "noDescription": "Keine Beschreibung.",
@@ -73,18 +76,31 @@
     "upgrade": "Auf Premium upgraden"
   },
   "footer": {
+    "brandDescription": "Unterstütze deine emotionale Wellness-Reise mit personalisierter Anleitung und evidenzgestützten Praktiken.",
     "copyright": "© Doisense. Alle Rechte vorbehalten.",
+    "aboutUs": "Über uns",
+    "team": "Unser Team",
+    "mission": "Mission und Werte",
+    "careers": "Karriere",
+    "email": "E-Mail",
+    "whatsapp": "WhatsApp",
     "resources": "Ressourcen",
     "helpCenter": "Hilfezentrum",
     "docs": "Dokumentation",
+    "blog": "Blog",
+    "documentation": "Dokumentation",
     "features": "Funktionen",
+    "services": "Dienstleistungen",
+    "coaching": "Coaching",
+    "wellness": "Wellness-Programme",
     "company": "Unternehmen",
     "privacy": "Datenschutz",
     "terms": "Nutzungsbedingungen",
     "cookies": "Cookies",
     "gdpr": "DSGVO",
-    "newsletterTitle": "Newsletter abonnieren",
-    "newsletterPlaceholder": "E-Mail eingeben",
+    "newsletterTitle": "Abonniere unseren Newsletter",
+    "newsletterDescription": "Erhalte Wellness-Tipps und Updates in deinen Posteingang.",
+    "newsletterPlaceholder": "deine e-mail adresse",
     "subscribe": "Abonnieren",
     "newsletterSubscribed": "Du wurdest erfolgreich abonniert.",
     "newsletterSubscribeError": "Abonnement fehlgeschlagen. Bitte erneut versuchen.",

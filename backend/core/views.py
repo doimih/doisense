@@ -1,23 +1,37 @@
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db.models import Q
 from django.utils import timezone
+from datetime import timezone as dt_timezone
 from datetime import timedelta
 from urllib.request import urlopen, Request
+from urllib.parse import urlencode
+from pathlib import Path
+import imghdr
+import re
 import json
+import smtplib
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.shortcuts import render
+from django.core.mail import EmailMessage, get_connection
 from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from journal.models import JournalQuestion
 from programs.models import GuidedProgram
-from newsletter.models import Newsletter, Subscription
 
-from .models import CMSPage, UserWellbeingCheckin
+from .models import CMSPage, SystemConfig, UserWellbeingCheckin
 from .serializers import CMSPageSerializer, WellbeingCheckinCreateSerializer
+
+
+def public_cache_response(data, *, max_age: int = 300):
+    response = Response(data)
+    response["Cache-Control"] = f"public, max-age={max_age}, stale-while-revalidate={max_age * 2}"
+    return response
 
 
 class CMSPageListView(APIView):
@@ -103,7 +117,7 @@ class CMSPublicPageView(APIView):
         if not page:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(CMSPageSerializer(page).data)
+        return public_cache_response(CMSPageSerializer(page).data, max_age=300)
 
 
 class CMSPublicPreviewPageView(APIView):
@@ -147,7 +161,7 @@ class CMSMenuLinksView(APIView):
             if p.show_in_footer
         ]
 
-        return Response({"header": header, "footer": footer})
+        return public_cache_response({"header": header, "footer": footer}, max_age=300)
 
 
 class GeoLanguageView(APIView):
@@ -175,7 +189,7 @@ class GeoLanguageView(APIView):
         if language not in settings.SUPPORTED_LANGUAGES:
             language = "en"
 
-        return Response({"country": country, "language": language})
+        return public_cache_response({"country": country, "language": language}, max_age=3600)
 
     def _get_country(self, request):
         header_country = (
@@ -388,48 +402,202 @@ class WellbeingSummaryView(APIView):
         )
 
 
-class NewsletterSubscribeView(APIView):
+class SettingsImageLibraryView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
+    ALLOWED_TYPES = {"jpeg", "png", "webp", "gif"}
+    MAX_UPLOAD_SIZE = 8 * 1024 * 1024
+    FOLDER = "settings-images"
+
+    def get(self, request):
+        if not request.user.is_superuser:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        folder = Path(settings.MEDIA_ROOT) / self.FOLDER
+        folder.mkdir(parents=True, exist_ok=True)
+
+        images = []
+        for item in sorted(folder.glob("*"), key=lambda p: p.stat().st_mtime, reverse=True):
+            if not item.is_file():
+                continue
+            extension = item.suffix.lstrip(".").lower()
+            if extension not in self.ALLOWED_EXTENSIONS:
+                continue
+
+            stat = item.stat()
+            images.append(
+                {
+                    "name": item.name,
+                    "url": f"{settings.MEDIA_URL}{self.FOLDER}/{item.name}",
+                    "size": stat.st_size,
+                    "updated_at": timezone.datetime.fromtimestamp(stat.st_mtime, tz=dt_timezone.utc),
+                }
+            )
+
+        return Response({"items": images})
+
+    def post(self, request):
+        if not request.user.is_superuser:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        upload = request.FILES.get("image")
+        if not upload:
+            return Response({"detail": "Missing image file."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if upload.size > self.MAX_UPLOAD_SIZE:
+            return Response({"detail": "File too large. Max allowed is 8MB."}, status=status.HTTP_400_BAD_REQUEST)
+
+        image_type = imghdr.what(upload)
+        if image_type not in self.ALLOWED_TYPES:
+            return Response(
+                {"detail": "Unsupported image format. Allowed: jpg, png, webp, gif."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        original_name = str(upload.name or "image").strip()
+        stem = Path(original_name).stem
+        stem = re.sub(r"[^a-zA-Z0-9_-]+", "-", stem).strip("-") or "image"
+        extension = "jpg" if image_type == "jpeg" else image_type
+
+        path = default_storage.save(
+            f"{self.FOLDER}/{stem}.{extension}",
+            upload,
+        )
+        filename = Path(path).name
+
+        return Response(
+            {
+                "name": filename,
+                "url": f"{settings.MEDIA_URL}{self.FOLDER}/{filename}",
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ContactConfigView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        config = SystemConfig.get_solo()
+        return public_cache_response(
+            {
+                "recaptcha_enabled": bool(config.recaptcha_enabled and config.recaptcha_site_key),
+                "recaptcha_site_key": config.recaptcha_site_key or "",
+            },
+            max_age=300,
+        )
+
+
+class ContactSubmitView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        full_name = str(request.data.get("full_name") or "").strip()
         email = str(request.data.get("email") or "").strip().lower()
+        subject = str(request.data.get("subject") or "").strip()
+        message = str(request.data.get("message") or "").strip()
+        recaptcha_token = str(request.data.get("recaptcha_token") or "").strip()
+
+        if not full_name:
+            return Response({"detail": "Full name is required."}, status=status.HTTP_400_BAD_REQUEST)
         if not email:
             return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not subject:
+            return Response({"detail": "Subject is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not message:
+            return Response({"detail": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             validate_email(email)
         except ValidationError:
             return Response({"detail": "Invalid email address."}, status=status.HTTP_400_BAD_REQUEST)
 
-        newsletter = Newsletter.objects.filter(visible=True).order_by("id").first()
-        if newsletter is None:
-            newsletter = Newsletter.objects.order_by("id").first()
+        config = SystemConfig.get_solo()
+        if config.recaptcha_enabled:
+            if not config.recaptcha_secret_key:
+                return Response(
+                    {"detail": "reCAPTCHA is enabled but not configured on server."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+            if not recaptcha_token:
+                return Response({"detail": "reCAPTCHA token is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if newsletter is None:
+            ok, score = self._verify_recaptcha(config.recaptcha_secret_key, recaptcha_token)
+            min_score = float(config.recaptcha_min_score or 0.5)
+            if not ok or score < min_score:
+                return Response(
+                    {"detail": "reCAPTCHA verification failed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        target_email = config.contact_notification_email or ""
+        if not target_email:
             return Response(
-                {"detail": "Newsletter service is not configured yet."},
+                {"detail": "Contact destination email is not configured."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        defaults = {
-            "subscribed": True,
-            "subscribe_date": timezone.now(),
-            "unsubscribed": False,
-            "unsubscribe_date": None,
-        }
-        subscription, created = Subscription.objects.get_or_create(
-            newsletter=newsletter,
-            email_field=email,
-            defaults=defaults,
+        from_email = (
+            config.contact_from_email
+            or config.email_host_user
+            or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.app")
         )
 
-        if not created:
-            subscription.subscribed = True
-            subscription.subscribe_date = timezone.now()
-            subscription.unsubscribed = False
-            subscription.unsubscribe_date = None
-            subscription.save(
-                update_fields=["subscribed", "subscribe_date", "unsubscribed", "unsubscribe_date"]
+        body = (
+            f"New contact form submission\n\n"
+            f"Name: {full_name}\n"
+            f"Email: {email}\n"
+            f"Subject: {subject}\n\n"
+            f"Message:\n{message}\n"
+        )
+
+        try:
+            connection = get_connection(
+                host=config.email_host,
+                port=config.email_port,
+                username=config.email_host_user,
+                password=config.email_host_password,
+                use_tls=config.email_use_tls,
+                use_ssl=config.email_use_ssl,
+                fail_silently=False,
+            )
+            EmailMessage(
+                subject=f"[Contact] {subject}",
+                body=body,
+                from_email=from_email,
+                to=[target_email],
+                reply_to=[email],
+                connection=connection,
+            ).send()
+        except smtplib.SMTPException:
+            return Response(
+                {"detail": "Unable to send message right now. Please try again later."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except Exception:
+            return Response(
+                {"detail": "Unable to send message right now. Please try again later."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        return Response({"detail": "Subscription saved successfully."}, status=status.HTTP_200_OK)
+        return Response({"detail": "Message sent successfully."}, status=status.HTTP_200_OK)
+
+    def _verify_recaptcha(self, secret_key: str, token: str) -> tuple[bool, float]:
+        payload = urlencode({"secret": secret_key, "response": token}).encode("utf-8")
+        request = Request(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data=payload,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
+        try:
+            with urlopen(request, timeout=4.0) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except Exception:
+            return False, 0.0
+
+        success = bool(data.get("success"))
+        score = float(data.get("score") or 0.0)
+        return success, score

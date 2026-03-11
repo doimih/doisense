@@ -1,171 +1,183 @@
 <template>
-  <div class="grid gap-4 lg:grid-cols-[84px,1fr,280px]">
-    <aside class="rounded-2xl bg-stone-900 p-3 text-stone-100">
-      <div class="flex h-full flex-row gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-        <button
-          v-for="mod in modules"
-          :key="mod.id"
-          type="button"
-          class="group flex min-w-[64px] flex-col items-center justify-center rounded-xl px-2 py-3 text-center transition lg:min-w-0"
-          :class="
-            currentModule.id === mod.id
-              ? 'bg-stone-700 text-white'
-              : 'bg-stone-800/70 text-stone-300 hover:bg-stone-700 hover:text-white'
-          "
-          @click="switchModule(mod.id)"
-        >
-          <span class="text-lg">{{ mod.icon }}</span>
-          <span class="mt-1 text-[11px] font-medium leading-tight">{{ mod.shortName }}</span>
-        </button>
-      </div>
-    </aside>
-
-    <section class="flex min-h-[650px] flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white">
-      <header class="border-b border-stone-200 bg-stone-50 px-5 py-4">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-semibold text-stone-700">
-            <span>{{ currentModule.icon }}</span>
-            <span>{{ currentModule.name }}</span>
-          </span>
-          <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-            {{ text.coachBadge }}
-          </span>
+  <div class="rounded-[28px] border border-sky-100 bg-gradient-to-br from-[#f7fbff] via-[#f5f9fc] to-[#eef4f8] p-3 md:p-4">
+    <div class="grid gap-4 lg:grid-cols-[220px,1fr,290px]">
+      <aside class="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/90 shadow-sm backdrop-blur">
+        <div class="border-b border-slate-100 px-4 py-4">
+          <p class="text-[11px] uppercase tracking-[0.2em] text-slate-400">Module AI</p>
         </div>
-        <p class="mt-2 text-sm text-stone-600">{{ currentModule.description }}</p>
-      </header>
-
-      <div v-if="showCrisisBanner" class="mx-5 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        <p class="font-semibold">{{ text.crisisTitle }}</p>
-        <p>{{ text.crisisSubtitle }}</p>
-      </div>
-
-      <div ref="messagesEl" class="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-        <div
-          v-for="(msg, i) in messages"
-          :key="i"
-          class="max-w-[95%]"
-          :class="msg.isUser ? 'ml-auto' : 'mr-auto'"
-        >
-          <div
-            class="rounded-2xl px-4 py-3 text-sm leading-6"
-            :class="msg.isUser ? 'rounded-br-md bg-stone-800 text-white' : 'rounded-bl-md bg-stone-100 text-stone-800'"
+        <div class="space-y-2 p-3">
+          <button
+            v-for="mod in modules"
+            :key="mod.id"
+            type="button"
+            class="group flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition"
+            :class="
+              currentModule.id === mod.id
+                ? 'border-teal-200 bg-teal-50 text-teal-800'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+            "
+            @click="switchModule(mod.id)"
           >
-            {{ msg.message }}
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-base">{{ mod.icon }}</span>
+            <span>
+              <span class="block text-sm font-semibold">{{ mod.name }}</span>
+              <span class="block text-xs text-slate-500">{{ mod.shortName }}</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="border-t border-slate-100 p-3">
+          <p class="mb-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">{{ text.mood }}</p>
+          <div class="grid grid-cols-4 gap-2">
+            <button
+              v-for="m in moods"
+              :key="m.id"
+              type="button"
+              class="rounded-lg border px-2 py-2 text-base transition"
+              :class="selectedMood === m.id ? 'border-teal-300 bg-teal-50' : 'border-slate-200 bg-white hover:bg-slate-50'"
+              @click="saveMood(m.id)"
+            >
+              {{ m.emoji }}
+            </button>
           </div>
         </div>
-        <div v-if="loading" class="text-sm text-stone-500">{{ t('common.loading') }}...</div>
-      </div>
+      </aside>
 
-      <div class="border-t border-stone-200 px-5 py-3">
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-500">{{ text.quickActions }}</p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="prompt in currentModule.prompts"
-            :key="prompt"
-            type="button"
-            class="rounded-full border border-stone-300 bg-stone-50 px-3 py-1 text-xs transition hover:bg-stone-100"
-            @click="send(prompt)"
-          >
-            {{ prompt }}
-          </button>
+      <section class="flex min-h-[680px] flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+        <header class="border-b border-slate-100 bg-gradient-to-r from-teal-50/70 to-sky-50/70 px-5 py-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              <span>{{ currentModule.icon }}</span>
+              <span>{{ currentModule.name }}</span>
+            </span>
+            <span class="rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-800">
+              {{ text.coachBadge }}
+            </span>
+          </div>
+          <p class="mt-2 text-sm leading-6 text-slate-600">{{ currentModule.description }}</p>
+        </header>
+
+        <div v-if="showCrisisBanner" class="mx-5 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p class="font-semibold">{{ text.crisisTitle }}</p>
+          <p>{{ text.crisisSubtitle }}</p>
         </div>
-      </div>
 
-      <form @submit.prevent="send()" class="border-t border-stone-200 bg-white p-4">
-        <div class="flex items-end gap-2">
-          <textarea
-            v-model="input"
-            rows="1"
-            :placeholder="t('chat.placeholder')"
-            class="max-h-40 min-h-[42px] flex-1 resize-y rounded-xl border border-stone-300 px-3 py-2 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-          />
-          <button
-            type="submit"
-            :disabled="loading || !input.trim()"
-            class="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {{ t('chat.send') }}
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <aside class="space-y-4 rounded-2xl border border-stone-200 bg-stone-50 p-4">
-      <div class="rounded-xl border border-stone-200 bg-white p-4">
-        <p class="text-xs uppercase tracking-wider text-stone-500">{{ text.streak }}</p>
-        <p class="mt-1 text-3xl font-semibold text-stone-800">{{ streakDays }}</p>
-        <p class="text-sm text-stone-500">{{ text.streakDays }} ({{ streakDays }}/{{ planDays }})</p>
-        <div class="mt-3 grid grid-cols-7 gap-1">
+        <div ref="messagesEl" class="flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,rgba(240,249,255,0.45),rgba(255,255,255,0))] px-5 py-5">
           <div
-            v-for="i in 7"
+            v-for="(msg, i) in messages"
             :key="i"
-            class="h-2 rounded"
-            :class="i <= streakProgressSegments ? 'bg-emerald-500' : 'bg-stone-200'"
-          />
-        </div>
-      </div>
-
-      <div class="rounded-xl border border-stone-200 bg-white p-4">
-        <p class="text-xs uppercase tracking-wider text-stone-500">{{ text.mood }}</p>
-        <div class="mt-2 grid grid-cols-4 gap-2">
-          <button
-            v-for="m in moods"
-            :key="m.id"
-            type="button"
-            class="rounded-md px-2 py-2 text-lg transition"
-            :class="selectedMood === m.id ? 'bg-amber-600 text-white' : 'bg-stone-100 hover:bg-stone-200'"
-            @click="saveMood(m.id)"
+            class="max-w-[95%]"
+            :class="msg.isUser ? 'ml-auto' : 'mr-auto'"
           >
-            {{ m.emoji }}
-          </button>
+            <div
+              class="rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm"
+              :class="msg.isUser ? 'rounded-br-md border border-teal-200 bg-[#e9f7f5] text-slate-800' : 'rounded-bl-md border border-slate-200 bg-slate-50 text-slate-800'"
+            >
+              {{ msg.message }}
+            </div>
+          </div>
+          <div v-if="loading" class="text-sm text-slate-500">{{ t('common.loading') }}...</div>
         </div>
-        <svg class="mt-3 h-10 w-full" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true">
-          <polyline
-            :points="moodChartPoints"
-            fill="none"
-            stroke="#d97706"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </div>
 
-      <div class="rounded-xl border border-stone-200 bg-white p-4">
-        <p class="text-xs uppercase tracking-wider text-stone-500">{{ text.energyCheckin }}</p>
-        <p class="mb-3 mt-1 text-sm text-stone-600">{{ text.energyToday }}</p>
-        <div class="grid grid-cols-5 gap-2">
-          <button
-            v-for="n in 5"
-            :key="n"
-            type="button"
-            class="rounded border py-1 text-xs"
-            :class="
-              energyLevel === n
-                ? 'border-stone-800 bg-stone-800 text-white'
-                : 'border-stone-300 bg-white text-stone-700'
-            "
-            @click="saveEnergy(n)"
-          >
-            {{ n }}
-          </button>
+        <div class="border-t border-slate-100 bg-white px-5 py-3">
+          <p class="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">{{ text.quickActions }}</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="prompt in currentModule.prompts"
+              :key="prompt"
+              type="button"
+              class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800"
+              @click="send(prompt)"
+            >
+              {{ prompt }}
+            </button>
+          </div>
         </div>
-        <svg class="mt-3 h-10 w-full" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true">
-          <polyline
-            :points="energyChartPoints"
-            fill="none"
-            stroke="#334155"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </div>
 
-      <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-        {{ text.disclaimer }}
-      </div>
-    </aside>
+        <form @submit.prevent="send()" class="border-t border-slate-100 bg-white p-4">
+          <div class="flex items-end gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+            <textarea
+              v-model="input"
+              rows="1"
+              :placeholder="t('chat.placeholder')"
+              class="max-h-40 min-h-[42px] flex-1 resize-y rounded-xl border border-transparent bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
+            />
+            <button
+              type="submit"
+              :disabled="loading || !input.trim()"
+              class="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {{ t('chat.send') }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="space-y-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+        <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <p class="text-xs uppercase tracking-[0.18em] text-slate-500">{{ text.streak }}</p>
+          <p class="mt-1 text-3xl font-semibold text-slate-800">{{ streakDays }}</p>
+          <p class="text-sm text-slate-500">{{ text.streakDays }} ({{ streakDays }}/{{ planDays }})</p>
+          <div class="mt-3 grid grid-cols-7 gap-1">
+            <div
+              v-for="i in 7"
+              :key="i"
+              class="h-2 rounded"
+              :class="i <= streakProgressSegments ? 'bg-teal-500' : 'bg-slate-200'"
+            />
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+          <p class="text-xs uppercase tracking-[0.18em] text-slate-500">{{ text.mood }}</p>
+          <svg class="mt-3 h-10 w-full" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true">
+            <polyline
+              :points="moodChartPoints"
+              fill="none"
+              stroke="#0d9488"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+          <p class="text-xs uppercase tracking-[0.18em] text-slate-500">{{ text.energyCheckin }}</p>
+          <p class="mb-3 mt-1 text-sm text-slate-600">{{ text.energyToday }}</p>
+          <div class="grid grid-cols-5 gap-2">
+            <button
+              v-for="n in 5"
+              :key="n"
+              type="button"
+              class="rounded border py-1 text-xs font-medium transition"
+              :class="
+                energyLevel === n
+                  ? 'border-teal-600 bg-teal-600 text-white'
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+              "
+              @click="saveEnergy(n)"
+            >
+              {{ n }}
+            </button>
+          </div>
+          <svg class="mt-3 h-10 w-full" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true">
+            <polyline
+              :points="energyChartPoints"
+              fill="none"
+              stroke="#334155"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          {{ text.disclaimer }}
+        </div>
+      </aside>
+    </div>
   </div>
 </template>
 

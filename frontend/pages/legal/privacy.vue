@@ -13,7 +13,10 @@
 
       <section v-for="section in text.sections" :key="section.title" class="bg-white border border-stone-200 rounded-xl p-5">
         <h2 class="text-xl font-semibold text-stone-900 mb-2">{{ section.title }}</h2>
-        <p class="text-stone-700 text-sm leading-6">{{ section.body }}</p>
+        <p v-if="section.body" class="text-stone-700 text-sm leading-6 whitespace-pre-line">{{ section.body }}</p>
+        <ul v-if="section.items?.length" class="mt-3 space-y-2 pl-5 text-sm leading-6 text-stone-700 list-disc">
+          <li v-for="item in section.items" :key="item">{{ item }}</li>
+        </ul>
       </section>
     </template>
   </article>
@@ -30,7 +33,7 @@ const { cmsPage, hasCmsContent } = useLegalCmsPage('privacy')
 const privacyCopy: Record<string, {
   title: string
   updated: string
-  sections: Array<{ title: string; body: string }>
+  sections: Array<{ title: string; body?: string; items?: string[] }>
   seoTitle: string
   seoDescription: string
 }> = {
@@ -38,11 +41,107 @@ const privacyCopy: Record<string, {
     title: 'Politica de confidențialitate',
     updated: 'Ultima actualizare: 08 martie 2026',
     sections: [
-      { title: '1. Ce date colectăm', body: 'Date de cont (email), conținut introdus în jurnal/chat, metadate tehnice necesare securității și funcționării aplicației.' },
-      { title: '2. Scopul prelucrării', body: 'Folosim datele pentru autentificare, furnizarea funcționalităților, personalizarea răspunsurilor AI și îmbunătățirea calității serviciului.' },
-      { title: '3. Temei legal', body: 'Executarea contractului (serviciul oferit), interes legitim pentru securitate/operare și consimțământ unde este necesar.' },
-      { title: '4. Stocare și retenție', body: 'Datele sunt păstrate atât timp cât contul este activ sau cât este necesar pentru obligații legale și audit minim de securitate.' },
-      { title: '5. Partajare', body: 'Nu vindem date personale. Putem folosi furnizori tehnici (hosting, plăți, AI) strict pentru furnizarea serviciului, cu măsuri contractuale adecvate.' },
+      {
+        title: 'TERMENI SI CONDITII - Versiunea completa',
+        body: 'Acest document stabileste termenii si conditiile de utilizare ale platformei [Numele Platformei], un serviciu digital de wellness bazat pe inteligenta artificiala.\nPrin utilizarea platformei, utilizatorul accepta integral acesti termeni.',
+      },
+      {
+        title: '1. Introducere',
+        body: 'Prin utilizarea platformei, utilizatorul accepta integral acesti termeni.',
+      },
+      {
+        title: '2. Descrierea serviciului',
+        body: 'Platforma ofera:',
+        items: [
+          'suport emotional general',
+          'analiza a starilor emotionale',
+          'generare de intrebari pentru auto-reflectie',
+          'rapoarte si planuri de wellness',
+          'recomandari non-medicale',
+        ],
+      },
+      {
+        title: 'Platforma NU ofera',
+        items: [
+          'diagnostic medical',
+          'tratament psihologic',
+          'consiliere psihiatrica',
+          'interventii terapeutice',
+          'recomandari medicale',
+        ],
+      },
+      {
+        title: 'Clarificare',
+        body: 'Platforma este un instrument de auto-reflectie si dezvoltare personala.',
+      },
+      {
+        title: '3. Eligibilitate',
+        body: 'Utilizatorul trebuie sa aiba minimum 18 ani.',
+      },
+      {
+        title: '4. Contul utilizatorului',
+        body: 'Utilizatorul este responsabil pentru:',
+        items: [
+          'confidentialitatea contului',
+          'acuratetea datelor introduse',
+          'activitatea desfasurata in cont',
+        ],
+      },
+      {
+        title: '5. Abonamente si plati',
+        items: [
+          'Platforma ofera planuri BASIC, PREMIUM si VIP.',
+          'Platile sunt procesate prin Stripe.',
+          'Abonamentele sunt recurente.',
+          'Utilizatorul poate anula oricand.',
+          'La anulare, accesul ramane activ pana la finalul perioadei platite.',
+          'Refund-urile sunt gestionate conform politicii de refund Stripe.',
+        ],
+      },
+      {
+        title: '6. Trial',
+        items: [
+          'Utilizatorul beneficiaza de 7 zile gratuite.',
+          'La finalul trialului, accesul se suspenda daca nu se activeaza un abonament.',
+        ],
+      },
+      {
+        title: '7. Limitarea raspunderii',
+        body: 'Platforma nu este responsabila pentru:',
+        items: [
+          'deciziile utilizatorului',
+          'interpretarea recomandarilor',
+          'consecintele emotionale sau psihologice',
+          'pierderi financiare',
+          'indisponibilitatea temporara a serviciului',
+        ],
+      },
+      {
+        title: 'Platforma este oferita "ca atare"',
+      },
+      {
+        title: '8. Interdictii',
+        body: 'Utilizatorul nu poate:',
+        items: [
+          'utiliza platforma in scopuri ilegale',
+          'incerca acces neautorizat',
+          'copia sau redistribui continutul AI',
+          'abuza verbal AI-ul sau echipa',
+        ],
+      },
+      {
+        title: '9. Suspendarea contului',
+        body: 'Platforma poate suspenda contul in caz de:',
+        items: ['abuz', 'frauda', 'incalcarea termenilor'],
+      },
+      {
+        title: '10. Modificari',
+        body: 'Termenii pot fi actualizati. Utilizatorul va fi notificat.',
+      },
+      {
+        title: '11. Legea aplicabila',
+        body: 'Acest contract este guvernat de legislatia din Romania si UE.',
+      },
     ],
     seoTitle: 'Politica de confidentialitate - Doisense',
     seoDescription: 'Vezi cum prelucrăm datele personale în Doisense: ce colectăm, de ce, cât stocăm și cu cine partajăm.',

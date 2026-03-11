@@ -58,9 +58,12 @@
     "send": "Invia"
   },
   "journal": {
-    "contentPlaceholder": "Scrivi i tuoi pensieri...",
+    "description": "Rifletti sulle tue esperienze quotidiane con domande guidate.",
+    "contentPlaceholder": "Scrivi i tuoi pensieri qui...",
     "save": "Salva",
-    "saved": "Salvato."
+    "saving": "Salvataggio in corso...",
+    "saved": "Salvato.",
+    "noQuestions": "Nessuna domanda disponibile"
   },
   "programs": {
     "noDescription": "Nessuna descrizione.",
@@ -73,18 +76,31 @@
     "upgrade": "Passa a Premium"
   },
   "footer": {
+    "brandDescription": "Supporta il tuo percorso di benessere emotivo con una guida personalizzata e pratiche basate su evidenze.",
     "copyright": "© Doisense. Tutti i diritti riservati.",
+    "aboutUs": "Chi siamo",
+    "team": "Il nostro team",
+    "mission": "Missione e valori",
+    "careers": "Lavora con noi",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
     "resources": "Risorse",
     "helpCenter": "Centro assistenza",
     "docs": "Documentazione",
+    "blog": "Blog",
+    "documentation": "Documentazione",
     "features": "Funzionalità",
+    "services": "Servizi",
+    "coaching": "Coaching",
+    "wellness": "Programmi Wellness",
     "company": "Azienda",
     "privacy": "Privacy",
     "terms": "Termini",
     "cookies": "Cookie",
     "gdpr": "GDPR",
-    "newsletterTitle": "Iscriviti alla newsletter",
-    "newsletterPlaceholder": "Inserisci la tua email",
+    "newsletterTitle": "Iscriviti alla nostra newsletter",
+    "newsletterDescription": "Ricevi suggerimenti su benessere e aggiornamenti nella tua casella.",
+    "newsletterPlaceholder": "il tuo indirizzo email",
     "subscribe": "Iscriviti",
     "newsletterSubscribed": "Iscrizione completata con successo.",
     "newsletterSubscribeError": "Iscrizione non riuscita. Riprova.",

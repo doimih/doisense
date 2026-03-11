@@ -1,11 +1,11 @@
 <template>
-  <nav class="bg-white border-b border-stone-200 px-4 py-3">
+  <nav ref="navRef" :class="navClass">
     <div class="container mx-auto flex items-center justify-between gap-4">
-      <NuxtLink :to="localePath('/')" class="text-xl font-semibold text-stone-800">Doisense</NuxtLink>
+      <NuxtLink :to="localePath('/')" :class="brandClass">Doisense</NuxtLink>
 
       <button
         type="button"
-        class="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md border border-stone-300 text-stone-700"
+        :class="mobileToggleClass"
         @click="mobileOpen = !mobileOpen"
         aria-label="Toggle navigation"
       >
@@ -14,40 +14,41 @@
       </button>
 
       <div class="hidden lg:flex items-center gap-3 flex-wrap justify-end text-sm">
-        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/features')" class="text-stone-600 hover:text-stone-900">
+        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/features')" :class="navLinkClass">
           {{ $t('nav.features') }}
         </NuxtLink>
-        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" class="text-stone-600 hover:text-stone-900">
+        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" :class="navLinkClass">
           {{ $t('nav.pricing') }}
         </NuxtLink>
-        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" class="text-stone-600 hover:text-stone-900">
+        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" :class="navLinkClass">
           {{ $t('nav.about') }}
         </NuxtLink>
-        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" class="text-stone-600 hover:text-stone-900">
+        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" :class="navLinkClass">
           {{ $t('nav.contact') }}
         </NuxtLink>
-        <NuxtLink :to="localePath('/search')" class="text-stone-600 hover:text-stone-900">
-          {{ $t('nav.search') }}
+        <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/faq')" :class="navLinkClass">
+          FAQ
         </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" class="text-stone-600 hover:text-stone-900">
+
+        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" :class="navLinkClass">
           {{ $t('nav.chat') }}
         </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="text-stone-600 hover:text-stone-900">
+        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" :class="navLinkClass">
           {{ $t('nav.journal') }}
         </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="text-stone-600 hover:text-stone-900">
+        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" :class="navLinkClass">
           {{ $t('nav.programs') }}
         </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="text-stone-600 hover:text-stone-900">
+        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" :class="navLinkClass">
           {{ $t('nav.profile') }}
         </NuxtLink>
-        <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" class="text-stone-600 hover:text-stone-900">
+        <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" :class="navLinkClass">
           {{ $t('nav.admin') }}
         </a>
         <button
           v-if="!authStore.isLoggedIn"
           type="button"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-600 hover:border-stone-400 hover:text-stone-900"
+          :class="accountButtonClass"
           @click="openAuthModal"
           aria-label="Open authentication"
         >
@@ -58,7 +59,7 @@
         <div class="relative">
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-700 hover:border-stone-400"
+            :class="languageButtonClass"
             aria-label="Open language menu"
             @click="desktopLanguageMenuOpen = !desktopLanguageMenuOpen"
           >
@@ -84,7 +85,7 @@
         <button
           v-if="authStore.isLoggedIn"
           type="button"
-          class="text-stone-600 hover:text-stone-900"
+          :class="navLinkClass"
           @click="logout"
         >
           {{ $t('auth.logout') }}
@@ -97,7 +98,7 @@
       <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.pricing') }}</NuxtLink>
       <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.about') }}</NuxtLink>
       <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.contact') }}</NuxtLink>
-      <NuxtLink :to="localePath('/search')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.search') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/faq')" class="block text-stone-700" @click="mobileOpen = false">FAQ</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.chat') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
@@ -281,8 +282,14 @@ const route = useRoute()
 const { locale, setLocale, t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const selectedLanguageCookie = useCookie<string | null>('i18n_redirect', { default: () => null })
+const selectedLanguageCookieLegacy = useCookie<string | null>('i18n_redirected', { default: () => null })
 
 const mobileOpen = ref(false)
+const hasScrolled = ref(false)
+const isOverDarkZone = ref(false)
+const navRef = ref<HTMLElement | null>(null)
+const navHidden = ref(false)
+const lastScrollY = ref(0)
 const desktopLanguageMenuOpen = ref(false)
 const mobileLanguageMenuOpen = ref(false)
 const languageOptions = [
@@ -298,6 +305,45 @@ const activeLanguageLabel = computed(() => {
   const current = languageOptions.find((lang) => locale.value.startsWith(lang.code))
   return current?.label ?? 'en'
 })
+
+const navClass = computed(() => {
+  const scrolled = hasScrolled.value
+  const darkZone = isOverDarkZone.value
+  const hidden = navHidden.value && !mobileOpen.value
+  return [
+    'sticky top-0 z-40 px-4 py-3 transition-all duration-300',
+    scrolled && darkZone
+      ? 'border-b border-white/25 bg-stone-900/55 text-white shadow-[0_8px_30px_-20px_rgba(2,6,23,0.7)] backdrop-blur-xl'
+      : scrolled
+      ? 'border-b border-white/35 bg-white/72 shadow-[0_8px_30px_-20px_rgba(15,23,42,0.45)] backdrop-blur-xl'
+      : 'border-b border-stone-200 bg-white/98',
+    hidden ? '-translate-y-full' : 'translate-y-0',
+  ]
+})
+
+const brandClass = computed(() => [
+  'text-xl font-semibold transition-colors',
+  isOverDarkZone.value ? 'text-white' : 'text-stone-800',
+])
+
+const navLinkClass = computed(() =>
+  isOverDarkZone.value ? 'text-white/85 hover:text-white transition-colors' : 'text-stone-600 hover:text-stone-900 transition-colors',
+)
+
+const mobileToggleClass = computed(() => [
+  'lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors',
+  isOverDarkZone.value ? 'border-white/40 text-white' : 'border-stone-300 text-stone-700',
+])
+
+const accountButtonClass = computed(() => [
+  'inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors',
+  isOverDarkZone.value ? 'border-white/40 text-white hover:border-white/70 hover:text-white' : 'border-stone-300 text-stone-600 hover:border-stone-400 hover:text-stone-900',
+])
+
+const languageButtonClass = computed(() => [
+  'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+  isOverDarkZone.value ? 'border-white/40 text-white hover:border-white/70' : 'border-stone-300 text-stone-700 hover:border-stone-400',
+])
 
 const showAuthModal = ref(false)
 const authTab = ref<'login' | 'register'>('login')
@@ -484,6 +530,7 @@ function logout() {
 async function changeLanguage(code: string) {
   try {
     selectedLanguageCookie.value = code
+    selectedLanguageCookieLegacy.value = code
     const targetPath = switchLocalePath(code)
     if (targetPath && targetPath !== route.fullPath) {
       await router.push(targetPath)
@@ -499,10 +546,62 @@ async function changeLanguage(code: string) {
 
 watch(
   () => route.fullPath,
-  () => {
+  async () => {
     mobileOpen.value = false
+    navHidden.value = false
     desktopLanguageMenuOpen.value = false
     mobileLanguageMenuOpen.value = false
+    await nextTick()
+    updateNavTone()
   },
 )
+
+function onScroll() {
+  if (!import.meta.client) return
+  const currentY = Math.max(0, window.scrollY)
+  hasScrolled.value = currentY > 8
+
+  if (mobileOpen.value) {
+    navHidden.value = false
+  } else {
+    const scrollingDown = currentY > lastScrollY.value
+    const delta = Math.abs(currentY - lastScrollY.value)
+    if (currentY <= 16) {
+      navHidden.value = false
+    } else if (delta > 6) {
+      navHidden.value = scrollingDown
+    }
+  }
+
+  lastScrollY.value = currentY
+  updateNavTone()
+}
+
+function updateNavTone() {
+  if (!import.meta.client) return
+  const nav = navRef.value
+  if (!nav) return
+
+  const x = Math.max(1, Math.floor(window.innerWidth / 2))
+  const y = Math.max(1, Math.floor(nav.offsetHeight / 2))
+  const stack = document.elementsFromPoint(x, y)
+  const underNav = stack.find((el) => !nav.contains(el))
+  isOverDarkZone.value = Boolean(underNav?.closest('[data-nav-theme="dark"]'))
+}
+
+onMounted(() => {
+  if (!import.meta.client) return
+  lastScrollY.value = Math.max(0, window.scrollY)
+  hasScrolled.value = lastScrollY.value > 8
+  navHidden.value = false
+  updateNavTone()
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', updateNavTone, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  if (!import.meta.client) return
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', updateNavTone)
+})
 </script>

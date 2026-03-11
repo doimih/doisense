@@ -1,32 +1,106 @@
 <template>
-  <section class="max-w-3xl mx-auto py-10 space-y-6">
-    <h1 class="text-4xl font-bold text-stone-900">{{ text.title }}</h1>
-    <p class="text-stone-600">{{ text.subtitle }}</p>
+  <section class="max-w-5xl mx-auto py-8 md:py-12">
+    <div class="rounded-3xl border border-stone-300 bg-stone-100/70 p-6 md:p-10 lg:p-14 space-y-8">
+      <p class="inline-flex items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-800">
+        {{ text.badge }}
+      </p>
 
-    <div class="bg-white border border-stone-200 rounded-xl p-6 space-y-4">
-      <div>
-        <h2 class="text-sm font-semibold text-stone-900">{{ text.supportTitle }}</h2>
-        <p class="text-sm text-stone-700">{{ text.supportText }}</p>
+      <header class="space-y-4 max-w-3xl">
+        <h1 class="text-4xl md:text-6xl font-bold leading-tight text-stone-900">{{ text.title }}</h1>
+        <p class="text-stone-600 text-lg leading-8">{{ text.subtitle }}</p>
+      </header>
+
+      <form class="space-y-6" @submit.prevent="submitForm">
+        <div class="grid gap-5 md:grid-cols-2">
+          <label class="space-y-2">
+            <span class="text-base font-semibold text-stone-900">{{ text.fullNameLabel }}</span>
+            <input
+              v-model="form.fullName"
+              type="text"
+              class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+              :placeholder="text.fullNamePlaceholder"
+              autocomplete="name"
+              required
+            >
+          </label>
+
+          <label class="space-y-2">
+            <span class="text-base font-semibold text-stone-900">{{ text.emailLabel }}</span>
+            <input
+              v-model="form.email"
+              type="email"
+              class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+              :placeholder="text.emailPlaceholder"
+              autocomplete="email"
+              required
+            >
+          </label>
+        </div>
+
+        <label class="space-y-2 block">
+          <span class="text-base font-semibold text-stone-900">{{ text.subjectLabel }}</span>
+          <input
+            v-model="form.subject"
+            type="text"
+            class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+            :placeholder="text.subjectPlaceholder"
+            required
+          >
+        </label>
+
+        <label class="space-y-2 block">
+          <span class="text-base font-semibold text-stone-900">{{ text.messageLabel }}</span>
+          <textarea
+            v-model="form.message"
+            rows="5"
+            class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+            :placeholder="text.messagePlaceholder"
+            required
+          />
+        </label>
+
+        <p v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ errorMessage }}
+        </p>
+        <p v-if="successMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {{ successMessage }}
+        </p>
+
+        <button
+          type="submit"
+          :disabled="submitting"
+          class="w-full rounded-full bg-black px-6 py-4 text-lg font-semibold text-white transition hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {{ submitting ? text.sendingAction : text.sendAction }}
+        </button>
+      </form>
+
+      <div class="grid gap-4 md:grid-cols-3 pt-2">
+        <article class="rounded-xl border border-stone-300 bg-white px-4 py-4">
+          <h2 class="text-sm font-semibold text-stone-900">{{ text.supportTitle }}</h2>
+          <p class="text-sm text-stone-700 mt-1">{{ text.supportText }}</p>
+        </article>
+        <article class="rounded-xl border border-stone-300 bg-white px-4 py-4">
+          <h2 class="text-sm font-semibold text-stone-900">{{ text.gdprTitle }}</h2>
+          <p class="text-sm text-stone-700 mt-1">{{ text.gdprText }}</p>
+        </article>
+        <article class="rounded-xl border border-stone-300 bg-white px-4 py-4">
+          <h2 class="text-sm font-semibold text-stone-900">{{ text.responseTitle }}</h2>
+          <p class="text-sm text-stone-700 mt-1">{{ text.responseText }}</p>
+        </article>
       </div>
-      <div>
-        <h2 class="text-sm font-semibold text-stone-900">{{ text.gdprTitle }}</h2>
-        <p class="text-sm text-stone-700">{{ text.gdprText }}</p>
-      </div>
-      <div>
-        <h2 class="text-sm font-semibold text-stone-900">{{ text.responseTitle }}</h2>
-        <p class="text-sm text-stone-700">{{ text.responseText }}</p>
-      </div>
+
+      <p class="text-xs text-stone-500">
+        {{ text.note }}
+        <NuxtLink :to="localePath('/legal/gdpr')" class="underline">{{ text.gdprLink }}</NuxtLink>
+      </p>
     </div>
-
-    <p class="text-xs text-stone-500">
-      {{ text.note }}
-      <NuxtLink :to="localePath('/legal/gdpr')" class="underline">{{ text.gdprLink }}</NuxtLink>
-    </p>
   </section>
 </template>
 
 <script setup lang="ts">
 const localePath = useLocalePath()
+const { fetchApi } = useApi()
 const { locale } = useI18n()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
@@ -35,7 +109,19 @@ const localeCode = computed(() => {
 
 const copy: Record<string, {
   title: string
+  badge: string
   subtitle: string
+  fullNameLabel: string
+  fullNamePlaceholder: string
+  emailLabel: string
+  emailPlaceholder: string
+  subjectLabel: string
+  subjectPlaceholder: string
+  messageLabel: string
+  messagePlaceholder: string
+  sendAction: string
+  sendingAction: string
+  successMessage: string
   supportTitle: string
   supportText: string
   gdprTitle: string
@@ -49,7 +135,19 @@ const copy: Record<string, {
 }> = {
   ro: {
     title: 'Contact',
+    badge: 'Contactează-ne',
     subtitle: 'Pentru suport tehnic, întrebări comerciale sau solicitări de protecția datelor, ne poți scrie oricând.',
+    fullNameLabel: 'Nume complet',
+    fullNamePlaceholder: 'Introdu numele tău complet',
+    emailLabel: 'Adresă de email',
+    emailPlaceholder: 'Introdu adresa ta de email',
+    subjectLabel: 'Subiect',
+    subjectPlaceholder: 'Despre ce este mesajul?',
+    messageLabel: 'Mesaj',
+    messagePlaceholder: 'Scrie mesajul tău aici',
+    sendAction: 'Trimite mesajul',
+    sendingAction: 'Se trimite...',
+    successMessage: 'Mesaj trimis cu succes. Revenim către tine cât mai curând.',
     supportTitle: 'Suport general',
     supportText: 'Email: support@doisense.app',
     gdprTitle: 'Solicitări GDPR',
@@ -63,7 +161,19 @@ const copy: Record<string, {
   },
   en: {
     title: 'Contact',
+    badge: 'Contact Us',
     subtitle: 'For technical support, commercial questions, or data protection requests, you can contact us anytime.',
+    fullNameLabel: 'Full Name',
+    fullNamePlaceholder: 'Enter your full name',
+    emailLabel: 'Email Address',
+    emailPlaceholder: 'Enter your email address',
+    subjectLabel: 'Subject',
+    subjectPlaceholder: 'What is this message about?',
+    messageLabel: 'Message',
+    messagePlaceholder: 'Type your message here',
+    sendAction: 'Send Message',
+    sendingAction: 'Sending...',
+    successMessage: 'Message sent successfully. We will get back to you soon.',
     supportTitle: 'General support',
     supportText: 'Email: support@doisense.app',
     gdprTitle: 'GDPR requests',
@@ -77,7 +187,19 @@ const copy: Record<string, {
   },
   de: {
     title: 'Kontakt',
+    badge: 'Kontakt',
     subtitle: 'Für technischen Support, geschäftliche Fragen oder Datenschutzanfragen kannst du uns jederzeit kontaktieren.',
+    fullNameLabel: 'Vollständiger Name',
+    fullNamePlaceholder: 'Gib deinen vollständigen Namen ein',
+    emailLabel: 'E-Mail-Adresse',
+    emailPlaceholder: 'Gib deine E-Mail-Adresse ein',
+    subjectLabel: 'Betreff',
+    subjectPlaceholder: 'Worum geht es in deiner Nachricht?',
+    messageLabel: 'Nachricht',
+    messagePlaceholder: 'Schreibe hier deine Nachricht',
+    sendAction: 'Nachricht senden',
+    sendingAction: 'Wird gesendet...',
+    successMessage: 'Nachricht erfolgreich gesendet. Wir melden uns bald bei dir.',
     supportTitle: 'Allgemeiner Support',
     supportText: 'E-Mail: support@doisense.app',
     gdprTitle: 'DSGVO-Anfragen',
@@ -91,7 +213,19 @@ const copy: Record<string, {
   },
   fr: {
     title: 'Contact',
+    badge: 'Contact',
     subtitle: 'Pour le support technique, les questions commerciales ou les demandes sur les donnees personnelles, vous pouvez nous contacter a tout moment.',
+    fullNameLabel: 'Nom complet',
+    fullNamePlaceholder: 'Entrez votre nom complet',
+    emailLabel: 'Adresse email',
+    emailPlaceholder: 'Entrez votre adresse email',
+    subjectLabel: 'Sujet',
+    subjectPlaceholder: 'Quel est le sujet de votre message ?',
+    messageLabel: 'Message',
+    messagePlaceholder: 'Ecrivez votre message ici',
+    sendAction: 'Envoyer le message',
+    sendingAction: 'Envoi en cours...',
+    successMessage: 'Message envoye avec succes. Nous revenons vers vous rapidement.',
     supportTitle: 'Support general',
     supportText: 'Email: support@doisense.app',
     gdprTitle: 'Demandes GDPR',
@@ -105,7 +239,19 @@ const copy: Record<string, {
   },
   it: {
     title: 'Contatto',
+    badge: 'Contattaci',
     subtitle: 'Per supporto tecnico, domande commerciali o richieste sulla protezione dei dati, puoi contattarci in qualsiasi momento.',
+    fullNameLabel: 'Nome completo',
+    fullNamePlaceholder: 'Inserisci il tuo nome completo',
+    emailLabel: 'Indirizzo email',
+    emailPlaceholder: 'Inserisci il tuo indirizzo email',
+    subjectLabel: 'Oggetto',
+    subjectPlaceholder: 'Di cosa tratta il messaggio?',
+    messageLabel: 'Messaggio',
+    messagePlaceholder: 'Scrivi qui il tuo messaggio',
+    sendAction: 'Invia messaggio',
+    sendingAction: 'Invio in corso...',
+    successMessage: 'Messaggio inviato con successo. Ti risponderemo presto.',
     supportTitle: 'Supporto generale',
     supportText: 'Email: support@doisense.app',
     gdprTitle: 'Richieste GDPR',
@@ -119,7 +265,19 @@ const copy: Record<string, {
   },
   es: {
     title: 'Contacto',
+    badge: 'Contáctanos',
     subtitle: 'Para soporte técnico, preguntas comerciales o solicitudes de protección de datos, puedes escribirnos en cualquier momento.',
+    fullNameLabel: 'Nombre completo',
+    fullNamePlaceholder: 'Introduce tu nombre completo',
+    emailLabel: 'Correo electrónico',
+    emailPlaceholder: 'Introduce tu correo electrónico',
+    subjectLabel: 'Asunto',
+    subjectPlaceholder: '¿De qué trata este mensaje?',
+    messageLabel: 'Mensaje',
+    messagePlaceholder: 'Escribe tu mensaje aquí',
+    sendAction: 'Enviar mensaje',
+    sendingAction: 'Enviando...',
+    successMessage: 'Mensaje enviado correctamente. Te responderemos pronto.',
     supportTitle: 'Soporte general',
     supportText: 'Email: support@doisense.app',
     gdprTitle: 'Solicitudes GDPR',
@@ -133,7 +291,19 @@ const copy: Record<string, {
   },
   pl: {
     title: 'Kontakt',
+    badge: 'Skontaktuj się z nami',
     subtitle: 'W sprawie wsparcia technicznego, pytań handlowych lub wniosków dotyczących ochrony danych możesz skontaktować się z nami w dowolnym momencie.',
+    fullNameLabel: 'Imię i nazwisko',
+    fullNamePlaceholder: 'Wpisz swoje imię i nazwisko',
+    emailLabel: 'Adres email',
+    emailPlaceholder: 'Wpisz swój adres email',
+    subjectLabel: 'Temat',
+    subjectPlaceholder: 'Czego dotyczy wiadomość?',
+    messageLabel: 'Wiadomość',
+    messagePlaceholder: 'Wpisz treść wiadomości',
+    sendAction: 'Wyślij wiadomość',
+    sendingAction: 'Wysyłanie...',
+    successMessage: 'Wiadomość została wysłana. Odpowiemy wkrótce.',
     supportTitle: 'Wsparcie ogólne',
     supportText: 'Email: support@doisense.app',
     gdprTitle: 'Wnioski GDPR',
@@ -149,6 +319,107 @@ const copy: Record<string, {
 
 const text = computed(() => {
   return copy[localeCode.value] || copy.en
+})
+
+const form = reactive({
+  fullName: '',
+  email: '',
+  subject: '',
+  message: '',
+})
+
+const submitting = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
+const recaptchaEnabled = ref(false)
+const recaptchaSiteKey = ref('')
+
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (cb: () => void) => void
+      execute: (siteKey: string, options: { action: string }) => Promise<string>
+    }
+  }
+}
+
+function loadRecaptchaScript(siteKey: string) {
+  if (!import.meta.client || !siteKey) return
+  if (document.querySelector('script[data-recaptcha="doisense"]')) return
+
+  const script = document.createElement('script')
+  script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`
+  script.async = true
+  script.defer = true
+  script.setAttribute('data-recaptcha', 'doisense')
+  document.head.appendChild(script)
+}
+
+async function getRecaptchaToken() {
+  if (!recaptchaEnabled.value || !recaptchaSiteKey.value || !import.meta.client) {
+    return ''
+  }
+
+  const instance = window.grecaptcha
+  if (!instance) {
+    throw new Error('reCAPTCHA is not ready.')
+  }
+
+  return new Promise<string>((resolve, reject) => {
+    instance.ready(async () => {
+      try {
+        const token = await instance.execute(recaptchaSiteKey.value, { action: 'contact_form' })
+        resolve(token)
+      } catch {
+        reject(new Error('reCAPTCHA execution failed.'))
+      }
+    })
+  })
+}
+
+async function submitForm() {
+  if (submitting.value) return
+
+  errorMessage.value = ''
+  successMessage.value = ''
+  submitting.value = true
+  try {
+    const recaptchaToken = await getRecaptchaToken()
+    await fetchApi('/contact/submit', {
+      method: 'POST',
+      body: {
+        full_name: form.fullName,
+        email: form.email,
+        subject: form.subject,
+        message: form.message,
+        recaptcha_token: recaptchaToken,
+      },
+    })
+
+    successMessage.value = text.value.successMessage
+    form.fullName = ''
+    form.email = ''
+    form.subject = ''
+    form.message = ''
+  } catch (error: any) {
+    errorMessage.value = error?.data?.detail || error?.message || 'Unable to send message.'
+  } finally {
+    submitting.value = false
+  }
+}
+
+onMounted(async () => {
+  try {
+    const config = await fetchApi<{ recaptcha_enabled?: boolean; recaptcha_site_key?: string }>('/contact/config')
+    recaptchaEnabled.value = Boolean(config?.recaptcha_enabled)
+    recaptchaSiteKey.value = config?.recaptcha_site_key || ''
+    if (recaptchaEnabled.value && recaptchaSiteKey.value) {
+      loadRecaptchaScript(recaptchaSiteKey.value)
+    }
+  } catch {
+    recaptchaEnabled.value = false
+    recaptchaSiteKey.value = ''
+  }
 })
 
 const seoTitle = computed(() => text.value.seoTitle)

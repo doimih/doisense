@@ -1,22 +1,33 @@
 <template>
-  <div class="border border-stone-200 rounded-lg bg-white p-4">
-    <p class="font-medium text-stone-800 mb-2">{{ question.text }}</p>
-    <form v-if="!submitted" @submit.prevent="submit" class="space-y-2">
+  <div class="border border-slate-200 rounded-lg bg-white p-5 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+    <!-- Question Text -->
+    <p class="font-medium text-slate-900 mb-4 text-sm leading-relaxed flex-shrink-0">{{ question.text }}</p>
+
+    <!-- Form or Success Message -->
+    <form v-if="!submitted" @submit.prevent="submit" class="space-y-3 flex flex-col flex-grow">
       <textarea
         v-model="content"
-        :placeholder="$t('journal.contentPlaceholder')"
-        rows="3"
-        class="w-full px-3 py-2 border border-stone-300 rounded-lg"
+        :placeholder="$t('journal.contentPlaceholder') || 'Your thoughts...'"
+        rows="4"
+        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none flex-grow"
       />
       <button
         type="submit"
         :disabled="!content.trim() || loading"
-        class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
+        class="w-full px-4 py-2 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
       >
-        {{ $t('journal.save') }}
+        <span v-if="loading">{{ $t('journal.saving') || 'Saving...' }}</span>
+        <span v-else>{{ $t('journal.save') || 'Save' }}</span>
       </button>
     </form>
-    <p v-else class="text-green-600 text-sm">{{ $t('journal.saved') }}</p>
+
+    <!-- Success State -->
+    <div v-else class="bg-teal-50 border border-teal-200 rounded-lg p-3 flex items-center gap-2 flex-shrink-0">
+      <svg class="w-5 h-5 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      <span class="text-teal-700 text-sm font-medium">{{ $t('journal.saved') || 'Saved!' }}</span>
+    </div>
   </div>
 </template>
 

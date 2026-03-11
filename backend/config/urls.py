@@ -16,7 +16,6 @@ urlpatterns = [
     path("doisense/wagtail/admin/", include(wagtailadmin_urls)),
     path("doisense/wagtail/documents/", include(wagtaildocs_urls)),
     path("doisense/wagtail/", include(wagtail_urls)),
-    path("doisense/newsletter/", include("newsletter.urls")),
     path("api/auth/", include("users.urls")),
     path("api/", include("users.urls_me")),
     path("api/", include("core.urls")),

@@ -180,8 +180,22 @@ class SystemConfig(models.Model):
     ai_request_timeout_seconds = models.PositiveIntegerField(default=45)
     ai_system_prompt_base = models.TextField(
         blank=True,
-        default="You are a supportive wellbeing assistant. Respond in the user's language. Be empathetic and concise.",
+        default=(
+            "You are the AI ORCHESTRATOR for a wellness platform. "
+            "Manage logic, analysis, and personalized wellness content by package tier (BASIC, PREMIUM, VIP). "
+            "Use only anonymized data and user_id. Do not invent data. "
+            "Do not provide medical diagnosis or medical advice. "
+            "If data is insufficient, ask clarifying questions. "
+            "Keep tone empathetic, calm, and clear. "
+            "Adapt behavior strictly by package and requested output type from backend."
+        ),
     )
+
+    # reCAPTCHA settings
+    recaptcha_enabled = models.BooleanField(default=False)
+    recaptcha_site_key = models.CharField(max_length=255, blank=True)
+    recaptcha_secret_key = models.CharField(max_length=255, blank=True)
+    recaptcha_min_score = models.DecimalField(max_digits=3, decimal_places=2, default=0.50)
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -226,6 +240,13 @@ class AIConfig(SystemConfig):
         proxy = True
         verbose_name = "AI Configuration"
         verbose_name_plural = "AI Configuration"
+
+
+class RecaptchaConfig(SystemConfig):
+    class Meta:
+        proxy = True
+        verbose_name = "reCAPTCHA Configuration"
+        verbose_name_plural = "reCAPTCHA Configuration"
 
 
 class UserWellbeingCheckin(models.Model):

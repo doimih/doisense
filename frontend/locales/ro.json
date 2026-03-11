@@ -58,9 +58,12 @@
     "send": "Trimite"
   },
   "journal": {
+    "description": "Reflectează asupra experienţelor tale zilnice cu întrebări ghidate.",
     "contentPlaceholder": "Scrie gândurile aici...",
     "save": "Salvează",
-    "saved": "Salvat."
+    "saving": "Se salvează...",
+    "saved": "Salvat.",
+    "noQuestions": "Nicio întrebare disponibilă"
   },
   "programs": {
     "noDescription": "Fără descriere.",
@@ -73,18 +76,31 @@
     "upgrade": "Treci la Premium"
   },
   "footer": {
+    "brandDescription": "Sprijinind călătoria ta de bine emotional cu îndrumări personalizate și practici bazate pe dovezi.",
     "copyright": "© Doisense. Toate drepturile rezervate.",
+    "aboutUs": "Despre noi",
+    "team": "Echipa noastră",
+    "mission": "Misiune și valori",
+    "careers": "Cariere",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
     "resources": "Resurse",
     "helpCenter": "Centru ajutor",
     "docs": "Documentație",
+    "blog": "Blog",
+    "documentation": "Documentație",
     "features": "Funcționalități",
+    "services": "Servicii",
+    "coaching": "Coaching",
+    "wellness": "Programe Wellness",
     "company": "Companie",
     "privacy": "Confidențialitate",
     "terms": "Termeni",
     "cookies": "Cookie-uri",
     "gdpr": "GDPR",
     "newsletterTitle": "Abonează-te la newsletter",
-    "newsletterPlaceholder": "Introdu emailul",
+    "newsletterDescription": "Primește sfaturi de bine și actualizări dans inboxul tău.",
+    "newsletterPlaceholder": "adresa ta de email",
     "subscribe": "Abonare",
     "newsletterSubscribed": "Abonarea a fost realizata cu succes.",
     "newsletterSubscribeError": "Abonarea a esuat. Incearca din nou.",

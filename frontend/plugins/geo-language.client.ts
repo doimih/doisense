@@ -1,34 +1,41 @@
+// @ts-nocheck
 import { defineNuxtPlugin, useCookie, useRuntimeConfig } from "nuxt/app"
 
-export default defineNuxtPlugin(async (nuxtApp) => {
+export default defineNuxtPlugin((nuxtApp) => {
   const runtimeConfig = useRuntimeConfig()
-  const appBase = (runtimeConfig.public.appBaseUrl as string) || '/'
-  const apiBaseRaw = (runtimeConfig.public.apiBase as string) || '/api'
+  const appBase = typeof runtimeConfig.public.appBaseUrl === 'string' ? runtimeConfig.public.appBaseUrl : '/'
+  const apiBaseRaw = typeof runtimeConfig.public.apiBase === 'string' ? runtimeConfig.public.apiBase : '/api'
 
-  const selectedLanguageCookie = useCookie<string | null>('i18n_redirect', {
+  const selectedLanguageCookie = useCookie('i18n_redirect', {
+    default: () => null,
+  })
+  const selectedLanguageCookieLegacy = useCookie('i18n_redirected', {
     default: () => null,
   })
 
   // Respect explicit user selection stored by nuxt-i18n.
-  if (selectedLanguageCookie.value) return
+  if (selectedLanguageCookie.value || selectedLanguageCookieLegacy.value) return
 
-  const i18n = nuxtApp.$i18n as {
-    locale: { value: string }
-    setLocale: (locale: string) => Promise<void>
-    locales: Array<{ code: string }>
-    defaultLocale?: string
-  }
-  const supported = new Set((i18n.locales || []).map((item) => item.code))
+  const i18n = nuxtApp.$i18n
+  const locales = Array.isArray(i18n?.locales) ? i18n.locales : []
+  const supported = new Set(locales.map((item) => item.code))
 
   // Respect locale present in route path (for prefix strategies like /ro, /de).
-  const currentPath = nuxtApp.$router?.currentRoute?.value?.path || ''
-  const firstSegment = currentPath.split('/').filter(Boolean)[0] || ''
+  const router = nuxtApp.$router
+  const currentPath = router?.currentRoute?.value?.path || ''
+  const normalizedBase = appBase.startsWith('/') ? appBase : `/${appBase}`
+  const appPrefix = normalizedBase.replace(/\/+$/, '')
+  const pathWithoutBase = appPrefix && currentPath.startsWith(appPrefix)
+    ? currentPath.slice(appPrefix.length)
+    : currentPath
+  const firstSegment = pathWithoutBase.split('/').filter(Boolean)[0] || ''
   if (supported.has(firstSegment)) {
     selectedLanguageCookie.value = firstSegment
+    selectedLanguageCookieLegacy.value = firstSegment
     return
   }
 
-  function normalizeApiBase(base: string): string {
+  function normalizeApiBase(base) {
     const appPrefix = appBase.endsWith('/') ? appBase.slice(0, -1) : appBase
     if (!appPrefix || appPrefix === '/') return base
 
@@ -47,18 +54,24 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     return base
   }
 
-  try {
-    const payload = await $fetch<{ country?: string; language?: string }>('/geo/language', {
-      baseURL: normalizeApiBase(apiBaseRaw),
-    })
+  // Keep startup fast: run geolocation lookup without blocking plugin resolution.
+  void (async () => {
+    try {
+      const payload = await $fetch('/geo/language', {
+        baseURL: normalizeApiBase(apiBaseRaw),
+        timeout: 1500,
+      })
 
-    const language = (payload?.language || 'en').toLowerCase()
-    const target = supported.has(language) ? language : 'en'
+      const language = (payload?.language || 'en').toLowerCase()
+      const target = supported.has(language) ? language : 'en'
 
-    if (i18n.locale.value !== target) {
-      await i18n.setLocale(target)
+      if (i18n.locale.value !== target) {
+        await i18n.setLocale(target)
+      }
+      selectedLanguageCookie.value = target
+      selectedLanguageCookieLegacy.value = target
+    } catch {
+      // Silent fallback: keep default locale if geolocation is unavailable.
     }
-  } catch {
-    // Silent fallback: keep default locale if geolocation is unavailable.
-  }
+  })()
 })

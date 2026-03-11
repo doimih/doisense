@@ -1,0 +1,284 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Media Library{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  .ml-wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+  .ml-section { margin-bottom: 32px; }
+  .ml-section h2 { font-size: 15px; font-weight: 600; margin: 0 0 12px; color: #111827; }
+
+  /* Upload card */
+  .ml-upload-card {
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
+    padding: 24px;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+  .ml-upload-card.drag-over {
+    border-color: #6366f1;
+    background: #eef2ff;
+  }
+  .ml-drop-hint {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 13px;
+    pointer-events: none;
+    padding: 4px 0 8px;
+  }
+  .ml-drop-hint strong { color: #4f46e5; }
+  .ml-upload-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ml-file-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    color: #374151;
+  }
+  .ml-btn {
+    padding: 7px 18px;
+    border-radius: 6px;
+    border: none;
+    background: #111827;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ml-btn:hover { background: #1f2937; }
+  .ml-progress-bar-wrap {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    display: none;
+  }
+  .ml-progress-bar-wrap.active { display: block; }
+  .ml-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #6366f1;
+    border-radius: 4px;
+    transition: width 0.2s;
+  }
+  .ml-upload-status { font-size: 13px; color: #374151; display: none; }
+  .ml-upload-status.active { display: block; }
+
+  /* Alerts */
+  .ml-alert-success {
+    padding: 9px 14px;
+    border-radius: 6px;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 13px;
+  }
+  .ml-alert-error {
+    padding: 9px 14px;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 13px;
+  }
+
+  /* Image grid */
+  .ml-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .ml-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+  .ml-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+    background: #f3f4f6;
+  }
+  .ml-card-body { padding: 8px 10px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .ml-card-name { font-size: 12px; color: #374151; word-break: break-all; font-weight: 500; }
+  .ml-card-size { font-size: 11px; color: #9ca3af; }
+  .ml-card-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .ml-copy-btn {
+    flex: 1;
+    padding: 5px;
+    font-size: 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    text-align: center;
+  }
+  .ml-copy-btn:hover { background: #f3f4f6; }
+  .ml-copy-btn.copied { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+
+  .ml-empty { color: #9ca3af; font-size: 13px; padding: 16px 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ml-wrap">
+
+  <!-- Upload section -->
+  <div class="ml-section">
+    <h2>Upload image</h2>
+    <div class="ml-upload-card" id="ml-drop-zone">
+      <div class="ml-drop-hint">
+        <strong>Trage pozele aici</strong> sau folosește butonul de mai jos
+      </div>
+      <form id="ml-upload-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="ml-upload-row">
+          <input type="file" name="image" id="ml-file-input"
+                 accept="image/jpeg,image/png,image/webp,image/gif"
+                 class="ml-file-input" multiple>
+          <button type="submit" class="ml-btn" id="ml-upload-btn">Upload</button>
+        </div>
+      </form>
+
+      <div class="ml-progress-bar-wrap" id="ml-progress-wrap">
+        <div class="ml-progress-bar" id="ml-progress-bar"></div>
+      </div>
+      <div class="ml-upload-status" id="ml-upload-status"></div>
+
+      {% if success %}
+        <div class="ml-alert-success">{{ success }}</div>
+      {% endif %}
+      {% for err in errors %}
+        <div class="ml-alert-error">{{ err }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Image grid -->
+  <div class="ml-section">
+    <h2>Library ({{ items|length }} image{{ items|length|pluralize }})</h2>
+    {% if items %}
+      <div class="ml-grid">
+        {% for item in items %}
+          <div class="ml-card">
+            <img src="{{ item.url }}" alt="{{ item.name }}" loading="lazy">
+            <div class="ml-card-body">
+              <div class="ml-card-name">{{ item.name }}</div>
+              <div class="ml-card-size">{{ item.size_kb }} KB</div>
+              <div class="ml-card-actions">
+                <button class="ml-copy-btn"
+                        onclick="copyUrl(this, '{{ item.url }}')">Copy URL</button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="ml-empty">No images uploaded yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function copyUrl(btn, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy URL';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ── Drag-and-drop + AJAX upload ──────────────────────────────────────────────
+(function () {
+  const dropZone  = document.getElementById('ml-drop-zone');
+  const fileInput = document.getElementById('ml-file-input');
+  const form      = document.getElementById('ml-upload-form');
+  const progressWrap = document.getElementById('ml-progress-wrap');
+  const progressBar  = document.getElementById('ml-progress-bar');
+  const statusEl     = document.getElementById('ml-upload-status');
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // Prevent browser defaults for the whole page so dropping anywhere doesn't navigate
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+    document.addEventListener(ev, e => e.preventDefault(), false);
+  });
+
+  // Highlight drop zone when files hover over it
+  dropZone.addEventListener('dragenter', () => dropZone.classList.add('drag-over'));
+  dropZone.addEventListener('dragover',  () => dropZone.classList.add('drag-over'));
+  dropZone.addEventListener('dragleave', e => {
+    if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove('drag-over');
+  });
+
+  // Handle drop
+  dropZone.addEventListener('drop', e => {
+    dropZone.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return showStatus('No valid image files dropped.', true);
+    uploadFiles(files);
+  });
+
+  // Handle regular form submit (keeps POST fallback too, but we intercept via JS)
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const files = Array.from(fileInput.files);
+    if (!files.length) return;
+    uploadFiles(files);
+  });
+
+  async function uploadFiles(files) {
+    progressWrap.classList.add('active');
+    progressBar.style.width = '0%';
+    statusEl.classList.add('active');
+    statusEl.textContent = '';
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      statusEl.textContent = `Uploading ${i + 1} / ${files.length}: ${file.name}`;
+      progressBar.style.width = Math.round(((i) / files.length) * 100) + '%';
+
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', csrfToken);
+      fd.append('image', file);
+
+      try {
+        const resp = await fetch(window.location.pathname, { method: 'POST', body: fd });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      } catch (err) {
+        statusEl.innerHTML += `<br><span style="color:#991b1b">Error: ${file.name} – ${err.message}</span>`;
+      }
+
+      progressBar.style.width = Math.round(((i + 1) / files.length) * 100) + '%';
+    }
+
+    statusEl.textContent = `Done! ${files.length} file(s) uploaded. Reloading…`;
+    setTimeout(() => window.location.reload(), 800);
+  }
+
+  function showStatus(msg, isError) {
+    statusEl.classList.add('active');
+    statusEl.style.color = isError ? '#991b1b' : '#374151';
+    statusEl.textContent = msg;
+  }
+})();
+</script>
+{% endblock %}

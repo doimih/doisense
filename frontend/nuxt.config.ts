@@ -7,6 +7,9 @@ export default defineNuxtConfig({
     head: {
       title: "Doisense",
       meta: [{ charset: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" }],
+      link: [
+        { rel: "apple-touch-icon", href: "/doisense/pwa-192x192.svg" },
+      ],
     },
   },
   runtimeConfig: {
@@ -19,10 +22,87 @@ export default defineNuxtConfig({
       appleRedirectUri: process.env.NUXT_PUBLIC_APPLE_REDIRECT_URI || "",
     },
   },
-  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content"],
+  experimental: {
+    payloadExtraction: true,
+  },
+  nitro: {
+    compressPublicAssets: true,
+    routeRules: {
+      "/_nuxt/**": {
+        headers: {
+          "cache-control": "public, max-age=31536000, immutable",
+        },
+      },
+      "/doisense/_nuxt/**": {
+        headers: {
+          "cache-control": "public, max-age=31536000, immutable",
+        },
+      },
+    },
+  },
+  sourcemap: {
+    client: process.env.NODE_ENV !== "production",
+    server: process.env.NODE_ENV !== "production",
+  },
+  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content", "@vite-pwa/nuxt"],
+  pwa: {
+    registerType: "autoUpdate",
+    manifest: {
+      id: "/doisense/",
+      name: "Doisense",
+      short_name: "Doisense",
+      description: "Your wellbeing companion. Journal, chat with AI, and follow guided programs.",
+      theme_color: "#0f766e",
+      background_color: "#f3f5f8",
+      display: "standalone",
+      start_url: "/doisense/",
+      scope: "/doisense/",
+      lang: "en",
+      icons: [
+        {
+          src: "/doisense/pwa-192x192.svg",
+          sizes: "192x192",
+          type: "image/svg+xml",
+          purpose: "any maskable",
+        },
+        {
+          src: "/doisense/pwa-512x512.svg",
+          sizes: "512x512",
+          type: "image/svg+xml",
+          purpose: "any maskable",
+        },
+      ],
+    },
+    workbox: {
+      navigateFallback: "/doisense/offline.html",
+      globPatterns: ["**/*.{js,css,html,ico,png,svg,json,txt,woff2}"],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/projects\.doimih\.net\/doisense\/.*/i,
+          handler: "NetworkFirst",
+          options: {
+            cacheName: "doisense-pages",
+            networkTimeoutSeconds: 5,
+            expiration: {
+              maxEntries: 80,
+              maxAgeSeconds: 60 * 60 * 24 * 7,
+            },
+          },
+        },
+      ],
+    },
+    client: {
+      installPrompt: true,
+      periodicSyncForUpdates: 3600,
+    },
+    devOptions: {
+      enabled: false,
+      suppressWarnings: true,
+      type: "module",
+    },
+  },
   i18n: {
     restructureDir: "",
-    lazy: true,
     locales: [
       { code: "ro", language: "ro-RO", name: "Română", file: "ro.json" },
       { code: "en", language: "en-US", name: "English", file: "en.json" },
@@ -38,5 +118,5 @@ export default defineNuxtConfig({
     detectBrowserLanguage: { useCookie: true, cookieKey: "i18n_redirect" },
   },
   typescript: { strict: true },
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV !== "production" },
 });

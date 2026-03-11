@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "sorl.thumbnail",
-    "newsletter",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -138,12 +137,6 @@ UNFOLD = {
                         "permission": _perm("ai.view_conversationtemplate"),
                     },
                     {
-                        "title": "CMS Pages",
-                        "icon": "article",
-                        "link": lambda request: reverse("admin:core_cmspage_changelist"),
-                        "permission": _perm("core.view_cmspage"),
-                    },
-                    {
                         "title": "Email Settings (SMTP)",
                         "icon": "mail",
                         "link": lambda request: reverse("admin:core_systemconfig_changelist"),
@@ -168,10 +161,16 @@ UNFOLD = {
                         "permission": _perm("core.view_systemconfig"),
                     },
                     {
-                        "title": "Wagtail CMS",
-                        "icon": "edit_square",
-                        "link": lambda request: reverse("wagtailadmin_home"),
-                        "permission": lambda request: request.user.is_staff,
+                        "title": "reCAPTCHA Settings",
+                        "icon": "verified_user",
+                        "link": lambda request: reverse("admin:core_recaptchaconfig_changelist"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "Media Library",
+                        "icon": "photo_library",
+                        "link": lambda request: reverse("admin:core_media_library"),
+                        "permission": lambda request: request.user.is_superuser,
                     },
                 ],
             },
@@ -189,36 +188,6 @@ UNFOLD = {
                         "icon": "receipt_long",
                         "link": lambda request: reverse("admin:ai_ailog_changelist"),
                         "permission": _perm("ai.view_ailog"),
-                    },
-                ],
-            },
-            {
-                "title": "Newsletter",
-                "collapsible": True,
-                "items": [
-                    {
-                        "title": "Messages",
-                        "icon": "mail",
-                        "link": lambda request: reverse("admin:newsletter_message_changelist"),
-                        "permission": _perm("newsletter.view_message"),
-                    },
-                    {
-                        "title": "Newsletters",
-                        "icon": "campaign",
-                        "link": lambda request: reverse("admin:newsletter_newsletter_changelist"),
-                        "permission": _perm("newsletter.view_newsletter"),
-                    },
-                    {
-                        "title": "Submissions",
-                        "icon": "send",
-                        "link": lambda request: reverse("admin:newsletter_submission_changelist"),
-                        "permission": _perm("newsletter.view_submission"),
-                    },
-                    {
-                        "title": "Subscriptions",
-                        "icon": "alternate_email",
-                        "link": lambda request: reverse("admin:newsletter_subscription_changelist"),
-                        "permission": _perm("newsletter.view_subscription"),
                     },
                 ],
             },
@@ -286,6 +255,7 @@ CKEDITOR_5_CONFIGS = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -351,8 +321,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
 WAGTAIL_SITE_NAME = "Doisense Wagtail"
 WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", default="https://projects.doimih.net/doisense/wagtail/admin")
-NEWSLETTER_THUMBNAIL = "sorl-thumbnail"
-NEWSLETTER_USE_HTTPS = True
 
 AUTH_USER_MODEL = "users.User"
 

@@ -58,9 +58,12 @@
     "send": "Envoyer"
   },
   "journal": {
-    "contentPlaceholder": "Ecrivez vos pensees ici...",
+    "description": "Réfléchissez à vos expériences quotidiennes avec des questions guidées.",
+    "contentPlaceholder": "Écrivez vos pensées ici...",
     "save": "Enregistrer",
-    "saved": "Enregistre."
+    "saving": "Enregistrement en cours...",
+    "saved": "Enregistré.",
+    "noQuestions": "Aucune question disponible"
   },
   "programs": {
     "noDescription": "Aucune description.",
@@ -73,18 +76,31 @@
     "upgrade": "Passer a Premium"
   },
   "footer": {
+    "brandDescription": "Soutenez votre parcours de bien-être émotionnel avec des conseils personnalisés et des pratiques basées sur des preuves.",
     "copyright": "© Doisense. Tous droits reserves.",
+    "aboutUs": "A propos de nous",
+    "team": "Notre equipe",
+    "mission": "Mission et valeurs",
+    "careers": "Carrieres",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
     "resources": "Ressources",
     "helpCenter": "Centre d'aide",
     "docs": "Documentation",
+    "blog": "Blog",
+    "documentation": "Documentation",
     "features": "Fonctionnalites",
+    "services": "Services",
+    "coaching": "Coaching",
+    "wellness": "Programmes de bien-etre",
     "company": "Entreprise",
     "privacy": "Confidentialite",
     "terms": "Conditions",
     "cookies": "Cookies",
     "gdpr": "GDPR",
     "newsletterTitle": "Abonnez-vous a notre newsletter",
-    "newsletterPlaceholder": "Entrez votre email",
+    "newsletterDescription": "Recevez des conseils de bien-etre et des mises a jour dans votre boite de reception.",
+    "newsletterPlaceholder": "votre adresse email",
     "subscribe": "S'abonner",
     "newsletterSubscribed": "Vous etes abonne avec succes.",
     "newsletterSubscribeError": "L'abonnement a echoue. Veuillez reessayer.",

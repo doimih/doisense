@@ -58,9 +58,12 @@
     "send": "Send"
   },
   "journal": {
+    "description": "Reflect on your daily experiences with guided questions.",
     "contentPlaceholder": "Write your thoughts here...",
     "save": "Save",
-    "saved": "Saved."
+    "saving": "Saving...",
+    "saved": "Saved.",
+    "noQuestions": "No questions available"
   },
   "programs": {
     "noDescription": "No description.",
@@ -73,18 +76,31 @@
     "upgrade": "Upgrade to Premium"
   },
   "footer": {
+    "brandDescription": "Supporting your emotional wellness journey with personalized guidance and evidence-based practices.",
     "copyright": "© Doisense. All rights reserved.",
+    "aboutUs": "About Us",
+    "team": "Our Team",
+    "mission": "Mission & Values",
+    "careers": "Careers",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
     "resources": "Resources",
     "helpCenter": "Help center",
     "docs": "Docs",
+    "blog": "Blog",
+    "documentation": "Documentation",
     "features": "Features",
+    "services": "Services",
+    "coaching": "Coaching",
+    "wellness": "Wellness Programs",
     "company": "Company",
     "privacy": "Privacy",
     "terms": "Terms",
     "cookies": "Cookies",
     "gdpr": "GDPR",
-    "newsletterTitle": "Subscribe to our newsletter",
-    "newsletterPlaceholder": "Enter your email",
+    "newsletterTitle": "Subscribe to our Newsletter",
+    "newsletterDescription": "Get wellness tips and updates delivered to your inbox.",
+    "newsletterPlaceholder": "your email address",
     "subscribe": "Subscribe",
     "newsletterSubscribed": "You have been subscribed successfully.",
     "newsletterSubscribeError": "Subscription failed. Please try again.",
