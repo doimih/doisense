@@ -7,6 +7,7 @@ from django.conf import settings
 from django import forms
 from django.contrib import admin, messages
 from django.core.files.storage import default_storage
+from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.core.mail import EmailMessage, get_connection
 from django.template.response import TemplateResponse
@@ -111,29 +112,57 @@ class SystemConfigAdmin(ModelAdmin):
 
         errors = []
         success = None
+        uploaded_names = []
+
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 
         if request.method == "POST":
-            uploaded = request.FILES.get("image")
-            if not uploaded:
+            uploads = request.FILES.getlist("image")
+            if not uploads:
+                single_file = request.FILES.get("image")
+                if single_file:
+                    uploads = [single_file]
+
+            if not uploads:
                 errors.append("No file selected.")
-            elif uploaded.size > _MEDIA_LIBRARY_MAX_SIZE:
-                errors.append("File exceeds 8 MB limit.")
             else:
-                ext = uploaded.name.rsplit(".", 1)[-1].lower() if "." in uploaded.name else ""
-                if ext not in _MEDIA_LIBRARY_ALLOWED_EXT:
-                    errors.append("Unsupported file extension.")
-                else:
+                for uploaded in uploads:
+                    if uploaded.size > _MEDIA_LIBRARY_MAX_SIZE:
+                        errors.append(f"{uploaded.name}: file exceeds 8 MB limit.")
+                        continue
+
+                    ext = uploaded.name.rsplit(".", 1)[-1].lower() if "." in uploaded.name else ""
+                    if ext not in _MEDIA_LIBRARY_ALLOWED_EXT:
+                        errors.append(f"{uploaded.name}: unsupported file extension.")
+                        continue
+
                     detected = imghdr.what(uploaded)
                     if detected not in _MEDIA_LIBRARY_ALLOWED_TYPES:
-                        errors.append("File content does not match an allowed image type.")
-                    else:
-                        safe_name = re.sub(r"[^\w.\-]", "_", uploaded.name)
-                        dest = f"{_MEDIA_LIBRARY_FOLDER}/{safe_name}"
-                        if default_storage.exists(dest):
-                            base, dot_ext = safe_name.rsplit(".", 1) if "." in safe_name else (safe_name, "")
-                            dest = f"{_MEDIA_LIBRARY_FOLDER}/{base}_{int(time.time())}.{dot_ext}"
-                        default_storage.save(dest, uploaded)
-                        success = f"Uploaded: {os.path.basename(dest)}"
+                        errors.append(f"{uploaded.name}: file content does not match an allowed image type.")
+                        continue
+
+                    safe_name = re.sub(r"[^\w.\-]", "_", uploaded.name)
+                    dest = f"{_MEDIA_LIBRARY_FOLDER}/{safe_name}"
+                    if default_storage.exists(dest):
+                        base, dot_ext = safe_name.rsplit(".", 1) if "." in safe_name else (safe_name, "")
+                        dest = f"{_MEDIA_LIBRARY_FOLDER}/{base}_{int(time.time())}.{dot_ext}"
+
+                    default_storage.save(dest, uploaded)
+                    uploaded_names.append(os.path.basename(dest))
+
+                if uploaded_names:
+                    success = f"Uploaded {len(uploaded_names)} image(s): {', '.join(uploaded_names)}"
+
+            if is_ajax:
+                status_code = 201 if uploaded_names and not errors else (207 if uploaded_names else 400)
+                return JsonResponse(
+                    {
+                        "uploaded": uploaded_names,
+                        "errors": errors,
+                        "success": success,
+                    },
+                    status=status_code,
+                )
 
         # Build image list
         folder = os.path.join(settings.MEDIA_ROOT, _MEDIA_LIBRARY_FOLDER)
