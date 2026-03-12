@@ -179,6 +179,17 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Support",
+                "items": [
+                    {
+                        "title": "Support Tickets",
+                        "icon": "support_agent",
+                        "link": lambda request: reverse("admin:core_supportticket_changelist"),
+                        "permission": _perm("core.view_supportticket"),
+                    },
+                ],
+            },
+            {
                 "title": "LOG-uri",
                 "separator": True,
                 "items": [
@@ -199,12 +210,6 @@ UNFOLD = {
                         "icon": "sync_problem",
                         "link": lambda request: reverse("admin:payments_stripewebhookevent_changelist"),
                         "permission": _perm("payments.view_stripewebhookevent"),
-                    },
-                    {
-                        "title": "Support Tickets",
-                        "icon": "support_agent",
-                        "link": lambda request: reverse("admin:core_supportticket_changelist"),
-                        "permission": _perm("core.view_supportticket"),
                     },
                     {
                         "title": "Notification Delivery",

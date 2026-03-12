@@ -97,3 +97,6 @@ class StripeWebhookEventAdmin(admin.ModelAdmin):
         }
 
     payload_preview.short_description = "Payload preview"
+
+    def has_add_permission(self, request):
+        return False

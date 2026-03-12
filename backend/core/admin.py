@@ -300,6 +300,9 @@ class NotificationDeliveryAdmin(ModelAdmin):
     search_fields = ("user__email", "context_key")
     ordering = ("-sent_at",)
 
+    def has_add_permission(self, request):
+        return False
+
 
 @admin.register(InAppNotification)
 class InAppNotificationAdmin(ModelAdmin):
@@ -307,6 +310,9 @@ class InAppNotificationAdmin(ModelAdmin):
     list_filter = ("notification_type", "is_read")
     search_fields = ("user__email", "title", "body", "context_key")
     ordering = ("-created_at",)
+
+    def has_add_permission(self, request):
+        return False
 
 
 @admin.register(UserNotificationPreference)
@@ -323,6 +329,9 @@ class SupportTicketAdmin(ModelAdmin):
     list_filter = ("status", "created_at")
     search_fields = ("user__email", "subject", "message")
     ordering = ("-created_at",)
+
+    def has_add_permission(self, request):
+        return False
 
     def save_model(self, request, obj, form, change):
         before_data, after_data = extract_form_changes(form)
@@ -355,6 +364,9 @@ class FeatureAccessLogAdmin(ModelAdmin):
         "created_at",
     )
 
+    def has_add_permission(self, request):
+        return False
+
 
 @admin.register(AnalyticsEvent)
 class AnalyticsEventAdmin(ModelAdmin):
@@ -364,6 +376,9 @@ class AnalyticsEventAdmin(ModelAdmin):
     ordering = ("-created_at",)
     readonly_fields = ("event_name", "source", "schema_version", "user", "session_id", "properties", "created_at")
 
+    def has_add_permission(self, request):
+        return False
+
 
 @admin.register(UserQuotaUsage)
 class UserQuotaUsageAdmin(ModelAdmin):
@@ -372,6 +387,9 @@ class UserQuotaUsageAdmin(ModelAdmin):
     search_fields = ("user__email", "metric_key")
     ordering = ("-updated_at",)
     readonly_fields = ("user", "metric_key", "period_type", "period_start", "created_at", "updated_at")
+
+    def has_add_permission(self, request):
+        return False
 
 
 class BackupConfigAdminForm(forms.ModelForm):
@@ -568,6 +586,9 @@ class SystemErrorEventAdmin(ModelAdmin):
         "created_at",
     )
 
+    def has_add_permission(self, request):
+        return False
+
 
 @admin.register(AdminAuditLog)
 class AdminAuditLogAdmin(ModelAdmin):
@@ -598,6 +619,9 @@ class AdminAuditLogAdmin(ModelAdmin):
         "created_at",
     )
 
+    def has_add_permission(self, request):
+        return False
+
 
 @admin.register(BackupVerificationLog)
 class BackupVerificationLogAdmin(ModelAdmin):
@@ -606,4 +630,7 @@ class BackupVerificationLogAdmin(ModelAdmin):
     search_fields = ("source", "notes")
     ordering = ("-created_at",)
     readonly_fields = ("created_at",)
+
+    def has_add_permission(self, request):
+        return False
 
