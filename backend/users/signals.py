@@ -9,6 +9,7 @@ from profiles.models import UserProfile
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.get_or_create(user=instance)
-        eligible = bool(instance.id and instance.id <= EARLY_DISCOUNT_USER_LIMIT and not instance.vip_manual_override)
-        if instance.early_discount_eligible != eligible:
-            User.objects.filter(pk=instance.pk).update(early_discount_eligible=eligible)
+
+    eligible = instance.expected_early_discount_eligibility()
+    if instance.early_discount_eligible != eligible:
+        User.objects.filter(pk=instance.pk).update(early_discount_eligible=eligible)

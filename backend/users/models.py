@@ -78,6 +78,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Alias used by business rules: manual VIP override managed by admin."""
         return bool(self.vip_manual_override)
 
+    def expected_early_discount_eligibility(self) -> bool:
+        return bool(
+            self.is_active
+            and self.id
+            and self.id <= EARLY_DISCOUNT_USER_LIMIT
+            and not self.manual_vip
+        )
+
     def is_in_trial(self) -> bool:
         if self.manual_vip:
             # Manual VIP users bypass trial lifecycle and expiration checks.

@@ -1,5 +1,7 @@
 from django.core.cache import cache
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from .validators import validate_language
 
@@ -166,6 +168,111 @@ class BackupConfig(SystemConfig):
         proxy = True
         verbose_name = "Backup Configuration"
         verbose_name_plural = "Backup Configuration"
+
+
+class PlatformScheduledJob(models.Model):
+    SCHEDULE_HOURLY = "hourly"
+    SCHEDULE_DAILY = "daily"
+    SCHEDULE_WEEKLY = "weekly"
+    SCHEDULE_CHOICES = [
+        (SCHEDULE_HOURLY, "Hourly"),
+        (SCHEDULE_DAILY, "Daily"),
+        (SCHEDULE_WEEKLY, "Weekly"),
+    ]
+
+    STATUS_PENDING = "pending"
+    STATUS_SUCCESS = "success"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_SUCCESS, "Success"),
+        (STATUS_FAILED, "Failed"),
+    ]
+
+    WEEKDAY_CHOICES = [
+        (0, "Monday"),
+        (1, "Tuesday"),
+        (2, "Wednesday"),
+        (3, "Thursday"),
+        (4, "Friday"),
+        (5, "Saturday"),
+        (6, "Sunday"),
+    ]
+
+    code = models.CharField(max_length=64, unique=True)
+    label = models.CharField(max_length=120)
+    command_name = models.CharField(max_length=120)
+    schedule_type = models.CharField(max_length=16, choices=SCHEDULE_CHOICES, default=SCHEDULE_DAILY)
+    minute_of_hour = models.PositiveSmallIntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(59)],
+    )
+    hour_of_day = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(23)],
+    )
+    weekday = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        choices=WEEKDAY_CHOICES,
+        validators=[MinValueValidator(0), MaxValueValidator(6)],
+    )
+    enabled = models.BooleanField(default=True)
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    last_run_status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    last_error = models.TextField(blank=True, default="")
+    last_duration_ms = models.PositiveIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "core_platformscheduledjob"
+        ordering = ["label"]
+        verbose_name = "Scheduler Job"
+        verbose_name_plural = "Scheduler Jobs"
+
+    def __str__(self):
+        return self.label
+
+    def schedule_summary(self) -> str:
+        if self.schedule_type == self.SCHEDULE_HOURLY:
+            return f"Every hour at minute {self.minute_of_hour:02d}"
+        if self.schedule_type == self.SCHEDULE_WEEKLY:
+            weekday_label = dict(self.WEEKDAY_CHOICES).get(self.weekday, "Unknown")
+            return f"Every {weekday_label} at {self.hour_of_day:02d}:{self.minute_of_hour:02d}"
+        return f"Every day at {self.hour_of_day:02d}:{self.minute_of_hour:02d}"
+
+    def is_due(self, now=None) -> bool:
+        if not self.enabled:
+            return False
+
+        current = timezone.localtime(now or timezone.now())
+        last_run = timezone.localtime(self.last_run_at) if self.last_run_at else None
+
+        if self.schedule_type == self.SCHEDULE_HOURLY:
+            if current.minute != self.minute_of_hour:
+                return False
+            return not last_run or (
+                last_run.year,
+                last_run.month,
+                last_run.day,
+                last_run.hour,
+            ) != (
+                current.year,
+                current.month,
+                current.day,
+                current.hour,
+            )
+
+        if self.hour_of_day is None or current.hour != self.hour_of_day or current.minute != self.minute_of_hour:
+            return False
+
+        if self.schedule_type == self.SCHEDULE_WEEKLY:
+            if self.weekday is None or current.weekday() != self.weekday:
+                return False
+
+        return not last_run or last_run.date() != current.date()
 
 
 class UserWellbeingCheckin(models.Model):

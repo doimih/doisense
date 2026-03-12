@@ -87,10 +87,13 @@ def test_early_discount_eligibility_persists_after_vip_toggle(authenticated_clie
     assert first_response.data["manual_vip"] is True
 
     user.refresh_from_db()
-    assert user.early_discount_eligible is True
+    assert user.early_discount_eligible is False
 
     user.vip_manual_override = False
     user.save(update_fields=["vip_manual_override"])
+
+    user.refresh_from_db()
+    assert user.early_discount_eligible is True
 
     second_response = authenticated_client.post(
         reverse("create-checkout-session"),

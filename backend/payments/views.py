@@ -143,10 +143,13 @@ def _price_id_to_tier(price_id: str) -> str:
 
 
 def _is_early_discount_applicable(user: User, requested_plan_tier: str) -> bool:
+    expected_discount = getattr(user, "expected_early_discount_eligibility", None)
+    is_discount_eligible = expected_discount() if callable(expected_discount) else bool(
+        getattr(user, "early_discount_eligible", False) and not getattr(user, "vip_manual_override", False)
+    )
     return (
         requested_plan_tier == "premium"
-        and bool(getattr(user, "early_discount_eligible", False))
-        and not bool(getattr(user, "vip_manual_override", False))
+        and is_discount_eligible
     )
 
 

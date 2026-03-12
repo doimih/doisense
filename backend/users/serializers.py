@@ -132,6 +132,7 @@ class UserSerializer(serializers.ModelSerializer):
     membership_tier = serializers.SerializerMethodField()
     has_saved_card = serializers.SerializerMethodField()
     manual_vip = serializers.SerializerMethodField()
+    early_discount_eligible = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -172,6 +173,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_manual_vip(self, obj):
         return bool(getattr(obj, "manual_vip", False))
+
+    def get_early_discount_eligible(self, obj):
+        resolver = getattr(obj, "expected_early_discount_eligibility", None)
+        if callable(resolver):
+            return resolver()
+        return bool(getattr(obj, "early_discount_eligible", False))
 
     def get_has_saved_card(self, obj):
         return obj.payments.exclude(stripe_customer_id="").exclude(stripe_customer_id__isnull=True).exists()

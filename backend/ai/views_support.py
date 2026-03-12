@@ -8,16 +8,20 @@ Separate from the wellness chat; no tier gating — all users can access support
 Rate-limited separately (5 requests/min per user).
 """
 from django.core.cache import cache
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.analytics import track_event
+from core.models import InAppNotification, SupportTicket
 from .router import complete
 from payments.models import Payment
 
 
 _SUPPORT_RATE_LIMIT = 5  # requests per minute
+_TICKET_REUSE_WINDOW_MINUTES = 60 * 24
 
 
 def _support_rate_key(user_id):
@@ -156,6 +160,97 @@ def _build_support_system_prompt(user, intent: str) -> str:
     )
 
 
+def _should_open_support_ticket(message: str, intent: str) -> bool:
+    if intent == "tech":
+        return True
+
+    msg = (message or "").lower()
+    escalation_keywords = (
+        "human",
+        "agent",
+        "support team",
+        "contact team",
+        "contact support",
+        "ticket",
+        "urgent",
+        "admin",
+        "operator",
+        "echipa",
+        "suport",
+        "contactati",
+        "contacta",
+        "tiket",
+        "tichet",
+        "urgent",
+    )
+    return intent in {"account", "billing", "gdpr"} and any(keyword in msg for keyword in escalation_keywords)
+
+
+def _build_ticket_subject(intent: str, message: str) -> str:
+    subject_prefix = {
+        "account": "Account support",
+        "billing": "Billing support",
+        "gdpr": "GDPR support",
+        "tech": "Technical support",
+        "general": "General support",
+    }.get(intent, "Support request")
+    snippet = " ".join((message or "").split())[:90]
+    if not snippet:
+        return subject_prefix
+    return f"{subject_prefix}: {snippet}"[:180]
+
+
+def _create_or_reuse_ticket(user, intent: str, message: str):
+    if not _should_open_support_ticket(message, intent):
+        return None, False
+
+    subject = _build_ticket_subject(intent, message)
+    cutoff = timezone.now() - timezone.timedelta(minutes=_TICKET_REUSE_WINDOW_MINUTES)
+    ticket = SupportTicket.objects.filter(
+        user=user,
+        status__in=[SupportTicket.STATUS_OPEN, SupportTicket.STATUS_IN_PROGRESS],
+        subject=subject,
+        message=message,
+        created_at__gte=cutoff,
+    ).order_by("-created_at").first()
+    if ticket:
+        return ticket, False
+
+    ticket = SupportTicket.objects.create(
+        user=user,
+        subject=subject,
+        message=message,
+    )
+    track_event(
+        "support_ticket_created",
+        source="backend",
+        user=user,
+        properties={},
+    )
+    InAppNotification.objects.create(
+        user=user,
+        notification_type="support_ticket_created",
+        title="Support request received",
+        body=f"We opened support ticket #{ticket.id} and the team can review it if needed.",
+        context_key=str(ticket.id),
+    )
+    return ticket, True
+
+
+def _ticket_response_note(user, ticket, created: bool) -> str:
+    if not ticket:
+        return ""
+
+    if (user.language or "en").lower().startswith("ro"):
+        if created:
+            return f"\n\nAm creat tichetul de suport #{ticket.id}. Echipa poate continua de aici daca este nevoie."
+        return f"\n\nExista deja un tichet de suport deschis pentru aceasta situatie: #{ticket.id}."
+
+    if created:
+        return f"\n\nWe created support ticket #{ticket.id}. The team can continue from there if needed."
+    return f"\n\nThere is already an open support ticket for this issue: #{ticket.id}."
+
+
 class SupportChatView(APIView):
     """
     POST /api/support/ask
@@ -180,6 +275,7 @@ class SupportChatView(APIView):
             return Response({"detail": "Message too long (max 2000 chars)."}, status=400)
 
         intent = _classify_intent(message)
+        ticket, created_ticket = _create_or_reuse_ticket(request.user, intent, message)
         system_prompt = _build_support_system_prompt(request.user, intent)
 
         try:
@@ -195,4 +291,12 @@ class SupportChatView(APIView):
                 "Vă rugăm să ne contactați prin pagina de Contact."
             )
 
-        return Response({"reply": reply, "intent": intent})
+        reply = f"{reply}{_ticket_response_note(request.user, ticket, created_ticket)}"
+        payload = {"reply": reply, "intent": intent}
+        if ticket:
+            payload["ticket"] = {
+                "id": ticket.id,
+                "status": ticket.status,
+                "created": created_ticket,
+            }
+        return Response(payload)

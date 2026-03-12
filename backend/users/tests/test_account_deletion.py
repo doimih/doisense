@@ -8,6 +8,21 @@ from journal.models import JournalEntry
 
 @pytest.mark.django_db
 def test_delete_account_anonymizes_user_and_preserves_content(authenticated_client, user, journal_question):
+    user.vip_manual_override = True
+    user.early_discount_eligible = True
+    user.plan_tier = "trial"
+    user.trial_started_at = user.created_at
+    user.trial_ends_at = user.created_at
+    user.save(
+        update_fields=[
+            "vip_manual_override",
+            "early_discount_eligible",
+            "plan_tier",
+            "trial_started_at",
+            "trial_ends_at",
+        ]
+    )
+
     JournalEntry.objects.create(
         user=user,
         question=journal_question,
@@ -32,6 +47,10 @@ def test_delete_account_anonymizes_user_and_preserves_content(authenticated_clie
 
     assert user.is_active is False
     assert user.plan_tier == "free"
+    assert user.vip_manual_override is False
+    assert user.early_discount_eligible is False
+    assert user.trial_started_at is None
+    assert user.trial_ends_at is None
     assert user.email == f"deleted.user.{user.id}@doisense.local"
     assert user.first_name == ""
     assert user.last_name == ""

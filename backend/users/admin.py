@@ -20,6 +20,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ("is_premium", "vip_manual_override", "early_discount_eligible", "is_staff")
     search_fields = ("email",)
     ordering = ("-created_at",)
+    readonly_fields = ("early_discount_eligible",)
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         (

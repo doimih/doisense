@@ -74,6 +74,13 @@
           {{ text.premiumArgument }}
         </p>
 
+        <p
+          v-if="plan.key === 'premium'"
+          class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-800"
+        >
+          {{ premiumEarlyAccessNote }}
+        </p>
+
         <button
           v-if="isLoggedIn"
           type="button"
@@ -902,6 +909,19 @@ const pricingCopy: Record<string, {
 }
 
 const text = computed(() => pricingCopy[localeCode.value] || pricingCopy.ro)
+const premiumEarlyAccessNote = computed(() => {
+  const labels: Record<string, string> = {
+    ro: 'Primele 500 inscrieri la PREMIUM beneficiaza de reducere permanenta de 10% (129 lei -> 116.10 lei / luna).',
+    en: 'The first 500 PREMIUM sign-ups receive a permanent 10% discount (129 RON -> 116.10 RON / month).',
+    de: 'Die ersten 500 PREMIUM-Anmeldungen erhalten dauerhaft 10% Rabatt (129 RON -> 116.10 RON / Monat).',
+    fr: 'Les 500 premiers abonnements PREMIUM beneficient d une reduction permanente de 10% (129 RON -> 116.10 RON / mois).',
+    it: 'I primi 500 iscritti PREMIUM ricevono uno sconto permanente del 10% (129 RON -> 116.10 RON / mese).',
+    es: 'Los primeros 500 registros PREMIUM reciben un descuento permanente del 10% (129 RON -> 116.10 RON / mes).',
+    pl: 'Pierwsze 500 rejestracji PREMIUM otrzymuje staly rabat 10% (129 RON -> 116.10 RON / miesiac).',
+  }
+  return labels[localeCode.value] || labels.en
+})
+
 const displayedPlans = computed<Plan[]>(() => {
   const plans = text.value.plans.map((plan) => ({ ...plan }))
   if (!isEarlyDiscountEligible.value) {

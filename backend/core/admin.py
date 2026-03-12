@@ -12,6 +12,7 @@ from django.http import HttpResponseRedirect
 from django.core.mail import EmailMessage, get_connection
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.core.management import call_command
 from unfold.admin import ModelAdmin
 
 from .audit import extract_form_changes, log_admin_change
@@ -26,6 +27,7 @@ from .models import (
     InAppNotification,
     NotificationDelivery,
     OAuthConfig,
+    PlatformScheduledJob,
     RecaptchaConfig,
     SupportTicket,
     StripeConfig,
@@ -345,6 +347,76 @@ class SupportTicketAdmin(ModelAdmin):
                 after_data=after_data,
                 reason="Support ticket updated from admin",
             )
+
+
+@admin.register(PlatformScheduledJob)
+class PlatformScheduledJobAdmin(ModelAdmin):
+    list_display = (
+        "label",
+        "command_name",
+        "schedule_type",
+        "render_schedule_summary",
+        "enabled",
+        "last_run_status",
+        "last_run_at",
+    )
+    list_filter = ("enabled", "schedule_type", "last_run_status")
+    search_fields = ("label", "command_name", "code")
+    ordering = ("label",)
+    readonly_fields = ("code", "command_name", "last_run_at", "last_run_status", "last_error", "last_duration_ms")
+    actions = ["run_selected_jobs_now"]
+
+    fieldsets = (
+        (
+            "Job",
+            {
+                "fields": (
+                    "code",
+                    "label",
+                    "command_name",
+                    "enabled",
+                )
+            },
+        ),
+        (
+            "Schedule",
+            {
+                "fields": (
+                    "schedule_type",
+                    "minute_of_hour",
+                    "hour_of_day",
+                    "weekday",
+                )
+            },
+        ),
+        (
+            "Last Run",
+            {
+                "fields": (
+                    "last_run_status",
+                    "last_run_at",
+                    "last_duration_ms",
+                    "last_error",
+                )
+            },
+        ),
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.action(description="Run selected scheduler jobs now")
+    def run_selected_jobs_now(self, request, queryset):
+        ran = 0
+        for job in queryset:
+            call_command("run_platform_scheduler", job_code=job.code)
+            ran += 1
+        self.message_user(request, f"Executed {ran} scheduler job(s).", level=messages.SUCCESS)
+
+    def render_schedule_summary(self, obj):
+        return obj.schedule_summary()
+
+    render_schedule_summary.short_description = "Schedule"
 
 
 @admin.register(FeatureAccessLog)

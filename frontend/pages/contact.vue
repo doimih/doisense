@@ -77,7 +77,7 @@
         <button
           type="submit"
           :disabled="submitting"
-          class="w-full rounded-full bg-black px-6 py-4 text-lg font-semibold text-white transition hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full rounded-full bg-black px-6 py-3 text-base font-semibold text-white transition hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {{ submitting ? text.sendingAction : text.sendAction }}
         </button>

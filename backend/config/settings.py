@@ -162,6 +162,23 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Automation",
+                "items": [
+                    {
+                        "title": "Task Scheduler",
+                        "icon": "schedule",
+                        "link": lambda request: reverse("admin:core_platformscheduledjob_changelist"),
+                        "permission": _perm("core.view_platformscheduledjob"),
+                    },
+                    {
+                        "title": "Backup Scheduler",
+                        "icon": "backup",
+                        "link": lambda request: reverse("admin:core_backupconfig_changelist"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                ],
+            },
+            {
                 "title": "Activity",
                 "items": [
                     {

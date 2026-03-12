@@ -42,3 +42,27 @@ def test_early_discount_disabled_for_manual_vip():
     user.refresh_from_db()
     assert user.vip_manual_override is True
     assert user.early_discount_eligible is False
+
+
+@pytest.mark.django_db
+def test_early_discount_recalculates_when_manual_vip_is_toggled():
+    user = User.objects.create_user(
+        email="toggle-manual-vip@example.com",
+        password="StrongPass123",
+        vip_manual_override=False,
+    )
+
+    user.refresh_from_db()
+    assert user.early_discount_eligible is True
+
+    user.vip_manual_override = True
+    user.save(update_fields=["vip_manual_override"])
+
+    user.refresh_from_db()
+    assert user.early_discount_eligible is False
+
+    user.vip_manual_override = False
+    user.save(update_fields=["vip_manual_override"])
+
+    user.refresh_from_db()
+    assert user.early_discount_eligible is True

@@ -1,5 +1,7 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.storage import default_storage
+from django.db import connections
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timezone as dt_timezone
@@ -41,6 +43,39 @@ def public_cache_response(data, *, max_age: int = 300):
     response = Response(data)
     response["Cache-Control"] = f"public, max-age={max_age}, stale-while-revalidate={max_age * 2}"
     return response
+
+
+class HealthCheckView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        db_ok = True
+        cache_ok = True
+
+        try:
+            with connections["default"].cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+        except Exception:
+            db_ok = False
+
+        try:
+            cache.set("healthcheck:ping", "ok", timeout=5)
+            cache_ok = cache.get("healthcheck:ping") == "ok"
+        except Exception:
+            cache_ok = False
+
+        status_code = status.HTTP_200_OK if db_ok and cache_ok else status.HTTP_503_SERVICE_UNAVAILABLE
+        return Response(
+            {
+                "status": "ok" if status_code == status.HTTP_200_OK else "degraded",
+                "checks": {
+                    "database": "ok" if db_ok else "error",
+                    "cache": "ok" if cache_ok else "error",
+                },
+            },
+            status=status_code,
+        )
 
 
 class CMSPageListView(APIView):

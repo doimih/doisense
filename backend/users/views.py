@@ -223,7 +223,11 @@ class MeView(APIView):
 
         user.is_active = False
         user.is_premium = False
+        user.vip_manual_override = False
+        user.early_discount_eligible = False
         user.plan_tier = User.PLAN_FREE
+        user.trial_started_at = None
+        user.trial_ends_at = None
         user.email = f"deleted.user.{user.id}@doisense.local"
         user.first_name = ""
         user.last_name = ""
@@ -235,7 +239,11 @@ class MeView(APIView):
             update_fields=[
                 "is_active",
                 "is_premium",
+                "vip_manual_override",
+                "early_discount_eligible",
                 "plan_tier",
+                "trial_started_at",
+                "trial_ends_at",
                 "email",
                 "first_name",
                 "last_name",
