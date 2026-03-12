@@ -25,6 +25,81 @@ def test_checkout_session_falls_back_to_internal_activation(authenticated_client
 
 
 @pytest.mark.django_db
+def test_checkout_session_applies_early_discount_for_premium(authenticated_client, user):
+    user.early_discount_eligible = True
+    user.vip_manual_override = False
+    user.save(update_fields=["early_discount_eligible", "vip_manual_override"])
+
+    response = authenticated_client.post(
+        reverse("create-checkout-session"),
+        {"plan_tier": "premium"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["internal_activation"] is True
+    assert response.data["applied_plan_tier"] == "premium_discounted"
+    assert response.data["early_discount_applied"] is True
+    assert response.data["early_discount_percent"] == 10
+
+    user.refresh_from_db()
+    payment = Payment.objects.get(user=user)
+    assert user.plan_tier == "premium"
+    assert payment.plan_tier == "premium_discounted"
+
+
+@pytest.mark.django_db
+def test_checkout_session_skips_early_discount_for_manual_vip(authenticated_client, user):
+    user.early_discount_eligible = True
+    user.vip_manual_override = True
+    user.save(update_fields=["early_discount_eligible", "vip_manual_override"])
+
+    response = authenticated_client.post(
+        reverse("create-checkout-session"),
+        {"plan_tier": "premium"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["internal_activation"] is True
+    assert response.data["applied_plan_tier"] == "premium"
+    assert response.data["early_discount_applied"] is False
+
+    payment = Payment.objects.get(user=user)
+    assert payment.plan_tier == "premium"
+
+
+@pytest.mark.django_db
+def test_early_discount_eligibility_persists_after_vip_toggle(authenticated_client, user):
+    user.early_discount_eligible = True
+    user.vip_manual_override = True
+    user.save(update_fields=["early_discount_eligible", "vip_manual_override"])
+
+    first_response = authenticated_client.post(
+        reverse("create-checkout-session"),
+        {"plan_tier": "premium"},
+        format="json",
+    )
+    assert first_response.status_code == 200
+    assert first_response.data["early_discount_applied"] is False
+
+    user.refresh_from_db()
+    assert user.early_discount_eligible is True
+
+    user.vip_manual_override = False
+    user.save(update_fields=["vip_manual_override"])
+
+    second_response = authenticated_client.post(
+        reverse("create-checkout-session"),
+        {"plan_tier": "premium"},
+        format="json",
+    )
+    assert second_response.status_code == 200
+    assert second_response.data["early_discount_applied"] is True
+    assert second_response.data["applied_plan_tier"] == "premium_discounted"
+
+
+@pytest.mark.django_db
 def test_cancel_subscription_marks_cancel_at_period_end(authenticated_client, user):
     payment = Payment.objects.create(
         user=user,

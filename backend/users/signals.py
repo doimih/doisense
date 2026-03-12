@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import User
+from .models import EARLY_DISCOUNT_USER_LIMIT, User
 from profiles.models import UserProfile
 
 
@@ -9,3 +9,6 @@ from profiles.models import UserProfile
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.get_or_create(user=instance)
+        eligible = bool(instance.id and instance.id <= EARLY_DISCOUNT_USER_LIMIT and not instance.vip_manual_override)
+        if instance.early_discount_eligible != eligible:
+            User.objects.filter(pk=instance.pk).update(early_discount_eligible=eligible)

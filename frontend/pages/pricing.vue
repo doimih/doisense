@@ -19,7 +19,7 @@
     <div class="mx-auto max-w-7xl space-y-0 px-4 py-10 sm:px-6 lg:px-8">
     <section class="mt-[100px] mb-[100px] grid gap-6 lg:grid-cols-3">
       <article
-        v-for="plan in text.plans"
+        v-for="plan in displayedPlans"
         :key="plan.key"
         :class="[
           'relative rounded-3xl border p-6 shadow-sm transition-transform md:p-7',
@@ -47,7 +47,15 @@
         <h2 class="mt-2 text-2xl font-bold text-stone-900">{{ plan.title }}</h2>
         <p class="mt-3 text-sm leading-6 text-stone-700">{{ plan.description }}</p>
 
+        <p
+          v-if="plan.earlyAccessBadge"
+          class="mt-4 inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-emerald-700"
+        >
+          {{ plan.earlyAccessBadge }}
+        </p>
+
         <div class="mt-5 flex items-end gap-2 border-b border-stone-200 pb-5">
+          <p v-if="plan.originalPrice" class="text-base font-semibold text-stone-400 line-through">{{ plan.originalPrice }}</p>
           <p class="text-5xl font-bold tracking-tight text-stone-900">{{ plan.price }}</p>
           <p class="pb-1 text-sm font-medium text-stone-600">{{ plan.period }}</p>
         </div>
@@ -176,8 +184,14 @@ const loadingText = computed(() => {
 
 const currentPlanKey = computed(() => {
   if (!isLoggedIn.value) return null
-  const tier = authStore.user?.membership_tier
-  return (tier && tier !== 'free' && tier !== 'trial') ? tier : null
+  const tier = authStore.user?.plan_tier
+  if (!tier || tier === 'free' || tier === 'trial') return null
+  if (tier === 'premium_discounted') return 'premium'
+  return tier
+})
+
+const isEarlyDiscountEligible = computed(() => {
+  return Boolean(isLoggedIn.value && authStore.user?.early_discount_eligible)
 })
 
 async function startCheckout(planKey: string) {
@@ -233,6 +247,8 @@ type Plan = {
   items: string[]
   action: string
   highlight?: boolean
+  originalPrice?: string
+  earlyAccessBadge?: string
 }
 
 type ComparisonRow = {
@@ -886,6 +902,27 @@ const pricingCopy: Record<string, {
 }
 
 const text = computed(() => pricingCopy[localeCode.value] || pricingCopy.ro)
+const displayedPlans = computed<Plan[]>(() => {
+  const plans = text.value.plans.map((plan) => ({ ...plan }))
+  if (!isEarlyDiscountEligible.value) {
+    return plans
+  }
+
+  return plans.map((plan) => {
+    if (plan.key !== 'premium') {
+      return plan
+    }
+
+    return {
+      ...plan,
+      originalPrice: plan.price,
+      price: localeCode.value === 'ro' ? '116.10 lei' : '116.10 RON',
+      earlyAccessBadge: localeCode.value === 'ro'
+        ? 'Reducere Early Access -10%'
+        : 'Early Access Discount -10%',
+    }
+  })
+})
 const seoTitle = computed(() => text.value.seoTitle)
 const seoDescription = computed(() => text.value.seoDescription)
 

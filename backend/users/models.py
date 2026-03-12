@@ -7,6 +7,7 @@ from core.validators import validate_language
 
 
 TRIAL_DAYS = 7
+EARLY_DISCOUNT_USER_LIMIT = 500
 
 
 class UserManager(BaseUserManager):
@@ -47,6 +48,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     tax_region = models.CharField(max_length=120, blank=True)
     language = models.CharField(max_length=2, default="en", validators=[validate_language])
     is_premium = models.BooleanField(default=False)
+    vip_manual_override = models.BooleanField(default=False)
+    early_discount_eligible = models.BooleanField(default=False)
     plan_tier = models.CharField(max_length=10, choices=PLAN_CHOICES, default=PLAN_FREE)
     trial_started_at = models.DateTimeField(null=True, blank=True)
     trial_ends_at = models.DateTimeField(null=True, blank=True)
