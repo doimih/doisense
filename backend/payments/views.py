@@ -37,6 +37,18 @@ VALID_PLAN_TIERS = {"basic", "premium", "vip"}
 EARLY_DISCOUNT_PERCENT = 10
 
 
+def _build_promo_state_for_user(user: User) -> dict:
+    is_manual_vip = _is_manual_vip(user)
+    eligible = bool(_is_early_discount_applicable(user, "premium")) if not is_manual_vip else False
+    return {
+        "promo_key": "premium_early_discount",
+        "is_active": eligible,
+        "discount_percent": EARLY_DISCOUNT_PERCENT if eligible else 0,
+        "target_plan": "premium",
+        "manual_vip": is_manual_vip,
+    }
+
+
 class CheckoutSessionRateThrottle(UserRateThrottle):
     rate = "6/hour"
 
@@ -396,6 +408,15 @@ class SubscriptionStatusView(APIView):
             "current_period_end": payment.current_period_end.isoformat() if payment.current_period_end else None,
             "effective_tier": user.effective_plan_tier(),
         })
+
+
+class PromoStateView(APIView):
+    """Return dynamic promo state for the current user."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(_build_promo_state_for_user(request.user), status=status.HTTP_200_OK)
 
 
 class UpgradeSubscriptionView(APIView):

@@ -21,6 +21,7 @@ from .models import (
     AdminAuditLog,
     AIConfig,
     AnalyticsEvent,
+    BackupRestoreRequest,
     BackupVerificationLog,
     BackupConfig,
     FeatureAccessLog,
@@ -327,8 +328,8 @@ class UserNotificationPreferenceAdmin(ModelAdmin):
 
 @admin.register(SupportTicket)
 class SupportTicketAdmin(ModelAdmin):
-    list_display = ("id", "user", "subject", "status", "created_at")
-    list_filter = ("status", "created_at")
+    list_display = ("id", "user", "subject", "priority", "status", "assigned_to", "created_at")
+    list_filter = ("priority", "status", "created_at")
     search_fields = ("user__email", "subject", "message")
     ordering = ("-created_at",)
 
@@ -347,6 +348,17 @@ class SupportTicketAdmin(ModelAdmin):
                 after_data=after_data,
                 reason="Support ticket updated from admin",
             )
+
+
+@admin.register(BackupRestoreRequest)
+class BackupRestoreRequestAdmin(ModelAdmin):
+    list_display = ("id", "status", "restore_point", "requested_by", "approved_by", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("restore_point", "reason", "requested_by__email")
+    ordering = ("-created_at",)
+
+    def has_add_permission(self, request):
+        return False
 
 
 @admin.register(PlatformScheduledJob)

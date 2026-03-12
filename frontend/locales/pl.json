@@ -1,19 +1,17 @@
 {
-  "landing": {
-    "title": "Doisense",
-    "subtitle": "Twój towarzysz dobrego samopoczucia. Dziennik, czat z AI i programy prowadzone."
-  },
+  "landing": {},
   "nav": {
     "features": "Funkcje",
     "pricing": "Cennik",
     "about": "O nas",
     "contact": "Kontakt",
-    "search": "Szukaj",
     "admin": "Admin",
     "chat": "Czat",
     "journal": "Dziennik",
     "programs": "Programy prowadzone",
-    "profile": "Profil"
+    "profile": "Profil",
+    "notifications": "Powiadomienia",
+    "support": "Wsparcie"
   },
   "auth": {
     "login": "Zaloguj",
@@ -32,12 +30,9 @@
     "recoverDone": "Haslo zaktualizowane. Mozesz sie zalogowac.",
     "recoverInvalid": "Link niewazny/wygasl lub haslo niepoprawne.",
     "noAccount": "Nie masz konta? Zarejestruj się",
-    "hasAccount": "Masz konto? Zaloguj się",
     "accountTitle": "Twoje konto",
     "firstName": "Imię",
     "lastName": "Nazwisko",
-    "taxRegion": "Region podatkowy",
-    "taxRegionPlaceholder": "np: PL",
     "googleNotConfigured": "Logowanie Google nie jest skonfigurowane.",
     "googleLoginFailed": "Nie udało się zakończyć logowania Google.",
     "appleNotConfigured": "Logowanie Apple nie jest skonfigurowane.",
@@ -49,7 +44,6 @@
     "termsAndConditions": "Regulamin",
     "and": "i",
     "privacyPolicy": "Politykę prywatności",
-    "mustAcceptLegal": "Musisz zaakceptować regulamin i politykę prywatności.",
     "loginSeoDescription": "Zaloguj się do konta Doisense.",
     "registerSeoDescription": "Utwórz konto Doisense."
   },
@@ -77,10 +71,7 @@
     "markComplete": "Oznacz jako ukończone",
     "allComplete": "Program ukończony!"
   },
-  "profile": {
-    "premium": "Premium",
-    "upgrade": "Przejdź na Premium"
-  },
+  "profile": {},
   "footer": {
     "brandDescription": "Wspieramy Twoją podróż emocjonalnego dobrostanu dzięki spersonalizowanym wskazówkom i praktykom opartym na dowodach.",
     "copyright": "© Doisense. Wszelkie prawa zastrzeżone.",
@@ -92,10 +83,8 @@
     "whatsapp": "WhatsApp",
     "resources": "Zasoby",
     "helpCenter": "Centrum pomocy",
-    "docs": "Dokumentacja",
     "blog": "Blog",
     "documentation": "Dokumentacja",
-    "features": "Funkcje",
     "services": "Usługi",
     "coaching": "Coaching",
     "wellness": "Programy wellness",
@@ -103,32 +92,29 @@
     "privacy": "Prywatność",
     "terms": "Regulamin",
     "cookies": "Cookies",
-    "gdpr": "GDPR",
-    "newsletterTitle": "Zapisz się do naszego newslettera",
-    "newsletterDescription": "Otrzymuj porady dotyczące zdrowia i psychicznego oraz aktualizacje na swoją skrzynkę.",
-    "newsletterPlaceholder": "twój adres email",
-    "subscribe": "Subskrybuj",
-    "builtWithNuxt": "Zbudowano w Nuxt",
-    "newsletterSubscribed": "Zostales pomyslnie zapisany/a.",
-    "newsletterSubscribeError": "Subskrypcja nie powiodla sie. Sprobuj ponownie.",
-    "newsletterInvalidEmail": "Wpisz poprawny adres e-mail."
+    "gdpr": "GDPR"
   },
   "common": {
     "loading": "Ładowanie",
-    "back": "Wstecz",
-    "yes": "Tak",
-    "no": "Nie"
+    "back": "Wstecz"
   },
-  "search": {
-    "title": "Pełne wyszukiwanie",
-    "subtitle": "Szukaj w programach, pytaniach dziennika i stronach CMS.",
-    "placeholder": "Wpisz co najmniej 2 znaki",
-    "action": "Szukaj",
-    "programs": "Programy",
-    "journalQuestions": "Pytania dziennika",
-    "cmsPages": "Strony CMS",
-    "failed": "Wyszukiwanie nie powiodło się.",
-    "seoTitle": "Wyszukiwanie Doisense",
-    "seoDescription": "Narzędzie wyszukiwania dla zalogowanych użytkowników Doisense."
+  "home": {
+    "heroBadge": "Wellbeing + AI + GDPR",
+    "heroTitle": "Twoja platforma wellbeing, zbudowana odpowiedzialnie",
+    "heroSubtitle": "Doisense oferuje dziennik prowadzony, kontekstowy chat AI i programy strukturalne z kompletnymi stronami prawnymi.",
+    "primaryCta": "Utwórz konto",
+    "secondaryCta": "Zobacz funkcje",
+    "card1Title": "Prowadzone doświadczenie",
+    "card1Desc": "Jasny przepływ od onboardingu do codziennego postępu.",
+    "card2Title": "Projekt oparty na zaufaniu",
+    "card2Desc": "Czytelne informacje o danych, bezpieczeństwie i prawach.",
+    "card3Title": "Gotowość na skalę",
+    "card3Desc": "Kluczowe strony publiczne gotowe na rozwój.",
+    "sectionTwoTitle": "Prowadzone wsparcie dla codziennego dobrostanu psychicznego",
+    "sectionTwoDesc": "Doisense łączy dziennik prowadzony, rozmowy AI i programy strukturalne, aby wspierać realny i trwały progres.",
+    "impactBadge": "Nasz wpływ w liczbach",
+    "impactTitle": "Zobacz zasięg, rezultaty i rozwój, które wspieramy",
+    "seoTitle": "Doisense - Cyfrowy wellbeing z AI i dziennikiem",
+    "seoDesc": "Doisense zapewnia dziennik prowadzony, chat AI, programy strukturalne i kompletne strony prawne."
   }
 }

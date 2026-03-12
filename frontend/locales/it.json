@@ -1,19 +1,17 @@
 {
-  "landing": {
-    "title": "Doisense",
-    "subtitle": "Il tuo compagno di benessere. Diario, chat con AI e programmi guidati."
-  },
+  "landing": {},
   "nav": {
     "features": "Funzionalità",
     "pricing": "Prezzi",
     "about": "Chi siamo",
     "contact": "Contatto",
-    "search": "Ricerca",
     "admin": "Admin",
     "chat": "Chat",
     "journal": "Diario",
     "programs": "Programmi guidati",
-    "profile": "Profilo"
+    "profile": "Profilo",
+    "notifications": "Notifiche",
+    "support": "Supporto"
   },
   "auth": {
     "login": "Accedi",
@@ -32,12 +30,9 @@
     "recoverDone": "Password aggiornata. Ora puoi accedere.",
     "recoverInvalid": "Link non valido/scaduto o password non valida.",
     "noAccount": "Non hai un account? Registrati",
-    "hasAccount": "Hai già un account? Accedi",
     "accountTitle": "Il tuo account",
     "firstName": "Nome",
     "lastName": "Cognome",
-    "taxRegion": "Regione fiscale",
-    "taxRegionPlaceholder": "es: IT",
     "googleNotConfigured": "Accesso Google non configurato.",
     "googleLoginFailed": "Impossibile completare l'accesso con Google.",
     "appleNotConfigured": "Accesso Apple non configurato.",
@@ -49,7 +44,6 @@
     "termsAndConditions": "Termini e condizioni",
     "and": "e",
     "privacyPolicy": "Informativa sulla privacy",
-    "mustAcceptLegal": "Devi accettare termini e informativa sulla privacy.",
     "loginSeoDescription": "Accedi al tuo account Doisense.",
     "registerSeoDescription": "Crea il tuo account Doisense."
   },
@@ -77,10 +71,7 @@
     "markComplete": "Segna come completato",
     "allComplete": "Programma completato!"
   },
-  "profile": {
-    "premium": "Premium",
-    "upgrade": "Passa a Premium"
-  },
+  "profile": {},
   "footer": {
     "brandDescription": "Supporta il tuo percorso di benessere emotivo con una guida personalizzata e pratiche basate su evidenze.",
     "copyright": "© Doisense. Tutti i diritti riservati.",
@@ -92,10 +83,8 @@
     "whatsapp": "WhatsApp",
     "resources": "Risorse",
     "helpCenter": "Centro assistenza",
-    "docs": "Documentazione",
     "blog": "Blog",
     "documentation": "Documentazione",
-    "features": "Funzionalità",
     "services": "Servizi",
     "coaching": "Coaching",
     "wellness": "Programmi Wellness",
@@ -103,32 +92,29 @@
     "privacy": "Privacy",
     "terms": "Termini",
     "cookies": "Cookie",
-    "gdpr": "GDPR",
-    "newsletterTitle": "Iscriviti alla nostra newsletter",
-    "newsletterDescription": "Ricevi suggerimenti su benessere e aggiornamenti nella tua casella.",
-    "newsletterPlaceholder": "il tuo indirizzo email",
-    "subscribe": "Iscriviti",
-    "newsletterSubscribed": "Iscrizione completata con successo.",
-    "newsletterSubscribeError": "Iscrizione non riuscita. Riprova.",
-    "newsletterInvalidEmail": "Inserisci un indirizzo email valido.",
-    "builtWithNuxt": "Realizzato con Nuxt"
+    "gdpr": "GDPR"
   },
   "common": {
     "loading": "Caricamento",
-    "back": "Indietro",
-    "yes": "Sì",
-    "no": "No"
+    "back": "Indietro"
   },
-  "search": {
-    "title": "Ricerca completa",
-    "subtitle": "Cerca tra programmi, domande del diario e pagine CMS.",
-    "placeholder": "Inserisci almeno 2 caratteri",
-    "action": "Cerca",
-    "programs": "Programmi",
-    "journalQuestions": "Domande diario",
-    "cmsPages": "Pagine CMS",
-    "failed": "Ricerca non riuscita.",
-    "seoTitle": "Ricerca Doisense",
-    "seoDescription": "Utilità di ricerca per utenti autenticati su Doisense."
+  "home": {
+    "heroBadge": "Wellbeing + AI + GDPR",
+    "heroTitle": "Piattaforma di benessere digitale costruita con responsabilità",
+    "heroSubtitle": "Doisense offre diario guidato, chat AI contestuale e programmi strutturati con pagine legali complete.",
+    "primaryCta": "Crea account",
+    "secondaryCta": "Scopri le funzionalità",
+    "card1Title": "Esperienza guidata",
+    "card1Desc": "Flusso chiaro dall'onboarding al progresso quotidiano.",
+    "card2Title": "Design affidabile",
+    "card2Desc": "Informazioni chiare su dati, sicurezza e diritti.",
+    "card3Title": "Scalabilità prodotto",
+    "card3Desc": "Pagine pubbliche chiave pronte per crescere.",
+    "sectionTwoTitle": "Supporto guidato per il benessere mentale di ogni giorno",
+    "sectionTwoDesc": "Doisense unisce diario guidato, conversazioni AI e programmi strutturati per un progresso reale e costante.",
+    "impactBadge": "Il nostro impatto in numeri",
+    "impactTitle": "Scopri portata, risultati e crescita che aiutiamo a costruire",
+    "seoTitle": "Doisense - Benessere digitale con AI e diario guidato",
+    "seoDesc": "Doisense offre diario guidato, chat AI contestuale, programmi strutturati e pagine legali complete."
   }
 }

@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage, get_connection
 from django.http import JsonResponse
@@ -8,6 +10,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -70,6 +73,8 @@ def _send_activation_email(user) -> None:
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_register"
 
     def post(self, request):
         serializer = UserRegisterSerializer(data=request.data)
@@ -99,6 +104,8 @@ class RegisterView(APIView):
 
 class ActivateAccountView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_activate"
 
     def post(self, request):
         uid = request.data.get("uid")
@@ -140,6 +147,8 @@ class ActivateAccountView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_login"
 
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
@@ -169,6 +178,8 @@ class LoginView(APIView):
 
 class RefreshView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_refresh"
 
     def post(self, request):
         refresh_token = request.data.get("refresh")
@@ -345,6 +356,8 @@ class ChangePasswordView(APIView):
 
 class SocialLoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_social"
 
     @staticmethod
     def _verify_google_token(raw_token: str):
@@ -462,6 +475,8 @@ class SocialLoginView(APIView):
 
 class PasswordRecoveryRequestView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_recover"
 
     def post(self, request):
         serializer = PasswordRecoveryRequestSerializer(data=request.data)
@@ -518,6 +533,8 @@ class PasswordRecoveryRequestView(APIView):
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_reset_confirm"
 
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
@@ -538,6 +555,11 @@ class PasswordResetConfirmView(APIView):
                 {"detail": "Invalid or expired reset link."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        try:
+            validate_password(new_password, user)
+        except ValidationError as exc:
+            return Response({"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save(update_fields=["password"])

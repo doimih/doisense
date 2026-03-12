@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.files.storage import default_storage
 from django.db import connections
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timezone as dt_timezone
 from datetime import timedelta
@@ -21,6 +21,7 @@ from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from journal.models import JournalQuestion
@@ -29,8 +30,12 @@ from core.analytics import track_event
 
 from .image_utils import convert_uploaded_image_to_webp
 from .models import (
+    AnalyticsEvent,
+    BackupRestoreRequest,
+    BackupVerificationLog,
     CMSPage,
     InAppNotification,
+    SystemErrorEvent,
     SystemConfig,
     SupportTicket,
     UserNotificationPreference,
@@ -47,6 +52,8 @@ def public_cache_response(data, *, max_age: int = 300):
 
 class HealthCheckView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "health"
 
     def get(self, request):
         db_ok = True
@@ -66,6 +73,17 @@ class HealthCheckView(APIView):
             cache_ok = False
 
         status_code = status.HTTP_200_OK if db_ok and cache_ok else status.HTTP_503_SERVICE_UNAVAILABLE
+        if status_code != status.HTTP_200_OK:
+            SystemErrorEvent.objects.create(
+                severity=SystemErrorEvent.SEVERITY_HIGH,
+                component="healthcheck",
+                endpoint="/api/health",
+                http_method="GET",
+                status_code=status_code,
+                error_type="HealthDegraded",
+                message="Healthcheck returned degraded status.",
+                context={"database_ok": db_ok, "cache_ok": cache_ok},
+            )
         return Response(
             {
                 "status": "ok" if status_code == status.HTTP_200_OK else "degraded",
@@ -135,6 +153,8 @@ class CMSPageDetailView(APIView):
 
 class CMSPublicPageView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "public_read"
 
     def get(self, request, slug):
         language = (request.query_params.get("language") or "ro").strip()
@@ -166,6 +186,8 @@ class CMSPublicPageView(APIView):
 
 class CMSPublicPreviewPageView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "public_read"
 
     def get(self, request, slug):
         language = (request.query_params.get("language") or "ro").strip().lower()
@@ -189,6 +211,8 @@ class CMSPublicPreviewPageView(APIView):
 
 class CMSMenuLinksView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "public_read"
 
     def get(self, request):
         language = (request.query_params.get("language") or "ro").strip()
@@ -210,6 +234,8 @@ class CMSMenuLinksView(APIView):
 
 class GeoLanguageView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "geo"
 
     COUNTRY_LANGUAGE_MAP = {
         "RO": "ro",
@@ -273,6 +299,8 @@ class GeoLanguageView(APIView):
 
 class SearchView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "search"
 
     def get(self, request):
         query = (request.query_params.get("q") or "").strip()
@@ -353,6 +381,8 @@ class SearchView(APIView):
 
 class AnalyticsTrackView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "analytics_track"
 
     def post(self, request):
         serializer = AnalyticsTrackSerializer(data=request.data)
@@ -362,6 +392,10 @@ class AnalyticsTrackView(APIView):
         source = serializer.validated_data.get("source", "frontend")
         session_id = serializer.validated_data.get("session_id", "")
         properties = serializer.validated_data.get("properties") or {}
+
+        # Guard against oversized JSON payloads and event-flood storage abuse.
+        if len(json.dumps(properties, ensure_ascii=True)) > 4096:
+            return Response({"detail": "properties payload is too large."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user if request.user and request.user.is_authenticated else None
         track_event(
@@ -552,7 +586,10 @@ class SupportTicketListCreateView(APIView):
                         "id": row.id,
                         "subject": row.subject,
                         "message": row.message,
+                        "priority": row.priority,
                         "status": row.status,
+                        "first_response_due_at": row.first_response_due_at,
+                        "resolution_due_at": row.resolution_due_at,
                         "created_at": row.created_at,
                         "updated_at": row.updated_at,
                     }
@@ -570,10 +607,13 @@ class SupportTicketListCreateView(APIView):
         if not message:
             return Response({"detail": "message is required."}, status=status.HTTP_400_BAD_REQUEST)
 
+        now = timezone.now()
         ticket = SupportTicket.objects.create(
             user=request.user,
             subject=subject[:180],
             message=message,
+            first_response_due_at=now + timedelta(hours=4),
+            resolution_due_at=now + timedelta(hours=48),
         )
         track_event(
             "support_ticket_created",
@@ -586,11 +626,169 @@ class SupportTicketListCreateView(APIView):
                 "id": ticket.id,
                 "subject": ticket.subject,
                 "message": ticket.message,
+                "priority": ticket.priority,
                 "status": ticket.status,
+                "first_response_due_at": ticket.first_response_due_at,
+                "resolution_due_at": ticket.resolution_due_at,
                 "created_at": ticket.created_at,
                 "updated_at": ticket.updated_at,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+class BackupRestoreRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        rows = BackupRestoreRequest.objects.order_by("-created_at")[:50]
+        return Response(
+            {
+                "items": [
+                    {
+                        "id": row.id,
+                        "status": row.status,
+                        "restore_point": row.restore_point,
+                        "reason": row.reason,
+                        "requested_by": row.requested_by_id,
+                        "approved_by": row.approved_by_id,
+                        "created_at": row.created_at,
+                        "updated_at": row.updated_at,
+                    }
+                    for row in rows
+                ]
+            }
+        )
+
+    def post(self, request):
+        if not request.user.is_staff:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        restore_point = str(request.data.get("restore_point") or "").strip()
+        reason = str(request.data.get("reason") or "").strip()
+        confirmation = str(request.data.get("confirmation") or "").strip()
+
+        if not restore_point:
+            return Response({"detail": "restore_point is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if confirmation != "CONFIRM_RESTORE":
+            return Response(
+                {"detail": "Invalid confirmation token. Use CONFIRM_RESTORE."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        row = BackupRestoreRequest.objects.create(
+            requested_by=request.user,
+            restore_point=restore_point,
+            reason=reason,
+            confirmation_token=confirmation,
+        )
+        track_event(
+            "backup_restore_requested",
+            source="backend",
+            user=request.user,
+            properties={"restore_point": restore_point},
+        )
+        return Response(
+            {
+                "id": row.id,
+                "status": row.status,
+                "restore_point": row.restore_point,
+                "created_at": row.created_at,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AnalyticsFunnelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        now = timezone.now()
+        start = now - timedelta(days=30)
+        counts = {
+            "onboarding_started": AnalyticsEvent.objects.filter(event_name="onboarding_started", created_at__gte=start).count(),
+            "onboarding_completed": AnalyticsEvent.objects.filter(event_name="onboarding_completed", created_at__gte=start).count(),
+            "checkout_initiated": AnalyticsEvent.objects.filter(event_name="checkout_initiated", created_at__gte=start).count(),
+            "subscription_change_requested": AnalyticsEvent.objects.filter(
+                event_name="subscription_change_requested", created_at__gte=start
+            ).count(),
+            "program_completed": AnalyticsEvent.objects.filter(event_name="program_completed", created_at__gte=start).count(),
+        }
+        return Response({"period_days": 30, "funnel": counts})
+
+
+class AnalyticsCohortRetentionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        today = timezone.localdate()
+        start_date = today - timedelta(days=30)
+        cohort_rows = (
+            AnalyticsEvent.objects.filter(event_name="onboarding_completed", created_at__date__gte=start_date)
+            .values("created_at__date")
+            .annotate(total=Count("id"))
+            .order_by("created_at__date")
+        )
+
+        active_after_7d = AnalyticsEvent.objects.filter(
+            event_name="chat_message_sent",
+            created_at__date__gte=today - timedelta(days=23),
+        ).count()
+
+        return Response(
+            {
+                "cohorts": [
+                    {"cohort_date": row["created_at__date"], "users": row["total"]}
+                    for row in cohort_rows
+                ],
+                "retention_proxy": {
+                    "window_days": 7,
+                    "active_events": active_after_7d,
+                },
+            }
+        )
+
+
+class OperationalAlertsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        since = timezone.now() - timedelta(hours=24)
+        scheduler_failures = SystemErrorEvent.objects.filter(
+            component="scheduler",
+            severity__in=[SystemErrorEvent.SEVERITY_HIGH, SystemErrorEvent.SEVERITY_CRITICAL],
+            created_at__gte=since,
+        ).count()
+        health_degraded = SystemErrorEvent.objects.filter(
+            component="healthcheck",
+            created_at__gte=since,
+        ).count()
+        backup_failures = BackupVerificationLog.objects.filter(
+            status=BackupVerificationLog.STATUS_FAILED,
+            created_at__gte=since,
+        ).count()
+
+        return Response(
+            {
+                "window_hours": 24,
+                "alerts": {
+                    "scheduler_failures": scheduler_failures,
+                    "health_degraded": health_degraded,
+                    "backup_verification_failed": backup_failures,
+                },
+            }
         )
 
 
@@ -671,6 +869,8 @@ class SettingsImageLibraryView(APIView):
 
 class ContactConfigView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "contact_config"
 
     def get(self, request):
         config = SystemConfig.get_solo()
@@ -685,6 +885,8 @@ class ContactConfigView(APIView):
 
 class ContactSubmitView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "contact_submit"
 
     def post(self, request):
         full_name = str(request.data.get("full_name") or "").strip()
@@ -692,6 +894,13 @@ class ContactSubmitView(APIView):
         subject = str(request.data.get("subject") or "").strip()
         message = str(request.data.get("message") or "").strip()
         recaptcha_token = str(request.data.get("recaptcha_token") or "").strip()
+
+        if len(full_name) > 120:
+            return Response({"detail": "Full name too long."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(subject) > 180:
+            return Response({"detail": "Subject too long."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(message) > 5000:
+            return Response({"detail": "Message too long."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not full_name:
             return Response({"detail": "Full name is required."}, status=status.HTTP_400_BAD_REQUEST)

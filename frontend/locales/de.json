@@ -1,19 +1,17 @@
 {
-  "landing": {
-    "title": "Doisense",
-    "subtitle": "Dein Wohlfühl-Begleiter. Tagebuch, KI-Chat und geführte Programme."
-  },
+  "landing": {},
   "nav": {
     "features": "Funktionen",
     "pricing": "Preise",
     "about": "Über uns",
     "contact": "Kontakt",
-    "search": "Suche",
     "admin": "Admin",
     "chat": "Chat",
     "journal": "Tagebuch",
     "programs": "Geführte Programme",
-    "profile": "Profil"
+    "profile": "Profil",
+    "notifications": "Benachrichtigungen",
+    "support": "Support"
   },
   "auth": {
     "login": "Anmelden",
@@ -32,12 +30,9 @@
     "recoverDone": "Passwort aktualisiert. Du kannst dich jetzt anmelden.",
     "recoverInvalid": "Link ungultig/abgelaufen oder Passwort ungultig.",
     "noAccount": "Noch kein Konto? Registrieren",
-    "hasAccount": "Bereits Konto? Anmelden",
     "accountTitle": "Dein Konto",
     "firstName": "Vorname",
     "lastName": "Nachname",
-    "taxRegion": "Steuerregion",
-    "taxRegionPlaceholder": "z. B. DE",
     "googleNotConfigured": "Google-Login ist nicht konfiguriert.",
     "googleLoginFailed": "Google-Login konnte nicht abgeschlossen werden.",
     "appleNotConfigured": "Apple-Login ist nicht konfiguriert.",
@@ -49,7 +44,6 @@
     "termsAndConditions": "Allgemeine Geschäftsbedingungen",
     "and": "und",
     "privacyPolicy": "Datenschutzerklärung",
-    "mustAcceptLegal": "Du musst die Bedingungen und die Datenschutzerklärung akzeptieren.",
     "loginSeoDescription": "Melde dich bei deinem Doisense-Konto an.",
     "registerSeoDescription": "Erstelle dein Doisense-Konto."
   },
@@ -77,10 +71,7 @@
     "markComplete": "Als abgeschlossen markieren",
     "allComplete": "Programm abgeschlossen!"
   },
-  "profile": {
-    "premium": "Premium",
-    "upgrade": "Auf Premium upgraden"
-  },
+  "profile": {},
   "footer": {
     "brandDescription": "Unterstütze deine emotionale Wellness-Reise mit personalisierter Anleitung und evidenzgestützten Praktiken.",
     "copyright": "© Doisense. Alle Rechte vorbehalten.",
@@ -92,10 +83,8 @@
     "whatsapp": "WhatsApp",
     "resources": "Ressourcen",
     "helpCenter": "Hilfezentrum",
-    "docs": "Dokumentation",
     "blog": "Blog",
     "documentation": "Dokumentation",
-    "features": "Funktionen",
     "services": "Dienstleistungen",
     "coaching": "Coaching",
     "wellness": "Wellness-Programme",
@@ -103,32 +92,29 @@
     "privacy": "Datenschutz",
     "terms": "Nutzungsbedingungen",
     "cookies": "Cookies",
-    "gdpr": "DSGVO",
-    "newsletterTitle": "Abonniere unseren Newsletter",
-    "newsletterDescription": "Erhalte Wellness-Tipps und Updates in deinen Posteingang.",
-    "newsletterPlaceholder": "deine e-mail adresse",
-    "subscribe": "Abonnieren",
-    "newsletterSubscribed": "Du wurdest erfolgreich abonniert.",
-    "newsletterSubscribeError": "Abonnement fehlgeschlagen. Bitte erneut versuchen.",
-    "newsletterInvalidEmail": "Bitte eine gultige E-Mail-Adresse eingeben.",
-    "builtWithNuxt": "Erstellt mit Nuxt"
+    "gdpr": "DSGVO"
   },
   "common": {
     "loading": "Laden",
-    "back": "Zurück",
-    "yes": "Ja",
-    "no": "Nein"
+    "back": "Zurück"
   },
-  "search": {
-    "title": "Volltextsuche",
-    "subtitle": "Suche in Programmen, Tagebuchfragen und CMS-Seiten.",
-    "placeholder": "Mindestens 2 Zeichen eingeben",
-    "action": "Suchen",
-    "programs": "Programme",
-    "journalQuestions": "Tagebuchfragen",
-    "cmsPages": "CMS-Seiten",
-    "failed": "Suche fehlgeschlagen.",
-    "seoTitle": "Doisense Suche",
-    "seoDescription": "Suchfunktion für angemeldete Nutzer in Doisense."
+  "home": {
+    "heroBadge": "Wellbeing + AI + DSGVO",
+    "heroTitle": "Digitale Wellbeing-Plattform, verantwortungsvoll gebaut",
+    "heroSubtitle": "Doisense bietet geführtes Tagebuch, kontextbezogenen KI-Chat und strukturierte Programme mit klaren rechtlichen Seiten.",
+    "primaryCta": "Konto erstellen",
+    "secondaryCta": "Funktionen ansehen",
+    "card1Title": "Geführte Erfahrung",
+    "card1Desc": "Klarer Ablauf von Onboarding bis täglichem Fortschritt.",
+    "card2Title": "Vertrauensdesign",
+    "card2Desc": "Klare Infos zu Daten, Sicherheit und Rechten.",
+    "card3Title": "Skalierbar",
+    "card3Desc": "Wichtige öffentliche Seiten für Wachstum bereit.",
+    "sectionTwoTitle": "Geführte Unterstützung für mentales Wohlbefinden im Alltag",
+    "sectionTwoDesc": "Doisense verbindet geführtes Journaling, KI-Gespräche und strukturierte Programme für echten, nachhaltigen Fortschritt.",
+    "impactBadge": "Unser Impact in Zahlen",
+    "impactTitle": "Sieh Reichweite, Ergebnisse und Wachstum, das wir gemeinsam aufbauen",
+    "seoTitle": "Doisense - Digitales Wellbeing mit KI und Tagebuch",
+    "seoDesc": "Doisense bietet geführtes Tagebuch, KI-Chat, strukturierte Programme und vollständige rechtliche Seiten."
   }
 }

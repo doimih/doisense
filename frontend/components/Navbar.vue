@@ -1,7 +1,23 @@
 <template>
   <nav ref="navRef" :class="navClass">
     <div class="container mx-auto flex items-center justify-between gap-4">
-      <NuxtLink :to="localePath('/')" :class="brandClass">Doisense</NuxtLink>
+      <NuxtLink
+        :to="localePath('/')"
+        class="inline-flex items-center px-1 py-1"
+      >
+        <span class="inline-flex flex-col leading-none" style="font-family: 'Cormorant Garamond', serif;">
+          <span class="inline-flex items-baseline" style="letter-spacing: 0.2em; line-height: 0.92; text-transform: lowercase;">
+            <span :style="{ color: isOverDarkZone ? 'rgb(255 255 255)' : 'rgb(41 37 36)', fontSize: '2.55rem' }">doi</span>
+            <span style="color: #c4a882; font-size: 2.55rem; font-style: italic; margin-left: 0.22em;">sense</span>
+          </span>
+          <span
+            class="mt-1 uppercase"
+            :style="{ fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif', fontSize: '0.55rem', letterSpacing: '0.52em', color: isOverDarkZone ? 'rgb(255 255 255 / 0.8)' : 'rgb(41 37 36)' }"
+          >
+            wellbeing
+          </span>
+        </span>
+      </NuxtLink>
 
       <button
         type="button"
@@ -43,10 +59,10 @@
           {{ $t('nav.profile') }}
         </NuxtLink>
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" :class="navLinkClass">
-          {{ locale.startsWith('ro') ? 'Notificari' : 'Notifications' }}
+          {{ $t('nav.notifications') }}
         </NuxtLink>
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" :class="navLinkClass">
-          {{ locale.startsWith('ro') ? 'Suport' : 'Support' }}
+          {{ $t('nav.support') }}
         </NuxtLink>
         <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" :class="navLinkClass">
           {{ $t('nav.admin') }}
@@ -109,8 +125,8 @@
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" class="block text-stone-700" @click="mobileOpen = false">{{ locale.startsWith('ro') ? 'Notificari' : 'Notifications' }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" class="block text-stone-700" @click="mobileOpen = false">{{ locale.startsWith('ro') ? 'Suport' : 'Support' }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.notifications') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.support') }}</NuxtLink>
       <div class="pt-2">
         <p class="mb-1 text-xs text-stone-500">{{ $t('auth.language') }}</p>
         <div class="relative inline-block">
@@ -301,7 +317,10 @@ const navHidden = ref(false)
 const lastScrollY = ref(0)
 const desktopLanguageMenuOpen = ref(false)
 const mobileLanguageMenuOpen = ref(false)
-const languageOptions = [
+const LANGUAGE_CODES = ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'] as const
+type LocaleCode = (typeof LANGUAGE_CODES)[number]
+
+const languageOptions: Array<{ code: LocaleCode; label: string }> = [
   { code: 'ro', label: 'Romana' },
   { code: 'en', label: 'English' },
   { code: 'de', label: 'Deutsch' },
@@ -329,11 +348,6 @@ const navClass = computed(() => {
     hidden ? '-translate-y-full' : 'translate-y-0',
   ]
 })
-
-const brandClass = computed(() => [
-  'text-xl font-semibold transition-colors',
-  isOverDarkZone.value ? 'text-white' : 'text-stone-800',
-])
 
 const navLinkClass = computed(() =>
   isOverDarkZone.value ? 'text-white/85 hover:text-white transition-colors' : 'text-stone-600 hover:text-stone-900 transition-colors',
@@ -366,7 +380,7 @@ const loginPassword = ref('')
 
 const registerEmail = ref('')
 const registerPassword = ref('')
-const registerLanguage = ref('en')
+const registerLanguage = ref<LocaleCode>('en')
 const registerFirstName = ref('')
 const registerLastName = ref('')
 
@@ -394,9 +408,9 @@ async function goToRecover() {
   await router.push(localePath('/auth/recover'))
 }
 
-function preferredLanguage() {
+function preferredLanguage(): LocaleCode {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return languageOptions.some((lang) => lang.code === code) ? code : 'en'
+  return LANGUAGE_CODES.includes(code as LocaleCode) ? (code as LocaleCode) : 'en'
 }
 
 function loadScript(src: string, id: string) {
@@ -536,7 +550,7 @@ function logout() {
   router.push(localePath('/'))
 }
 
-async function changeLanguage(code: string) {
+async function changeLanguage(code: LocaleCode) {
   try {
     selectedLanguageCookie.value = code
     selectedLanguageCookieLegacy.value = code

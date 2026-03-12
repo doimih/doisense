@@ -187,3 +187,32 @@ def test_manual_vip_subscription_status_is_vip(authenticated_client, user):
     assert response.data["manual_vip"] is True
     assert response.data["effective_tier"] == "vip"
     assert response.data["status"] == "manual_vip"
+
+
+@pytest.mark.django_db
+def test_promo_state_active_for_eligible_user(authenticated_client, user):
+    user.early_discount_eligible = True
+    user.vip_manual_override = False
+    user.save(update_fields=["early_discount_eligible", "vip_manual_override"])
+
+    response = authenticated_client.get(reverse("promo-state"))
+
+    assert response.status_code == 200
+    assert response.data["promo_key"] == "premium_early_discount"
+    assert response.data["is_active"] is True
+    assert response.data["discount_percent"] == 10
+    assert response.data["target_plan"] == "premium"
+
+
+@pytest.mark.django_db
+def test_promo_state_inactive_for_manual_vip(authenticated_client, user):
+    user.early_discount_eligible = True
+    user.vip_manual_override = True
+    user.save(update_fields=["early_discount_eligible", "vip_manual_override"])
+
+    response = authenticated_client.get(reverse("promo-state"))
+
+    assert response.status_code == 200
+    assert response.data["is_active"] is False
+    assert response.data["discount_percent"] == 0
+    assert response.data["manual_vip"] is True

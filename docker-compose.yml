@@ -12,10 +12,14 @@ services:
       dockerfile: Dockerfile
     environment:
       POSTGRES_USER: doisense
-      POSTGRES_PASSWORD: doisense
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-db-password}
       POSTGRES_DB: doisense
     volumes:
       - doisense_pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - app_internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U doisense"]
       interval: 5s
@@ -24,6 +28,10 @@ services:
 
   redis:
     image: redis:7-alpine
+    expose:
+      - "6379"
+    networks:
+      - app_internal
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -36,11 +44,13 @@ services:
       dockerfile: Dockerfile
     volumes:
       - doisense_media:/app/media
+    expose:
+      - "8000"
     networks:
-      - default
+      - app_internal
       - traefik
     environment:
-      DATABASE_URL: postgres://doisense:doisense@db:5432/doisense
+      DATABASE_URL: postgres://doisense:${POSTGRES_PASSWORD:-change-me-db-password}@db:5432/doisense
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,backend,projects.doimih.net}
@@ -86,8 +96,10 @@ services:
       dockerfile: Dockerfile
       args:
         NUXT_PUBLIC_APP_BASE_URL: /doisense/
+    expose:
+      - "3000"
     networks:
-      - default
+      - app_internal
       - traefik
     environment:
       NUXT_PUBLIC_APP_BASE_URL: /doisense/
@@ -107,6 +119,8 @@ services:
       # Nu strip prefix – Nuxt servește cu baseURL /doisense
 
 networks:
+  app_internal:
+    internal: true
   traefik:
     external: true
     name: ${TRAEFIK_NETWORK:-traefik}

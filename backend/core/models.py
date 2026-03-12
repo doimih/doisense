@@ -388,6 +388,17 @@ class UserNotificationPreference(models.Model):
 
 
 class SupportTicket(models.Model):
+    PRIORITY_LOW = "low"
+    PRIORITY_MEDIUM = "medium"
+    PRIORITY_HIGH = "high"
+    PRIORITY_URGENT = "urgent"
+    PRIORITY_CHOICES = [
+        (PRIORITY_LOW, "Low"),
+        (PRIORITY_MEDIUM, "Medium"),
+        (PRIORITY_HIGH, "High"),
+        (PRIORITY_URGENT, "Urgent"),
+    ]
+
     STATUS_OPEN = "open"
     STATUS_IN_PROGRESS = "in_progress"
     STATUS_RESOLVED = "resolved"
@@ -404,7 +415,20 @@ class SupportTicket(models.Model):
     )
     subject = models.CharField(max_length=180)
     message = models.TextField()
+    priority = models.CharField(max_length=16, choices=PRIORITY_CHOICES, default=PRIORITY_MEDIUM)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_OPEN)
+    assigned_to = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_support_tickets",
+    )
+    first_response_due_at = models.DateTimeField(null=True, blank=True)
+    resolution_due_at = models.DateTimeField(null=True, blank=True)
+    first_responded_at = models.DateTimeField(null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    internal_notes = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -417,6 +441,55 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return f"Ticket #{self.id} ({self.status})"
+
+
+class BackupRestoreRequest(models.Model):
+    STATUS_REQUESTED = "requested"
+    STATUS_APPROVED = "approved"
+    STATUS_REJECTED = "rejected"
+    STATUS_EXECUTED = "executed"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_REQUESTED, "Requested"),
+        (STATUS_APPROVED, "Approved"),
+        (STATUS_REJECTED, "Rejected"),
+        (STATUS_EXECUTED, "Executed"),
+        (STATUS_FAILED, "Failed"),
+    ]
+
+    requested_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="backup_restore_requests",
+    )
+    approved_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_backup_restore_requests",
+    )
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_REQUESTED)
+    restore_point = models.CharField(max_length=255)
+    reason = models.TextField(blank=True, default="")
+    confirmation_token = models.CharField(max_length=64, default="CONFIRM_RESTORE")
+    execution_notes = models.TextField(blank=True, default="")
+    approved_at = models.DateTimeField(null=True, blank=True)
+    executed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "core_backuprestorerequest"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["status", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"Restore {self.restore_point} ({self.status})"
 
 
 class FeatureAccessLog(models.Model):

@@ -21,4 +21,8 @@ urlpatterns = [
     path("notifications/<int:notification_id>/read", views.InAppNotificationReadView.as_view(), name="notifications-read"),
     path("notifications/preferences", views.NotificationPreferenceView.as_view(), name="notifications-preferences"),
     path("support/tickets", views.SupportTicketListCreateView.as_view(), name="support-tickets"),
+    path("backup/restore-requests", views.BackupRestoreRequestView.as_view(), name="backup-restore-requests"),
+    path("analytics/funnel", views.AnalyticsFunnelView.as_view(), name="analytics-funnel"),
+    path("analytics/cohorts", views.AnalyticsCohortRetentionView.as_view(), name="analytics-cohorts"),
+    path("alerts/operational", views.OperationalAlertsView.as_view(), name="operational-alerts"),
 ]

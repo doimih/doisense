@@ -1,19 +1,17 @@
 {
-  "landing": {
-    "title": "Doisense",
-    "subtitle": "Your wellbeing companion. Journal, chat with AI, and follow guided programs."
-  },
+  "landing": {},
   "nav": {
     "features": "Features",
     "pricing": "Pricing",
     "about": "About",
     "contact": "Contact",
-    "search": "Search",
     "admin": "Admin",
     "chat": "Chat",
     "journal": "Journal",
     "programs": "Guided Programs",
-    "profile": "Profile"
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "support": "Support"
   },
   "auth": {
     "login": "Log in",
@@ -32,12 +30,9 @@
     "recoverDone": "Password updated. You can now log in.",
     "recoverInvalid": "Invalid or expired link, or invalid password.",
     "noAccount": "Don't have an account? Sign up",
-    "hasAccount": "Already have an account? Log in",
     "accountTitle": "Your account",
     "firstName": "First name",
     "lastName": "Last name",
-    "taxRegion": "Tax region",
-    "taxRegionPlaceholder": "e.g. RO",
     "googleNotConfigured": "Google login is not configured.",
     "googleLoginFailed": "Google login could not be completed.",
     "appleNotConfigured": "Apple login is not configured.",
@@ -49,7 +44,6 @@
     "termsAndConditions": "Terms and Conditions",
     "and": "and",
     "privacyPolicy": "Privacy Policy",
-    "mustAcceptLegal": "You must accept the terms and privacy policy.",
     "loginSeoDescription": "Log in to your Doisense account.",
     "registerSeoDescription": "Create your Doisense account."
   },
@@ -77,10 +71,7 @@
     "markComplete": "Mark as complete",
     "allComplete": "Program complete!"
   },
-  "profile": {
-    "premium": "Premium",
-    "upgrade": "Upgrade to Premium"
-  },
+  "profile": {},
   "footer": {
     "brandDescription": "Supporting your emotional wellness journey with personalized guidance and evidence-based practices.",
     "copyright": "© Doisense. All rights reserved.",
@@ -92,10 +83,8 @@
     "whatsapp": "WhatsApp",
     "resources": "Resources",
     "helpCenter": "Help center",
-    "docs": "Docs",
     "blog": "Blog",
     "documentation": "Documentation",
-    "features": "Features",
     "services": "Services",
     "coaching": "Coaching",
     "wellness": "Wellness Programs",
@@ -103,32 +92,29 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "cookies": "Cookies",
-    "gdpr": "GDPR",
-    "newsletterTitle": "Subscribe to our Newsletter",
-    "newsletterDescription": "Get wellness tips and updates delivered to your inbox.",
-    "newsletterPlaceholder": "your email address",
-    "subscribe": "Subscribe",
-    "newsletterSubscribed": "You have been subscribed successfully.",
-    "newsletterSubscribeError": "Subscription failed. Please try again.",
-    "newsletterInvalidEmail": "Please enter a valid email address.",
-    "builtWithNuxt": "Built with Nuxt"
+    "gdpr": "GDPR"
   },
   "common": {
     "loading": "Loading",
-    "back": "Back",
-    "yes": "Yes",
-    "no": "No"
+    "back": "Back"
   },
-  "search": {
-    "title": "Full Search",
-    "subtitle": "Search across programs, journal questions, and CMS pages.",
-    "placeholder": "Type at least 2 characters",
-    "action": "Search",
-    "programs": "Programs",
-    "journalQuestions": "Journal Questions",
-    "cmsPages": "CMS Pages",
-    "failed": "Search failed.",
-    "seoTitle": "Doisense Search",
-    "seoDescription": "Search utility for logged-in users inside Doisense."
+  "home": {
+    "heroBadge": "Wellbeing + AI + GDPR",
+    "heroTitle": "Your digital wellbeing platform, built responsibly",
+    "heroSubtitle": "Doisense provides guided journaling, contextual AI chat, and structured programs with complete legal pages and user data control.",
+    "primaryCta": "Create account",
+    "secondaryCta": "Explore features",
+    "card1Title": "Guided experience",
+    "card1Desc": "Clear flow from onboarding to daily progress.",
+    "card2Title": "Trust-focused design",
+    "card2Desc": "Explicit data, security, and rights information.",
+    "card3Title": "Product-ready scale",
+    "card3Desc": "Public key pages ready for growth.",
+    "sectionTwoTitle": "Guided support for everyday mental wellbeing",
+    "sectionTwoDesc": "Doisense combines guided journaling, AI conversations, and structured programs for real and sustainable progress.",
+    "impactBadge": "Our Impact In Numbers",
+    "impactTitle": "See The Reach, Results, And Growth We've Helped Facilitate",
+    "seoTitle": "Doisense - Digital wellbeing with AI and guided journaling",
+    "seoDesc": "Doisense provides guided journaling, contextual AI chat, structured programs, and complete legal pages for transparent compliance."
   }
 }

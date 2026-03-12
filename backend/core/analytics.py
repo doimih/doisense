@@ -26,7 +26,9 @@ EVENT_SCHEMA = {
     "subscription_change_requested": ["plan_tier"],
     "subscription_cancel_requested": ["plan_tier"],
     "subscription_refunded": ["plan_tier"],
+    "backup_restore_requested": ["restore_point"],
     "support_ticket_created": [],
+    "reactivation_campaign_sent": ["segment", "days_inactive"],
     "feature_access_checked": ["feature_key", "granted"],
     "quota_exceeded": ["metric_key"],
 }

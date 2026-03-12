@@ -10,6 +10,7 @@ from ai.models import AILog, Conversation
 from core.models import (
     AdminAuditLog,
     AnalyticsEvent,
+    BackupRestoreRequest,
     BackupVerificationLog,
     InAppNotification,
     SupportTicket,
@@ -232,6 +233,12 @@ def dashboard_callback(request, context):
     support_ticket_open_total = SupportTicket.objects.filter(
         status__in=[SupportTicket.STATUS_OPEN, SupportTicket.STATUS_IN_PROGRESS]
     ).count()
+    support_ticket_sla_overdue = SupportTicket.objects.filter(
+        status__in=[SupportTicket.STATUS_OPEN, SupportTicket.STATUS_IN_PROGRESS],
+        resolution_due_at__isnull=False,
+        resolution_due_at__lt=now,
+    ).count()
+    backup_restore_requested_period = BackupRestoreRequest.objects.filter(created_at__gte=start_period).count()
     in_app_unread_total = InAppNotification.objects.filter(is_read=False).count()
     subscription_cancel_requested_period = AnalyticsEvent.objects.filter(
         event_name="subscription_cancel_requested",
@@ -489,6 +496,8 @@ def dashboard_callback(request, context):
                 "program_reflection_period": program_reflection_period,
                 "support_ticket_created_period": support_ticket_created_period,
                 "support_ticket_open_total": support_ticket_open_total,
+                "support_ticket_sla_overdue": support_ticket_sla_overdue,
+                "backup_restore_requested_period": backup_restore_requested_period,
                 "in_app_unread_total": in_app_unread_total,
                 "subscription_cancel_requested_period": subscription_cancel_requested_period,
                 "subscription_refunded_period": subscription_refunded_period,

@@ -1,19 +1,17 @@
 {
-  "landing": {
-    "title": "Doisense",
-    "subtitle": "Votre compagnon bien-etre. Journal, chat avec IA et programmes guides."
-  },
+  "landing": {},
   "nav": {
     "features": "Fonctionnalites",
     "pricing": "Tarifs",
     "about": "A propos",
     "contact": "Contact",
-    "search": "Recherche",
     "admin": "Admin",
     "chat": "Discussion",
     "journal": "Journal",
     "programs": "Programmes guides",
-    "profile": "Profil"
+    "profile": "Profil",
+    "notifications": "Notifications",
+    "support": "Assistance"
   },
   "auth": {
     "login": "Se connecter",
@@ -32,12 +30,9 @@
     "recoverDone": "Mot de passe mis a jour. Vous pouvez maintenant vous connecter.",
     "recoverInvalid": "Lien invalide ou expire, ou mot de passe invalide.",
     "noAccount": "Vous n'avez pas de compte ? Creez-en un",
-    "hasAccount": "Vous avez deja un compte ? Connectez-vous",
     "accountTitle": "Votre compte",
     "firstName": "Prenom",
     "lastName": "Nom",
-    "taxRegion": "Region fiscale",
-    "taxRegionPlaceholder": "ex: FR",
     "googleNotConfigured": "La connexion Google n'est pas configuree.",
     "googleLoginFailed": "La connexion Google n'a pas pu etre finalisee.",
     "appleNotConfigured": "La connexion Apple n'est pas configuree.",
@@ -49,7 +44,6 @@
     "termsAndConditions": "Conditions generales",
     "and": "et",
     "privacyPolicy": "Politique de confidentialite",
-    "mustAcceptLegal": "Vous devez accepter les conditions et la politique de confidentialite.",
     "loginSeoDescription": "Connectez-vous a votre compte Doisense.",
     "registerSeoDescription": "Creez votre compte Doisense."
   },
@@ -77,10 +71,7 @@
     "markComplete": "Marquer comme complété",
     "allComplete": "Programme terminé !"
   },
-  "profile": {
-    "premium": "Premium",
-    "upgrade": "Passer a Premium"
-  },
+  "profile": {},
   "footer": {
     "brandDescription": "Soutenez votre parcours de bien-être émotionnel avec des conseils personnalisés et des pratiques basées sur des preuves.",
     "copyright": "© Doisense. Tous droits reserves.",
@@ -92,10 +83,8 @@
     "whatsapp": "WhatsApp",
     "resources": "Ressources",
     "helpCenter": "Centre d'aide",
-    "docs": "Documentation",
     "blog": "Blog",
     "documentation": "Documentation",
-    "features": "Fonctionnalites",
     "services": "Services",
     "coaching": "Coaching",
     "wellness": "Programmes de bien-etre",
@@ -103,32 +92,29 @@
     "privacy": "Confidentialite",
     "terms": "Conditions",
     "cookies": "Cookies",
-    "gdpr": "GDPR",
-    "newsletterTitle": "Abonnez-vous a notre newsletter",
-    "newsletterDescription": "Recevez des conseils de bien-etre et des mises a jour dans votre boite de reception.",
-    "newsletterPlaceholder": "votre adresse email",
-    "subscribe": "S'abonner",
-    "newsletterSubscribed": "Vous etes abonne avec succes.",
-    "newsletterSubscribeError": "L'abonnement a echoue. Veuillez reessayer.",
-    "newsletterInvalidEmail": "Veuillez entrer une adresse email valide.",
-    "builtWithNuxt": "Construit avec Nuxt"
+    "gdpr": "GDPR"
   },
   "common": {
     "loading": "Chargement",
-    "back": "Retour",
-    "yes": "Oui",
-    "no": "Non"
+    "back": "Retour"
   },
-  "search": {
-    "title": "Recherche complete",
-    "subtitle": "Recherchez dans les programmes, questions de journal et pages CMS.",
-    "placeholder": "Saisissez au moins 2 caracteres",
-    "action": "Rechercher",
-    "programs": "Programmes",
-    "journalQuestions": "Questions du journal",
-    "cmsPages": "Pages CMS",
-    "failed": "La recherche a echoue.",
-    "seoTitle": "Recherche Doisense",
-    "seoDescription": "Utilitaire de recherche pour les utilisateurs connectes sur Doisense."
+  "home": {
+    "heroBadge": "Wellbeing + AI + RGPD",
+    "heroTitle": "Votre plateforme de bien-être numérique, construite de façon responsable",
+    "heroSubtitle": "Doisense propose un journal guidé, un chat IA contextuel et des programmes structurés avec des pages légales complètes.",
+    "primaryCta": "Créer un compte",
+    "secondaryCta": "Voir les fonctionnalités",
+    "card1Title": "Expérience guidée",
+    "card1Desc": "Un parcours clair de l'onboarding au progrès quotidien.",
+    "card2Title": "Design de confiance",
+    "card2Desc": "Informations claires sur les données, la sécurité et les droits.",
+    "card3Title": "Prêt pour évoluer",
+    "card3Desc": "Pages publiques essentielles prêtes pour la croissance.",
+    "sectionTwoTitle": "Un accompagnement guidé pour le bien-être mental au quotidien",
+    "sectionTwoDesc": "Doisense combine journal guidé, conversations IA et programmes structurés pour un progrès réel et durable.",
+    "impactBadge": "Notre impact en chiffres",
+    "impactTitle": "Découvrez la portée, les résultats et la progression que nous facilitons",
+    "seoTitle": "Doisense - Bien-être numérique avec IA et journal guidé",
+    "seoDesc": "Doisense offre un journal guidé, un chat IA contextuel, des programmes structurés et des pages légales complètes."
   }
 }

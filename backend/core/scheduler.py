@@ -5,7 +5,7 @@ import time
 from django.core.management import call_command
 from django.utils import timezone
 
-from .models import PlatformScheduledJob
+from .models import PlatformScheduledJob, SystemErrorEvent
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,7 @@ DEFAULT_SCHEDULER_TASKS = [
     SchedulerTaskDefinition("send_upgrade_recommendations", "Send Upgrade Recommendations", "send_upgrade_recommendations", PlatformScheduledJob.SCHEDULE_DAILY, 0, 14),
     SchedulerTaskDefinition("audit_manual_vip", "Audit Manual VIP", "audit_manual_vip", PlatformScheduledJob.SCHEDULE_WEEKLY, 0, 6, 0),
     SchedulerTaskDefinition("send_inactivity_reminders", "Send Inactivity Reminders", "send_inactivity_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 9),
+    SchedulerTaskDefinition("send_reactivation_campaign", "Send Reactivation Campaign", "send_reactivation_campaign", PlatformScheduledJob.SCHEDULE_DAILY, 0, 11),
     SchedulerTaskDefinition("ai_update_profiles", "Refresh AI Profiles", "ai_update_profiles", PlatformScheduledJob.SCHEDULE_DAILY, 0, 2),
 ]
 
@@ -49,6 +50,16 @@ def execute_scheduled_job(job: PlatformScheduledJob, *, now=None) -> tuple[bool,
         status = PlatformScheduledJob.STATUS_FAILED
         error_output = stderr.getvalue().strip()
         job.last_error = (error_output or str(exc))[:5000]
+        SystemErrorEvent.objects.create(
+            severity=SystemErrorEvent.SEVERITY_HIGH,
+            component="scheduler",
+            endpoint=job.command_name,
+            http_method="COMMAND",
+            status_code=500,
+            error_type="ScheduledCommandFailed",
+            message=str(exc)[:2000],
+            context={"job_code": job.code},
+        )
         success = False
 
     duration_ms = int((time.monotonic() - started_at) * 1000)

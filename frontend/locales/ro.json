@@ -1,19 +1,17 @@
 {
-  "landing": {
-    "title": "Doisense",
-    "subtitle": "Companionul tău de wellbeing. Jurnal, conversații cu AI și programe ghidate."
-  },
+  "landing": {},
   "nav": {
     "features": "Funcționalități",
     "pricing": "Prețuri",
     "about": "Despre",
     "contact": "Contact",
-    "search": "Căutare",
     "admin": "Admin",
     "chat": "Chat",
     "journal": "Jurnal",
     "programs": "Programe ghidate",
-    "profile": "Profil"
+    "profile": "Profil",
+    "notifications": "Notificări",
+    "support": "Suport"
   },
   "auth": {
     "login": "Autentificare",
@@ -32,12 +30,9 @@
     "recoverDone": "Parola a fost schimbata. Te poti loga acum.",
     "recoverInvalid": "Link invalid/expirat sau parola invalida.",
     "noAccount": "Nu ai cont? Înregistrează-te",
-    "hasAccount": "Ai deja cont? Autentifică-te",
     "accountTitle": "Contul tău",
     "firstName": "Prenume",
     "lastName": "Nume",
-    "taxRegion": "Zona fiscala",
-    "taxRegionPlaceholder": "ex: RO",
     "googleNotConfigured": "Login-ul cu Google nu este configurat.",
     "googleLoginFailed": "Nu am putut finaliza login-ul cu Google.",
     "appleNotConfigured": "Login-ul cu Apple nu este configurat.",
@@ -49,7 +44,6 @@
     "termsAndConditions": "Termenii si conditiile",
     "and": "si",
     "privacyPolicy": "Politica de confidentialitate",
-    "mustAcceptLegal": "Trebuie sa accepti termenii si politica de confidentialitate.",
     "loginSeoDescription": "Autentificare in contul Doisense.",
     "registerSeoDescription": "Creeaza un cont Doisense."
   },
@@ -77,10 +71,7 @@
     "markComplete": "Marchează ca finalizat",
     "allComplete": "Program finalizat!"
   },
-  "profile": {
-    "premium": "Premium",
-    "upgrade": "Treci la Premium"
-  },
+  "profile": {},
   "footer": {
     "brandDescription": "Sprijinind călătoria ta de bine emotional cu îndrumări personalizate și practici bazate pe dovezi.",
     "copyright": "© Doisense. Toate drepturile rezervate.",
@@ -92,10 +83,8 @@
     "whatsapp": "WhatsApp",
     "resources": "Resurse",
     "helpCenter": "Centru ajutor",
-    "docs": "Documentație",
     "blog": "Blog",
     "documentation": "Documentație",
-    "features": "Funcționalități",
     "services": "Servicii",
     "coaching": "Coaching",
     "wellness": "Programe Wellness",
@@ -103,32 +92,29 @@
     "privacy": "Confidențialitate",
     "terms": "Termeni",
     "cookies": "Cookie-uri",
-    "gdpr": "GDPR",
-    "newsletterTitle": "Abonează-te la newsletter",
-    "newsletterDescription": "Primește sfaturi de bine și actualizări dans inboxul tău.",
-    "newsletterPlaceholder": "adresa ta de email",
-    "subscribe": "Abonare",
-    "newsletterSubscribed": "Abonarea a fost realizata cu succes.",
-    "newsletterSubscribeError": "Abonarea a esuat. Incearca din nou.",
-    "newsletterInvalidEmail": "Introdu o adresa de email valida.",
-    "builtWithNuxt": "Construit cu Nuxt"
+    "gdpr": "GDPR"
   },
   "common": {
     "loading": "Se încarcă",
-    "back": "Înapoi",
-    "yes": "Da",
-    "no": "Nu"
+    "back": "Înapoi"
   },
-  "search": {
-    "title": "Căutare completă",
-    "subtitle": "Caută în programe, întrebări de jurnal și pagini CMS.",
-    "placeholder": "Scrie cel puțin 2 caractere",
-    "action": "Caută",
-    "programs": "Programe",
-    "journalQuestions": "Întrebări jurnal",
-    "cmsPages": "Pagini CMS",
-    "failed": "Căutarea a eșuat.",
-    "seoTitle": "Căutare Doisense",
-    "seoDescription": "Utilitar de căutare pentru utilizatori autentificați în Doisense."
+  "home": {
+    "heroBadge": "Wellbeing + AI + GDPR",
+    "heroTitle": "Platformă de wellbeing digital, construită responsabil",
+    "heroSubtitle": "Doisense îți oferă jurnal ghidat, chat AI contextual și programe structurate, cu pagini legale complete și control asupra datelor.",
+    "primaryCta": "Creează cont",
+    "secondaryCta": "Vezi funcționalitățile",
+    "card1Title": "Experiență ghidată",
+    "card1Desc": "Flux clar de la onboarding la progres zilnic.",
+    "card2Title": "Design pentru încredere",
+    "card2Desc": "Informații explicite despre date, securitate și drepturi.",
+    "card3Title": "Scalabil pentru produs",
+    "card3Desc": "Pagini publice importante gata pentru creștere.",
+    "sectionTwoTitle": "Sprijin ghidat pentru wellbeing mental, zi de zi",
+    "sectionTwoDesc": "Platforma Doisense combină jurnalul ghidat, conversațiile AI și programele structurate pentru progres real și consecvent.",
+    "impactBadge": "Impactul nostru în cifre",
+    "impactTitle": "Vezi acoperirea, rezultatele și progresul construit cu utilizatorii noștri",
+    "seoTitle": "Doisense - Wellbeing digital cu AI si jurnal ghidat",
+    "seoDesc": "Platforma Doisense ofera jurnal ghidat, chat AI contextual, programe structurate si pagini legale complete pentru transparenta si conformitate."
   }
 }

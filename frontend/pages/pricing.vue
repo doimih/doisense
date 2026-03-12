@@ -183,6 +183,7 @@ const { fetchApi } = useApi()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const loadingPlan = ref<string | null>(null)
+const promoState = ref<{ is_active: boolean, discount_percent: number } | null>(null)
 const loadingText = computed(() => {
   const code = localeCode.value
   const labels: Record<string, string> = { ro: 'Se procesează...', en: 'Processing...', de: 'Verarbeitung...', fr: 'En cours...', it: 'In elaborazione...', es: 'Procesando...', pl: 'Przetwarzanie...' }
@@ -198,8 +199,35 @@ const currentPlanKey = computed(() => {
 })
 
 const isEarlyDiscountEligible = computed(() => {
-  return Boolean(isLoggedIn.value && authStore.user?.early_discount_eligible)
+  if (!isLoggedIn.value) return false
+  if (promoState.value) return Boolean(promoState.value.is_active)
+  return Boolean(authStore.user?.early_discount_eligible)
 })
+
+async function fetchPromoState() {
+  if (!isLoggedIn.value) {
+    promoState.value = null
+    return
+  }
+  try {
+    const state = await fetchApi<{ is_active: boolean, discount_percent: number }>('/payments/promo-state')
+    promoState.value = state || null
+  } catch {
+    promoState.value = null
+  }
+}
+
+watch(
+  () => isLoggedIn.value,
+  async (loggedIn) => {
+    if (loggedIn) {
+      await fetchPromoState()
+      return
+    }
+    promoState.value = null
+  },
+  { immediate: true },
+)
 
 async function startCheckout(planKey: string) {
   loadingPlan.value = planKey
