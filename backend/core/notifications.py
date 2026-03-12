@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage, get_connection
 from django.utils import timezone
 
-from core.models import NotificationDelivery
+from core.models import InAppNotification, NotificationDelivery
 from core.system_config import get_system_config
 
 
@@ -54,6 +54,32 @@ def record_notification_delivery(
         user=user,
         notification_type=notification_type,
         sent_for_date=sent_for_date,
+        context_key=context_key,
+    )
+
+
+def create_in_app_notification(
+    user,
+    notification_type: str,
+    title: str,
+    body: str,
+    *,
+    context_key: str = "",
+):
+    if context_key:
+        existing = InAppNotification.objects.filter(
+            user=user,
+            notification_type=notification_type,
+            context_key=context_key,
+        ).first()
+        if existing:
+            return existing
+
+    return InAppNotification.objects.create(
+        user=user,
+        notification_type=notification_type,
+        title=title,
+        body=body,
         context_key=context_key,
     )
 
@@ -470,6 +496,127 @@ A short check-in today can help you regain momentum:
 {frontend_base}/{language}/chat?module=coaching
 
 Warmly,
+Doisense"""
+
+    connection = _get_mail_connection()
+    message = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=_get_from_email(),
+        to=[user.email],
+        connection=connection,
+    )
+    message.send()
+
+
+def send_payment_failed_notification(user) -> None:
+    language = (user.language or "en").lower()
+    frontend_base = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+
+    if language.startswith("ro"):
+        subject = "Problema la plata abonamentului"
+        body = f"""Salut {user.first_name or 'there'}!
+
+Nu am putut procesa ultima plată pentru abonamentul tău.
+
+Te rugăm să verifici metoda de plată și să actualizezi datele din billing portal.
+
+=== Actualizează plata ===
+{frontend_base}/ro/profile
+
+Doisense"""
+    else:
+        subject = "Subscription payment failed"
+        body = f"""Hi {user.first_name or 'there'}!
+
+We could not process your latest subscription payment.
+
+Please review your payment method and update billing details from the billing portal.
+
+=== Update payment method ===
+{frontend_base}/{language}/profile
+
+Doisense"""
+
+    connection = _get_mail_connection()
+    message = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=_get_from_email(),
+        to=[user.email],
+        connection=connection,
+    )
+    message.send()
+
+
+def send_payment_expiring_notification(user, period_end) -> None:
+    language = (user.language or "en").lower()
+    frontend_base = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+    end_label = period_end.strftime("%Y-%m-%d") if period_end else "soon"
+
+    if language.startswith("ro"):
+        subject = "Abonamentul tău expiră curând"
+        body = f"""Salut {user.first_name or 'there'}!
+
+Abonamentul tău este setat să expire la data de {end_label}.
+
+Dacă vrei să păstrezi accesul premium, verifică statusul abonamentului în cont.
+
+=== Vezi abonamentul ===
+{frontend_base}/ro/profile
+
+Doisense"""
+    else:
+        subject = "Your subscription is expiring soon"
+        body = f"""Hi {user.first_name or 'there'}!
+
+Your subscription is scheduled to end on {end_label}.
+
+If you want to keep premium access, review your subscription status in your account.
+
+=== Review subscription ===
+{frontend_base}/{language}/profile
+
+Doisense"""
+
+    connection = _get_mail_connection()
+    message = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=_get_from_email(),
+        to=[user.email],
+        connection=connection,
+    )
+    message.send()
+
+
+def send_payment_invalid_method_notification(user) -> None:
+    language = (user.language or "en").lower()
+    frontend_base = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+
+    if language.startswith("ro"):
+        subject = "Metoda ta de plată necesită actualizare"
+        body = f"""Salut {user.first_name or 'there'}!
+
+Metoda de plată asociată abonamentului tău pare invalidă sau aproape de expirare.
+
+Te rugăm să adaugi o metodă validă pentru a evita întreruperea accesului premium.
+
+=== Actualizează metoda de plată ===
+{frontend_base}/ro/profile
+
+Doisense"""
+    else:
+        subject = "Your payment method needs an update"
+        body = f"""Hi {user.first_name or 'there'}!
+
+Your subscription payment method appears invalid or close to expiry.
+
+Please add a valid payment method to avoid premium access interruption.
+
+=== Update payment method ===
+{frontend_base}/{language}/profile
+
 Doisense"""
 
     connection = _get_mail_connection()

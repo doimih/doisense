@@ -28,6 +28,7 @@
           <h1 class="text-3xl font-bold leading-tight md:text-5xl">{{ activeStep.title }}</h1>
           <p v-if="activeStep.text" class="max-w-2xl text-base leading-8 text-white/82 md:text-lg">{{ activeStep.text }}</p>
           <p v-if="activeStep.subtext" class="max-w-2xl text-sm leading-7 text-white/68 md:text-base">{{ activeStep.subtext }}</p>
+          <p class="max-w-2xl text-sm leading-7 text-sky-100/90">{{ tierHint }}</p>
         </div>
       </div>
 
@@ -405,6 +406,24 @@ const isBusy = ref(false)
 
 const activeStep = computed(() => text.value.steps[currentStep.value])
 const isCurrentStepBlocked = computed(() => currentStep.value === 3 && !consentAccepted.value)
+const tierVariant = computed(() => authStore.user?.membership_tier || 'free')
+const tierHint = computed(() => {
+  if (['premium', 'vip'].includes(tierVariant.value)) {
+    return localeCode.value === 'ro'
+      ? 'Ai acces extins: mai mult context în AI și recomandări avansate.'
+      : 'You have expanded access: richer AI context and advanced recommendations.'
+  }
+  if (['basic', 'trial'].includes(tierVariant.value)) {
+    return localeCode.value === 'ro'
+      ? 'Începi cu fluxul standard, iar funcțiile premium pot fi activate ulterior.'
+      : 'You start with the standard flow and can unlock premium features later.'
+  }
+  return localeCode.value === 'ro'
+    ? 'Parcurgi fluxul de bază; poți face upgrade oricând din profil.'
+    : 'You are on the base flow; you can upgrade anytime from profile.'
+})
+
+const onboardingStepKeys = ['welcome', 'platform', 'disclaimer', 'privacy', 'profile', 'first_chat']
 
 usePublicSeo({
   title: computed(() => text.value.seoTitle),
@@ -416,7 +435,9 @@ onMounted(async () => {
   authStore.hydrate()
   if (authStore.user?.onboarding_completed !== false) {
     await router.replace(chatPath.value)
+    return
   }
+  await trackOnboarding('onboarding_started', { tier_variant: tierVariant.value })
 })
 
 function goBack() {
@@ -453,7 +474,26 @@ async function saveInitialProfile() {
   }
 
   await Promise.all(tasks)
+  await trackOnboarding('onboarding_profile_saved', {
+    has_journal: Boolean(journalEntry.value.trim()),
+    tier_variant: tierVariant.value,
+  })
   profileSaved.value = true
+}
+
+async function trackOnboarding(eventName: string, properties: Record<string, unknown>) {
+  try {
+    await fetchApi('/analytics/track', {
+      method: 'POST',
+      body: {
+        event_name: eventName,
+        source: 'frontend',
+        properties,
+      },
+    })
+  } catch {
+    // Best-effort analytics tracking only.
+  }
 }
 
 async function completeOnboarding() {
@@ -481,10 +521,22 @@ async function goNext() {
     }
 
     if (currentStep.value === text.value.steps.length - 1) {
+      await trackOnboarding('onboarding_step_completed', {
+        step_key: onboardingStepKeys[currentStep.value] || `step_${currentStep.value + 1}`,
+        step_index: currentStep.value + 1,
+        tier_variant: tierVariant.value,
+      })
       await completeOnboarding()
+      await trackOnboarding('onboarding_completed', { tier_variant: tierVariant.value })
       await router.push(chatPath.value)
       return
     }
+
+    await trackOnboarding('onboarding_step_completed', {
+      step_key: onboardingStepKeys[currentStep.value] || `step_${currentStep.value + 1}`,
+      step_index: currentStep.value + 1,
+      tier_variant: tierVariant.value,
+    })
 
     currentStep.value += 1
   } catch {

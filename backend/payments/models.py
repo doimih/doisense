@@ -32,3 +32,36 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for {self.user.email} - {self.status}"
+
+
+class StripeWebhookEvent(models.Model):
+    STATUS_RECEIVED = "received"
+    STATUS_PROCESSED = "processed"
+    STATUS_IGNORED = "ignored"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_RECEIVED, "Received"),
+        (STATUS_PROCESSED, "Processed"),
+        (STATUS_IGNORED, "Ignored"),
+        (STATUS_FAILED, "Failed"),
+    ]
+
+    event_id = models.CharField(max_length=255, unique=True)
+    event_type = models.CharField(max_length=100)
+    delivery_attempts = models.PositiveIntegerField(default=1)
+    last_status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_RECEIVED)
+    payload = models.JSONField(default=dict, blank=True)
+    processing_error = models.TextField(blank=True, default="")
+    processed_at = models.DateTimeField(null=True, blank=True)
+    first_received_at = models.DateTimeField(auto_now_add=True)
+    last_received_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "payments_stripewebhookevent"
+        ordering = ["-first_received_at"]
+        indexes = [
+            models.Index(fields=["event_type", "first_received_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.event_type} ({self.event_id})"

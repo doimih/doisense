@@ -347,6 +347,10 @@ OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 AI_CHAT_RATE_LIMIT = env.int("AI_CHAT_RATE_LIMIT", default=20)  # per minute
 
+# Analytics
+POSTHOG_API_KEY = env("POSTHOG_API_KEY", default="")
+POSTHOG_HOST = env("POSTHOG_HOST", default="https://app.posthog.com")
+
 # Supported languages (must match frontend i18n)
 SUPPORTED_LANGUAGES = ["ro", "en", "de", "fr", "it", "es", "pl"]
 

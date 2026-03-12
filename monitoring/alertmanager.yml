@@ -1,0 +1,37 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: ops-default
+  group_by: [alertname, instance]
+  group_wait: 20s
+  group_interval: 3m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity="critical"
+      receiver: ops-critical
+      repeat_interval: 30m
+
+receivers:
+  - name: ops-default
+    email_configs:
+      - to: ${ALERTS_EMAIL_TO:-ops@doisense.app}
+        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.app}
+        smarthost: ${ALERTS_SMARTHOST:-smtp.gmail.com:587}
+        auth_username: ${ALERTS_SMTP_USERNAME:-}
+        auth_password: ${ALERTS_SMTP_PASSWORD:-}
+        require_tls: true
+
+  - name: ops-critical
+    email_configs:
+      - to: ${ALERTS_EMAIL_TO:-ops@doisense.app}
+        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.app}
+        smarthost: ${ALERTS_SMARTHOST:-smtp.gmail.com:587}
+        auth_username: ${ALERTS_SMTP_USERNAME:-}
+        auth_password: ${ALERTS_SMTP_PASSWORD:-}
+        require_tls: true
+    slack_configs:
+      - api_url: ${ALERTS_SLACK_WEBHOOK_URL:-}
+        channel: ${ALERTS_SLACK_CHANNEL:-#ops-alerts}
+        send_resolved: true

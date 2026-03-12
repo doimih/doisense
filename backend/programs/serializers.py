@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import GuidedProgram, GuidedProgramDay, UserProgramProgress
+from .models import GuidedProgram, GuidedProgramDay, ProgramReflection, UserProgramProgress
 
 
 class GuidedProgramSerializer(serializers.ModelSerializer):
@@ -25,6 +25,8 @@ class UserProgramProgressSerializer(serializers.ModelSerializer):
             "program",
             "current_day",
             "completed_days",
+            "is_paused",
+            "paused_at",
             "total_days",
             "started_at",
             "last_active_at",
@@ -33,3 +35,18 @@ class UserProgramProgressSerializer(serializers.ModelSerializer):
 
     def get_total_days(self, obj):
         return obj.program.days.count()
+
+
+class ProgramReflectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramReflection
+        fields = (
+            "id",
+            "program",
+            "day_number",
+            "reflection_text",
+            "ai_feedback",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id", "program", "ai_feedback", "created_at", "updated_at")

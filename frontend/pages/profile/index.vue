@@ -106,6 +106,39 @@
         {{ saveLoading ? $t('common.loading') : text.saveProfile }}
       </button>
 
+      <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-4">
+        <p class="text-sm text-slate-700">
+          {{ localeCode === 'ro' ? 'Vrei un tur rapid pentru redescoperirea funcțiilor?' : 'Need a quick feature rediscovery tour?' }}
+        </p>
+        <button
+          type="button"
+          class="mt-3 rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
+          @click="restartOnboarding"
+        >
+          {{ localeCode === 'ro' ? 'Repornește onboarding' : 'Restart onboarding' }}
+        </button>
+      </div>
+
+      <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-4">
+        <p class="text-sm text-slate-700">
+          {{ localeCode === 'ro' ? 'Gestioneaza notificarile si cere ajutor direct din cont.' : 'Manage notifications and request support directly from your account.' }}
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <NuxtLink
+            :to="localePath('/notifications')"
+            class="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
+          >
+            {{ localeCode === 'ro' ? 'Notificari' : 'Notifications' }}
+          </NuxtLink>
+          <NuxtLink
+            :to="localePath('/support')"
+            class="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
+          >
+            {{ localeCode === 'ro' ? 'Support tickets' : 'Support tickets' }}
+          </NuxtLink>
+        </div>
+      </div>
+
       <!-- Upgrade section: show for trial or free users -->
       <div v-if="['trial', 'free'].includes(authStore.user.membership_tier)" class="space-y-2 rounded-lg border border-sky-200 bg-sky-50/60 p-4">
         <p class="text-sm font-semibold text-slate-900">{{ text.upgradeTo }}</p>
@@ -642,5 +675,13 @@ async function exportPersonalData() {
   } finally {
     exportLoading.value = false
   }
+}
+
+async function restartOnboarding() {
+  await fetchApi('/me/re-onboarding', { method: 'POST' })
+  if (authStore.user) {
+    authStore.setUser({ ...authStore.user, onboarding_completed: false })
+  }
+  await navigateTo(localePath('/onboarding'))
 }
 </script>

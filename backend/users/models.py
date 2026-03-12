@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from core.validators import validate_language
 
+
 TRIAL_DAYS = 7
 
 
@@ -70,7 +71,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def is_in_trial(self) -> bool:
-        """True when the user is within an active free trial period."""
         return (
             self.plan_tier == self.PLAN_TRIAL
             and self.trial_ends_at is not None
@@ -78,29 +78,24 @@ class User(AbstractBaseUser, PermissionsMixin):
         )
 
     def has_unlimited_platform_access(self) -> bool:
-        """Internal test/admin accounts bypass subscription and trial limits."""
         return self.is_superuser or self.is_staff
 
     def effective_plan_tier(self) -> str:
-        """Return the effective access tier, considering trial expiry and payment status."""
         if self.has_unlimited_platform_access():
             return self.PLAN_VIP
         if self.plan_tier == self.PLAN_TRIAL and not self.is_in_trial():
             return self.PLAN_FREE
-        # Paid tier but is_premium is False → past_due or otherwise inactive
         if self.plan_tier in (self.PLAN_BASIC, self.PLAN_PREMIUM, self.PLAN_VIP) and not self.is_premium:
             return self.PLAN_FREE
         return self.plan_tier
 
     def has_paid_access(self) -> bool:
-        """True for any active subscription or active trial."""
         if self.has_unlimited_platform_access():
             return True
         tier = self.effective_plan_tier()
         return tier in (self.PLAN_TRIAL, self.PLAN_BASIC, self.PLAN_PREMIUM, self.PLAN_VIP)
 
     def start_trial(self) -> None:
-        """Activate 7-day free trial, idempotent."""
         if self.plan_tier != self.PLAN_FREE or self.trial_started_at is not None:
             return
         now = timezone.now()

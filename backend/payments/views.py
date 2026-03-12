@@ -1,14 +1,27 @@
 import datetime
 import stripe
 from django.conf import settings
+from django.db.models import F
 from django.http import HttpResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
+from core.notifications import (
+    create_in_app_notification,
+    record_notification_delivery,
+    send_payment_expiring_notification,
+    send_payment_failed_notification,
+    send_payment_invalid_method_notification,
+    was_notification_sent,
+)
+from core.analytics import track_event
+from core.feature_access import require_feature
 from core.system_config import (
     get_stripe_price_id_for_tier,
     get_stripe_secret_key,
@@ -16,10 +29,81 @@ from core.system_config import (
 )
 from users.models import User
 
-from .models import Payment
+from .models import Payment, StripeWebhookEvent
 
 
 VALID_PLAN_TIERS = {"basic", "premium", "vip"}
+
+
+class CheckoutSessionRateThrottle(UserRateThrottle):
+    rate = "6/hour"
+
+
+class UpgradeSessionRateThrottle(UserRateThrottle):
+    rate = "12/hour"
+
+
+def _register_webhook_event(event: dict):
+    event_id = str(event.get("id") or "").strip()
+    if not event_id:
+        return None, True
+
+    event_type = str(event.get("type") or "unknown")[:100]
+    payload = event.get("data", {}).get("object", {}) if isinstance(event, dict) else {}
+    obj, created = StripeWebhookEvent.objects.get_or_create(
+        event_id=event_id,
+        defaults={"event_type": event_type, "payload": payload},
+    )
+    if created:
+        return obj, True
+
+    StripeWebhookEvent.objects.filter(pk=obj.pk).update(
+        delivery_attempts=F("delivery_attempts") + 1,
+        last_status=StripeWebhookEvent.STATUS_IGNORED,
+    )
+    return obj, False
+
+
+def _mark_webhook_processed(webhook_event: StripeWebhookEvent | None):
+    if not webhook_event:
+        return
+    webhook_event.last_status = StripeWebhookEvent.STATUS_PROCESSED
+    webhook_event.processing_error = ""
+    webhook_event.processed_at = timezone.now()
+    webhook_event.save(update_fields=["last_status", "processing_error", "processed_at", "last_received_at"])
+
+
+def _mark_webhook_failed(webhook_event: StripeWebhookEvent | None, error: str):
+    if not webhook_event:
+        return
+    webhook_event.last_status = StripeWebhookEvent.STATUS_FAILED
+    webhook_event.processing_error = (error or "")[:5000]
+    webhook_event.save(update_fields=["last_status", "processing_error", "last_received_at"])
+
+
+def _send_payment_notification_once(user: User, notification_type: str, context_key: str, sender) -> None:
+    if was_notification_sent(user, notification_type, context_key=context_key):
+        return
+
+    sender()
+    record_notification_delivery(user, notification_type, context_key=context_key)
+    title_map = {
+        "payment_failed": "Payment failed",
+        "payment_expiring": "Subscription expiring soon",
+        "payment_invalid_method": "Update your payment method",
+    }
+    body_map = {
+        "payment_failed": "We could not process your latest payment. Please check billing settings.",
+        "payment_expiring": "Your subscription is approaching period end. Review your plan status.",
+        "payment_invalid_method": "Your payment method appears invalid or near expiry.",
+    }
+    create_in_app_notification(
+        user,
+        notification_type,
+        title_map.get(notification_type, "Billing update"),
+        body_map.get(notification_type, "There is an update related to your subscription."),
+        context_key=context_key,
+    )
 
 
 def _price_id_to_tier(price_id: str) -> str:
@@ -57,7 +141,9 @@ def _activate_plan(user: User, plan_tier: str, *, source: str, customer_id: str 
 
 class CreateCheckoutSessionView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [CheckoutSessionRateThrottle]
 
+    @require_feature("payment_checkout")
     def post(self, request):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
         if plan_tier not in VALID_PLAN_TIERS:
@@ -74,6 +160,12 @@ class CreateCheckoutSessionView(APIView):
 
         if not stripe_secret_key or not stripe_price_id:
             _activate_plan(user, plan_tier, source="internal")
+            track_event(
+                "checkout_initiated",
+                source="backend",
+                user=user,
+                properties={"plan_tier": plan_tier},
+            )
             return Response(
                 {"url": success_url, "internal_activation": True, "plan_tier": plan_tier},
                 status=status.HTTP_200_OK,
@@ -97,6 +189,12 @@ class CreateCheckoutSessionView(APIView):
                 session_params["customer_email"] = user.email
 
             session = stripe.checkout.Session.create(**session_params)
+            track_event(
+                "checkout_initiated",
+                source="backend",
+                user=user,
+                properties={"plan_tier": plan_tier},
+            )
             return Response({"url": session.url}, status=status.HTTP_200_OK)
         except stripe.StripeError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
@@ -221,7 +319,9 @@ class SubscriptionStatusView(APIView):
 class UpgradeSubscriptionView(APIView):
     """Upgrade or downgrade an existing Stripe subscription in-place."""
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UpgradeSessionRateThrottle]
 
+    @require_feature("payment_upgrade")
     def post(self, request):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
         if plan_tier not in VALID_PLAN_TIERS:
@@ -234,6 +334,12 @@ class UpgradeSubscriptionView(APIView):
         if not stripe_secret_key or not stripe_price_id:
             # Fall back to internal activation when Stripe is not configured
             _activate_plan(user, plan_tier, source="internal")
+            track_event(
+                "subscription_change_requested",
+                source="backend",
+                user=user,
+                properties={"plan_tier": plan_tier},
+            )
             return Response({"upgraded": True, "plan_tier": plan_tier})
 
         payment = (
@@ -268,7 +374,72 @@ class UpgradeSubscriptionView(APIView):
                 customer_id=payment.stripe_customer_id,
                 subscription_id=payment.stripe_subscription_id,
             )
+            track_event(
+                "subscription_change_requested",
+                source="backend",
+                user=user,
+                properties={"plan_tier": plan_tier},
+            )
             return Response({"upgraded": True, "plan_tier": plan_tier})
+        except stripe.StripeError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CancelSubscriptionView(APIView):
+    """Cancel current subscription at period end (downgrade path)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        stripe_secret_key = get_stripe_secret_key()
+        payment = (
+            Payment.objects.filter(user=user, status__in=["active", "trialing", "past_due"])
+            .exclude(stripe_subscription_id="")
+            .exclude(stripe_subscription_id__isnull=True)
+            .order_by("-updated_at")
+            .first()
+        )
+
+        if not payment:
+            return Response(
+                {"detail": "No active subscription found to cancel."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not stripe_secret_key:
+            if not payment.current_period_end:
+                payment.current_period_end = timezone.now() + datetime.timedelta(days=30)
+            payment.cancel_at_period_end = True
+            payment.save(update_fields=["cancel_at_period_end", "current_period_end", "updated_at"])
+            track_event(
+                "subscription_cancel_requested",
+                source="backend",
+                user=user,
+                properties={"plan_tier": payment.plan_tier},
+            )
+            return Response({"cancel_at_period_end": True, "current_period_end": payment.current_period_end})
+
+        stripe.api_key = stripe_secret_key
+        try:
+            subscription = stripe.Subscription.modify(
+                payment.stripe_subscription_id,
+                cancel_at_period_end=True,
+            )
+            period_end_ts = subscription.get("current_period_end")
+            if period_end_ts:
+                payment.current_period_end = datetime.datetime.fromtimestamp(
+                    period_end_ts, tz=datetime.timezone.utc
+                )
+            payment.cancel_at_period_end = True
+            payment.save(update_fields=["cancel_at_period_end", "current_period_end", "updated_at"])
+            track_event(
+                "subscription_cancel_requested",
+                source="backend",
+                user=user,
+                properties={"plan_tier": payment.plan_tier},
+            )
+            return Response({"cancel_at_period_end": True, "current_period_end": payment.current_period_end})
         except stripe.StripeError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -291,104 +462,193 @@ def stripe_webhook(request):
     except stripe.SignatureVerificationError:
         return HttpResponse(status=400)
 
+    webhook_event, should_process = _register_webhook_event(event)
+    if not should_process:
+        return HttpResponse(status=200)
+
     event_type = event["type"]
 
-    if event_type == "checkout.session.completed":
-        session = event["data"]["object"]
-        user_id = session.get("metadata", {}).get("user_id")
-        plan_tier = (session.get("metadata", {}).get("plan_tier") or "premium").lower()
-        if plan_tier not in VALID_PLAN_TIERS:
-            plan_tier = "premium"
+    try:
+        if event_type == "checkout.session.completed":
+            session = event["data"]["object"]
+            user_id = session.get("metadata", {}).get("user_id")
+            plan_tier = (session.get("metadata", {}).get("plan_tier") or "premium").lower()
+            if plan_tier not in VALID_PLAN_TIERS:
+                plan_tier = "premium"
 
-        if user_id:
-            user = User.objects.filter(id=user_id).first()
-            if user:
-                customer_id = session.get("customer")
-                subscription_id = session.get("subscription")
-                _activate_plan(
-                    user,
-                    plan_tier,
-                    source="stripe",
-                    customer_id=customer_id,
-                    subscription_id=subscription_id,
-                )
-                # Fetch and store billing cycle end date
-                if subscription_id and stripe_secret_key:
-                    try:
-                        sub = stripe.Subscription.retrieve(subscription_id)
-                        period_end_ts = sub.get("current_period_end")
-                        if period_end_ts:
-                            Payment.objects.filter(
-                                stripe_subscription_id=subscription_id
-                            ).update(
-                                current_period_end=datetime.datetime.fromtimestamp(
-                                    period_end_ts, tz=datetime.timezone.utc
+            if user_id:
+                user = User.objects.filter(id=user_id).first()
+                if user:
+                    customer_id = session.get("customer")
+                    subscription_id = session.get("subscription")
+                    _activate_plan(
+                        user,
+                        plan_tier,
+                        source="stripe",
+                        customer_id=customer_id,
+                        subscription_id=subscription_id,
+                    )
+                    # Fetch and store billing cycle end date
+                    if subscription_id and stripe_secret_key:
+                        try:
+                            sub = stripe.Subscription.retrieve(subscription_id)
+                            period_end_ts = sub.get("current_period_end")
+                            if period_end_ts:
+                                Payment.objects.filter(
+                                    stripe_subscription_id=subscription_id
+                                ).update(
+                                    current_period_end=datetime.datetime.fromtimestamp(
+                                        period_end_ts, tz=datetime.timezone.utc
+                                    )
                                 )
-                            )
-                    except stripe.StripeError:
-                        pass
+                        except stripe.StripeError:
+                            pass
 
-    elif event_type == "customer.subscription.updated":
-        subscription = event["data"]["object"]
-        sub_id = subscription.get("id")
-        stripe_status = subscription.get("status", "active")
-        payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
-        if payment:
-            status_map = {
-                "active": "active",
-                "past_due": "past_due",
-                "canceled": "cancelled",
-                "trialing": "trialing",
-            }
-            payment.status = status_map.get(stripe_status, "active")
-            items = subscription.get("items", {}).get("data", [])
-            if items:
-                price_id = items[0].get("price", {}).get("id", "")
-                new_tier = _price_id_to_tier(price_id)
-                payment.plan_tier = new_tier
-                payment.user.plan_tier = new_tier
-                payment.user.save(update_fields=["plan_tier"])
-            if stripe_status == "past_due":
+        elif event_type == "customer.subscription.updated":
+            subscription = event["data"]["object"]
+            sub_id = subscription.get("id")
+            stripe_status = subscription.get("status", "active")
+            payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
+            if payment:
+                status_map = {
+                    "active": "active",
+                    "past_due": "past_due",
+                    "canceled": "cancelled",
+                    "trialing": "trialing",
+                }
+                payment.status = status_map.get(stripe_status, "active")
+                items = subscription.get("items", {}).get("data", [])
+                if items:
+                    price_id = items[0].get("price", {}).get("id", "")
+                    new_tier = _price_id_to_tier(price_id)
+                    payment.plan_tier = new_tier
+                    payment.user.plan_tier = new_tier
+                    payment.user.save(update_fields=["plan_tier"])
+                if stripe_status == "past_due":
+                    payment.user.is_premium = False
+                    payment.user.save(update_fields=["is_premium"])
+                # Track billing cycle dates
+                period_end_ts = subscription.get("current_period_end")
+                if period_end_ts:
+                    payment.current_period_end = datetime.datetime.fromtimestamp(
+                        period_end_ts, tz=datetime.timezone.utc
+                    )
+                payment.cancel_at_period_end = bool(
+                    subscription.get("cancel_at_period_end", False)
+                )
+                payment.save(
+                    update_fields=[
+                        "status",
+                        "plan_tier",
+                        "current_period_end",
+                        "cancel_at_period_end",
+                    ]
+                )
+
+                if payment.cancel_at_period_end and payment.current_period_end:
+                    days_left = (payment.current_period_end.date() - timezone.now().date()).days
+                    if 0 <= days_left <= 7:
+                        context_key = (
+                            f"{sub_id}:expiring:{payment.current_period_end.date().isoformat()}"
+                        )
+                        _send_payment_notification_once(
+                            payment.user,
+                            "payment_expiring",
+                            context_key,
+                            lambda: send_payment_expiring_notification(
+                                payment.user, payment.current_period_end
+                            ),
+                        )
+
+        elif event_type == "customer.subscription.deleted":
+            subscription = event["data"]["object"]
+            sub_id = subscription.get("id")
+            payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
+            if payment:
+                payment.user.is_premium = False
+                payment.user.plan_tier = User.PLAN_FREE
+                payment.user.save(update_fields=["is_premium", "plan_tier"])
+                payment.status = "cancelled"
+                payment.save(update_fields=["status"])
+
+        elif event_type == "invoice.payment_failed":
+            invoice = event["data"]["object"]
+            sub_id = invoice.get("subscription")
+            payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
+            if payment:
+                payment.status = "past_due"
+                payment.save(update_fields=["status"])
                 payment.user.is_premium = False
                 payment.user.save(update_fields=["is_premium"])
-            # Track billing cycle dates
-            period_end_ts = subscription.get("current_period_end")
-            if period_end_ts:
-                payment.current_period_end = datetime.datetime.fromtimestamp(
-                    period_end_ts, tz=datetime.timezone.utc
+
+                _send_payment_notification_once(
+                    payment.user,
+                    "payment_failed",
+                    f"{sub_id}:failed",
+                    lambda: send_payment_failed_notification(payment.user),
                 )
-            payment.cancel_at_period_end = bool(subscription.get("cancel_at_period_end", False))
-            payment.save(update_fields=["status", "plan_tier", "current_period_end", "cancel_at_period_end"])
 
-    elif event_type == "customer.subscription.deleted":
-        subscription = event["data"]["object"]
-        sub_id = subscription.get("id")
-        payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
-        if payment:
-            payment.user.is_premium = False
-            payment.user.plan_tier = User.PLAN_FREE
-            payment.user.save(update_fields=["is_premium", "plan_tier"])
-            payment.status = "cancelled"
-            payment.save(update_fields=["status"])
+                # For failed invoices we also prompt payment method update once per day/context.
+                _send_payment_notification_once(
+                    payment.user,
+                    "payment_invalid_method",
+                    f"{sub_id}:invalid-method",
+                    lambda: send_payment_invalid_method_notification(payment.user),
+                )
 
-    elif event_type == "invoice.payment_failed":
-        invoice = event["data"]["object"]
-        sub_id = invoice.get("subscription")
-        payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
-        if payment:
-            payment.status = "past_due"
-            payment.save(update_fields=["status"])
-            payment.user.is_premium = False
-            payment.user.save(update_fields=["is_premium"])
+        elif event_type == "customer.source.expiring":
+            source = event["data"]["object"]
+            customer_id = source.get("customer")
+            payment = Payment.objects.filter(stripe_customer_id=customer_id).first()
+            if payment:
+                _send_payment_notification_once(
+                    payment.user,
+                    "payment_invalid_method",
+                    f"{customer_id}:source-expiring",
+                    lambda: send_payment_invalid_method_notification(payment.user),
+                )
 
-    elif event_type == "invoice.payment_succeeded":
-        invoice = event["data"]["object"]
-        sub_id = invoice.get("subscription")
-        payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
-        if payment and payment.status == "past_due":
-            payment.status = "active"
-            payment.save(update_fields=["status"])
-            payment.user.is_premium = True
-            payment.user.save(update_fields=["is_premium"])
+        elif event_type == "invoice.payment_succeeded":
+            invoice = event["data"]["object"]
+            sub_id = invoice.get("subscription")
+            payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
+            if payment and payment.status == "past_due":
+                payment.status = "active"
+                payment.save(update_fields=["status"])
+                payment.user.is_premium = True
+                payment.user.save(update_fields=["is_premium"])
+
+        elif event_type == "charge.refunded":
+            charge = event["data"]["object"]
+            invoice_id = charge.get("invoice")
+            amount = int(charge.get("amount") or 0)
+            amount_refunded = int(charge.get("amount_refunded") or 0)
+            refunded = bool(charge.get("refunded"))
+            if invoice_id and refunded and amount > 0 and amount_refunded >= amount:
+                try:
+                    invoice = stripe.Invoice.retrieve(invoice_id)
+                    sub_id = invoice.get("subscription")
+                except stripe.StripeError:
+                    sub_id = None
+
+                payment = Payment.objects.filter(stripe_subscription_id=sub_id).first() if sub_id else None
+                if payment:
+                    payment.status = "cancelled"
+                    payment.cancel_at_period_end = False
+                    payment.save(update_fields=["status", "cancel_at_period_end", "updated_at"])
+                    payment.user.is_premium = False
+                    payment.user.plan_tier = User.PLAN_FREE
+                    payment.user.save(update_fields=["is_premium", "plan_tier"])
+                    track_event(
+                        "subscription_refunded",
+                        source="backend",
+                        user=payment.user,
+                        properties={"plan_tier": payment.plan_tier},
+                    )
+
+        _mark_webhook_processed(webhook_event)
+    except Exception as exc:
+        _mark_webhook_failed(webhook_event, str(exc))
+        return HttpResponse(status=500)
 
     return HttpResponse(status=200)

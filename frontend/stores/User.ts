@@ -8,10 +8,8 @@ export interface User {
   tax_region: string;
   language: string;
   is_premium: boolean;
-  plan_tier: 'free' | 'trial' | 'basic' | 'premium' | 'vip';
-  trial_ends_at: string | null;
   onboarding_completed: boolean;
-  membership_tier: 'free' | 'trial' | 'basic' | 'premium' | 'vip';
+  membership_tier: 'normal' | 'premium';
   has_saved_card: boolean;
   is_superuser: boolean;
   created_at: string;

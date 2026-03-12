@@ -22,3 +22,25 @@ def test_checkout_session_falls_back_to_internal_activation(authenticated_client
     assert user.is_premium is True
     assert payment.plan_tier == "basic"
     assert payment.status == "active"
+
+
+@pytest.mark.django_db
+def test_cancel_subscription_marks_cancel_at_period_end(authenticated_client, user):
+    payment = Payment.objects.create(
+        user=user,
+        stripe_customer_id="cus_test",
+        stripe_subscription_id="sub_test",
+        status="active",
+        plan_tier="premium",
+    )
+
+    response = authenticated_client.post(
+        reverse("cancel-subscription"),
+        {},
+        format="json",
+    )
+
+    assert response.status_code == 200
+
+    payment.refresh_from_db()
+    assert payment.cancel_at_period_end is True

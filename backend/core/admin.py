@@ -17,11 +17,18 @@ from unfold.admin import ModelAdmin
 from .image_utils import convert_uploaded_image_to_webp
 from .models import (
     AIConfig,
+    AnalyticsEvent,
+    BackupConfig,
+    FeatureAccessLog,
+    InAppNotification,
     NotificationDelivery,
     OAuthConfig,
     RecaptchaConfig,
+    SupportTicket,
     StripeConfig,
     SystemConfig,
+    UserNotificationPreference,
+    UserQuotaUsage,
 )
 
 _MEDIA_LIBRARY_FOLDER = "settings-images"
@@ -45,8 +52,6 @@ class SystemConfigAdminForm(forms.ModelForm):
             "stripe_secret_key",
             "stripe_webhook_secret",
             "stripe_price_id_premium",
-            "backup_access_key_id",
-            "backup_secret_access_key",
             "ai_openai_api_key",
             "ai_anthropic_api_key",
             "recaptcha_secret_key",
@@ -97,24 +102,7 @@ class SystemConfigAdmin(ModelAdmin):
                 )
             },
         ),
-        (
-            "WAL-G Backup (Hetzner Object Storage)",
-            {
-                "fields": (
-                    "backup_enabled",
-                    "backup_s3_endpoint",
-                    "backup_s3_bucket",
-                    "backup_s3_path_prefix",
-                    "backup_access_key_id",
-                    "backup_secret_access_key",
-                    "backup_region",
-                    "backup_force_path_style",
-                    "backup_schedule_minutes",
-                    "backup_delta_max_steps",
-                    "backup_retention_full_count",
-                )
-            },
-        ),
+
     )
 
     def get_urls(self):
@@ -294,6 +282,122 @@ class NotificationDeliveryAdmin(ModelAdmin):
     list_filter = ("notification_type", "sent_for_date")
     search_fields = ("user__email", "context_key")
     ordering = ("-sent_at",)
+
+
+@admin.register(InAppNotification)
+class InAppNotificationAdmin(ModelAdmin):
+    list_display = ("notification_type", "user", "is_read", "created_at")
+    list_filter = ("notification_type", "is_read")
+    search_fields = ("user__email", "title", "body", "context_key")
+    ordering = ("-created_at",)
+
+
+@admin.register(UserNotificationPreference)
+class UserNotificationPreferenceAdmin(ModelAdmin):
+    list_display = ("user", "push_enabled", "updated_at")
+    list_filter = ("push_enabled",)
+    search_fields = ("user__email",)
+    ordering = ("-updated_at",)
+
+
+@admin.register(SupportTicket)
+class SupportTicketAdmin(ModelAdmin):
+    list_display = ("id", "user", "subject", "status", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("user__email", "subject", "message")
+    ordering = ("-created_at",)
+
+
+@admin.register(FeatureAccessLog)
+class FeatureAccessLogAdmin(ModelAdmin):
+    list_display = ("feature_key", "user", "user_tier", "granted", "reason", "created_at")
+    list_filter = ("feature_key", "granted", "user_tier")
+    search_fields = ("feature_key", "user__email", "reason")
+    ordering = ("-created_at",)
+    readonly_fields = (
+        "user",
+        "feature_key",
+        "required_tiers",
+        "user_tier",
+        "granted",
+        "reason",
+        "context",
+        "created_at",
+    )
+
+
+@admin.register(AnalyticsEvent)
+class AnalyticsEventAdmin(ModelAdmin):
+    list_display = ("event_name", "source", "user", "created_at")
+    list_filter = ("event_name", "source")
+    search_fields = ("event_name", "user__email", "session_id")
+    ordering = ("-created_at",)
+    readonly_fields = ("event_name", "source", "schema_version", "user", "session_id", "properties", "created_at")
+
+
+@admin.register(UserQuotaUsage)
+class UserQuotaUsageAdmin(ModelAdmin):
+    list_display = ("user", "metric_key", "period_type", "period_start", "used_count", "updated_at")
+    list_filter = ("metric_key", "period_type", "period_start")
+    search_fields = ("user__email", "metric_key")
+    ordering = ("-updated_at",)
+    readonly_fields = ("user", "metric_key", "period_type", "period_start", "created_at", "updated_at")
+
+
+class BackupConfigAdminForm(forms.ModelForm):
+    class Meta:
+        model = BackupConfig
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Mask sensitive backup credentials
+        masked_fields = [
+            "backup_access_key_id",
+            "backup_secret_access_key",
+        ]
+        for field_name in masked_fields:
+            if field_name in self.fields:
+                self.fields[field_name].widget = forms.PasswordInput(
+                    render_value=True,
+                    attrs={"autocomplete": "new-password"},
+                )
+
+
+@admin.register(BackupConfig)
+class BackupConfigAdmin(ModelAdmin):
+    form = BackupConfigAdminForm
+
+    fieldsets = (
+        (
+            "WAL-G Backup (Hetzner Object Storage)",
+            {
+                "fields": (
+                    "backup_enabled",
+                    "backup_s3_endpoint",
+                    "backup_s3_bucket",
+                    "backup_s3_path_prefix",
+                    "backup_access_key_id",
+                    "backup_secret_access_key",
+                    "backup_region",
+                    "backup_force_path_style",
+                    "backup_schedule_minutes",
+                    "backup_delta_max_steps",
+                    "backup_retention_full_count",
+                )
+            },
+        ),
+    )
+
+    def changelist_view(self, request, extra_context=None):
+        # Redirect to edit view directly (singleton pattern)
+        config = BackupConfig.get_solo()
+        url = reverse("admin:core_backupconfig_change", args=[config.pk])
+        return HttpResponseRedirect(url)
+
+    def has_add_permission(self, request):
+        # Only one configuration row should exist.
+        return not BackupConfig.objects.exists()
 
 
 class SingletonProxyConfigAdmin(ModelAdmin):

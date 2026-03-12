@@ -56,6 +56,7 @@ export default defineNuxtConfig({
   },
   modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content", "@vite-pwa/nuxt"],
   pwa: {
+    disable: true,
     registerType: "autoUpdate",
     manifest: {
       id: "/doisense/",
@@ -84,7 +85,6 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/doisense/offline",
       navigateFallbackDenylist: [
         /^\/doisense\/(?:[a-z]{2}\/)?admin(?:\/|$)/,
       ],

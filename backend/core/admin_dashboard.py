@@ -1,14 +1,16 @@
 import json
 from datetime import timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
 from ai.models import AILog, Conversation
+from core.models import AnalyticsEvent, InAppNotification, SupportTicket, UserQuotaUsage
 from journal.models import JournalEntry
-from payments.models import Payment
+from payments.models import Payment, StripeWebhookEvent
+from programs.models import GuidedProgram, UserProgramProgress
 from users.models import User
 
 
@@ -176,6 +178,70 @@ def dashboard_callback(request, context):
     mrr = _mrr_estimate()
     churn_rate_30d = _churn_rate_30d()
     ai_by_tier = _ai_usage_by_tier(selected_period)
+    month_start = today.replace(day=1)
+    quota_usage_rows = list(
+        UserQuotaUsage.objects.filter(
+            period_type=UserQuotaUsage.PERIOD_MONTH,
+            period_start=month_start,
+        )
+        .values("metric_key")
+        .annotate(total_used=Sum("used_count"), users=Count("user", distinct=True))
+        .order_by("metric_key")
+    )
+    quota_exceeded_30d = AnalyticsEvent.objects.filter(
+        event_name="quota_exceeded",
+        created_at__gte=start_30d,
+    ).count()
+    quota_exceeded_period = AnalyticsEvent.objects.filter(
+        event_name="quota_exceeded",
+        created_at__gte=start_period,
+    ).count()
+    onboarding_started_period = AnalyticsEvent.objects.filter(
+        event_name="onboarding_started",
+        created_at__gte=start_period,
+    ).count()
+    onboarding_completed_period = AnalyticsEvent.objects.filter(
+        event_name="onboarding_completed",
+        created_at__gte=start_period,
+    ).count()
+    onboarding_restarted_period = AnalyticsEvent.objects.filter(
+        event_name="onboarding_restarted",
+        created_at__gte=start_period,
+    ).count()
+    program_completed_period = AnalyticsEvent.objects.filter(
+        event_name="program_completed",
+        created_at__gte=start_period,
+    ).count()
+    program_dropout_period = AnalyticsEvent.objects.filter(
+        event_name="program_dropout_detected",
+        created_at__gte=start_period,
+    ).count()
+    program_reflection_period = AnalyticsEvent.objects.filter(
+        event_name="program_reflection_submitted",
+        created_at__gte=start_period,
+    ).count()
+    support_ticket_created_period = SupportTicket.objects.filter(created_at__gte=start_period).count()
+    support_ticket_open_total = SupportTicket.objects.filter(
+        status__in=[SupportTicket.STATUS_OPEN, SupportTicket.STATUS_IN_PROGRESS]
+    ).count()
+    in_app_unread_total = InAppNotification.objects.filter(is_read=False).count()
+    subscription_cancel_requested_period = AnalyticsEvent.objects.filter(
+        event_name="subscription_cancel_requested",
+        created_at__gte=start_period,
+    ).count()
+    subscription_refunded_period = AnalyticsEvent.objects.filter(
+        event_name="subscription_refunded",
+        created_at__gte=start_period,
+    ).count()
+    webhook_events_30d = StripeWebhookEvent.objects.filter(first_received_at__gte=start_30d).count()
+    webhook_failed_30d = StripeWebhookEvent.objects.filter(
+        first_received_at__gte=start_30d,
+        last_status=StripeWebhookEvent.STATUS_FAILED,
+    ).count()
+    webhook_ignored_30d = StripeWebhookEvent.objects.filter(
+        first_received_at__gte=start_30d,
+        last_status=StripeWebhookEvent.STATUS_IGNORED,
+    ).count()
     gdpr_delete_count = User.objects.filter(
         email__startswith="deleted.user.",
         is_active=False,
@@ -184,6 +250,28 @@ def dashboard_callback(request, context):
         created_at__gte=start_30d,
         status__in=["active", "trialing"],
     ).count()
+    program_insights = []
+    for program in GuidedProgram.objects.filter(active=True).order_by("title")[:25]:
+        progress_qs = UserProgramProgress.objects.filter(program=program)
+        started = progress_qs.count()
+        total_days = max(program.days.count(), 1)
+        completed = progress_qs.filter(current_day__gt=total_days).count()
+        paused = progress_qs.filter(is_paused=True).count()
+        dropped = progress_qs.filter(dropout_marked_at__isnull=False).count()
+        completion_rate = round((completed / started) * 100, 1) if started else 0.0
+        dropout_rate = round((dropped / started) * 100, 1) if started else 0.0
+        program_insights.append(
+            {
+                "program_id": program.id,
+                "title": program.title,
+                "started": started,
+                "completed": completed,
+                "paused": paused,
+                "dropped": dropped,
+                "completion_rate": completion_rate,
+                "dropout_rate": dropout_rate,
+            }
+        )
 
     user_labels, user_values = _daily_counts(User.objects.all(), "created_at", selected_period)
     journal_labels, journal_values = _daily_counts(
@@ -346,6 +434,24 @@ def dashboard_callback(request, context):
                 "gdpr_delete_count": gdpr_delete_count,
                 "upgrade_count_30d": upgrade_count_30d,
                 "ai_by_tier": ai_by_tier,
+                "quota_usage_rows": quota_usage_rows,
+                "quota_exceeded_30d": quota_exceeded_30d,
+                "quota_exceeded_period": quota_exceeded_period,
+                "onboarding_started_period": onboarding_started_period,
+                "onboarding_completed_period": onboarding_completed_period,
+                "onboarding_restarted_period": onboarding_restarted_period,
+                "program_completed_period": program_completed_period,
+                "program_dropout_period": program_dropout_period,
+                "program_reflection_period": program_reflection_period,
+                "support_ticket_created_period": support_ticket_created_period,
+                "support_ticket_open_total": support_ticket_open_total,
+                "in_app_unread_total": in_app_unread_total,
+                "subscription_cancel_requested_period": subscription_cancel_requested_period,
+                "subscription_refunded_period": subscription_refunded_period,
+                "webhook_events_30d": webhook_events_30d,
+                "webhook_failed_30d": webhook_failed_30d,
+                "webhook_ignored_30d": webhook_ignored_30d,
+                "program_insights": program_insights,
             },
             "tier_distribution": tier_distribution,
             "period_filters": period_filters,

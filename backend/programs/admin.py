@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import GuidedProgram, GuidedProgramDay, UserProgramProgress
+from .models import GuidedProgram, GuidedProgramDay, ProgramReflection, UserProgramProgress
 
 
 class GuidedProgramDayInline(admin.TabularInline):
@@ -21,7 +21,15 @@ class GuidedProgramDayAdmin(admin.ModelAdmin):
 
 @admin.register(UserProgramProgress)
 class UserProgramProgressAdmin(admin.ModelAdmin):
-    list_display = ("user", "program", "current_day", "last_active_at")
-    list_filter = ("program",)
+    list_display = ("user", "program", "current_day", "is_paused", "dropout_marked_at", "last_active_at")
+    list_filter = ("program", "is_paused")
     search_fields = ("user__email", "program__title")
-    readonly_fields = ("started_at", "last_active_at")
+    readonly_fields = ("started_at", "last_active_at", "dropout_marked_at")
+
+
+@admin.register(ProgramReflection)
+class ProgramReflectionAdmin(admin.ModelAdmin):
+    list_display = ("user", "program", "day_number", "updated_at")
+    list_filter = ("program",)
+    search_fields = ("user__email", "program__title", "reflection_text")
+    readonly_fields = ("created_at", "updated_at")

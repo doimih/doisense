@@ -4,6 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.analytics import track_event
+from core.feature_access import require_feature
+from core.quota import check_and_consume
+
 from .models import JournalQuestion, JournalEntry
 from .serializers import JournalQuestionSerializer, JournalEntrySerializer
 
@@ -100,12 +104,8 @@ def _ensure_minimum_questions(language: str) -> None:
 class JournalQuestionsView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @require_feature("journal_access")
     def get(self, request):
-        if not request.user.has_paid_access():
-            return Response(
-                {"detail": "Your trial or subscription has expired."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         language = request.query_params.get("language") or request.user.language or "en"
         if language not in settings.SUPPORTED_LANGUAGES:
             language = "en"
@@ -119,13 +119,31 @@ class JournalQuestionsView(APIView):
 class JournalEntriesView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @require_feature("journal_access")
     def post(self, request):
-        if not request.user.has_paid_access():
+        allowed, remaining, limit = check_and_consume(request.user, "journal_entries", amount=1)
+        if not allowed:
+            base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+            language = request.user.language or "en"
             return Response(
-                {"detail": "Your trial or subscription has expired."},
+                {
+                    "detail": "Monthly journal quota exceeded for your tier.",
+                    "code": "quota_exceeded",
+                    "metric": "journal_entries",
+                    "limit": limit,
+                    "remaining": remaining,
+                    "cta_url": f"{base_url}/{language}/pricing",
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
+
         serializer = JournalEntrySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
+        track_event(
+            "journal_entry_created",
+            source="backend",
+            user=request.user,
+            properties={"question_id": serializer.data.get("question")},
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)

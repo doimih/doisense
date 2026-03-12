@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage, get_connection
-from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
@@ -15,12 +14,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 import jwt
-from ai.models import AILog, Conversation
-from core.models import UserWellbeingCheckin
+from core.analytics import track_event
 from core.system_config import get_apple_client_id, get_google_client_id, get_system_config
-from journal.models import JournalEntry
-from payments.models import Payment
-from profiles.models import UserProfile
 
 from .models import User
 from .serializers import (
@@ -32,178 +27,6 @@ from .serializers import (
     UserRegisterSerializer,
     UserSerializer,
 )
-
-
-_DELETED_ACCOUNT_EMAIL = "deleted.account@doisense.local"
-
-
-def _build_deleted_email(user_id: int) -> str:
-    return f"deleted.user.{user_id}@doisense.local"
-
-
-def _redact_known_identifiers(text: str, user: User) -> str:
-    if not text:
-        return text
-
-    redacted = text
-    replacements = [
-        user.email,
-        user.first_name,
-        user.last_name,
-        user.phone_contact,
-    ]
-    for value in replacements:
-        value = (value or "").strip()
-        if value:
-            redacted = redacted.replace(value, "[redacted]")
-    return redacted
-
-
-def _anonymize_conversations(user: User) -> None:
-    conversations = list(Conversation.objects.filter(user=user))
-    for conversation in conversations:
-        conversation.user = None
-        conversation.user_message = _redact_known_identifiers(conversation.user_message, user)
-        conversation.ai_response = _redact_known_identifiers(conversation.ai_response, user)
-    if conversations:
-        Conversation.objects.bulk_update(
-            conversations,
-            ["user", "user_message", "ai_response"],
-        )
-
-
-def _anonymize_user(user: User) -> None:
-    _anonymize_conversations(user)
-    AILog.objects.filter(user=user).update(user=None)
-    JournalEntry.objects.filter(user=user).delete()
-    UserWellbeingCheckin.objects.filter(user=user).delete()
-    UserProfile.objects.filter(user=user).update(
-        preferred_tone="",
-        sensitivities="",
-        communication_style="",
-        emotional_baseline="",
-        keywords={},
-    )
-    Payment.objects.filter(user=user).update(
-        stripe_customer_id="",
-        stripe_subscription_id="",
-        status="cancelled",
-        plan_tier=User.PLAN_BASIC,
-    )
-
-    user.email = _build_deleted_email(user.id)
-    user.first_name = ""
-    user.last_name = ""
-    user.phone_contact = ""
-    user.tax_region = ""
-    user.is_active = False
-    user.is_staff = False
-    user.is_superuser = False
-    user.is_premium = False
-    user.plan_tier = User.PLAN_FREE
-    user.trial_started_at = None
-    user.trial_ends_at = None
-    user.terms_accepted_at = None
-    user.privacy_accepted_at = None
-    user.ai_usage_accepted_at = None
-    user.legal_consent_language = ""
-    user.onboarding_completed = True
-    user.set_unusable_password()
-    user.save(
-        update_fields=[
-            "email",
-            "first_name",
-            "last_name",
-            "phone_contact",
-            "tax_region",
-            "is_active",
-            "is_staff",
-            "is_superuser",
-            "is_premium",
-            "plan_tier",
-            "trial_started_at",
-            "trial_ends_at",
-            "terms_accepted_at",
-            "privacy_accepted_at",
-            "ai_usage_accepted_at",
-            "legal_consent_language",
-            "onboarding_completed",
-            "password",
-        ]
-    )
-
-
-def _build_personal_data_export(user: User) -> dict:
-    profile = UserProfile.objects.filter(user=user).first()
-    payments = list(
-        Payment.objects.filter(user=user)
-        .order_by("-created_at")
-        .values("status", "plan_tier", "created_at", "updated_at")
-    )
-    journal_entries = list(
-        JournalEntry.objects.filter(user=user)
-        .select_related("question")
-        .order_by("-created_at")
-        .values(
-            "id",
-            "content",
-            "emotions",
-            "created_at",
-            "question_id",
-            "question__text",
-            "question__category",
-            "question__language",
-        )
-    )
-    conversations = list(
-        Conversation.objects.filter(user=user)
-        .order_by("-created_at")
-        .values(
-            "id",
-            "module",
-            "plan_tier",
-            "user_message",
-            "ai_response",
-            "created_at",
-        )
-    )
-    wellbeing_checkins = list(
-        UserWellbeingCheckin.objects.filter(user=user)
-        .order_by("-created_at")
-        .values("id", "mood", "energy_level", "created_at")
-    )
-
-    return {
-        "generated_at": timezone.now().isoformat(),
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "phone_contact": user.phone_contact,
-            "tax_region": user.tax_region,
-            "language": user.language,
-            "plan_tier": user.plan_tier,
-            "trial_started_at": user.trial_started_at,
-            "trial_ends_at": user.trial_ends_at,
-            "created_at": user.created_at,
-            "terms_accepted_at": user.terms_accepted_at,
-            "privacy_accepted_at": user.privacy_accepted_at,
-            "ai_usage_accepted_at": user.ai_usage_accepted_at,
-            "legal_consent_language": user.legal_consent_language,
-        },
-        "profile": {
-            "preferred_tone": profile.preferred_tone if profile else "",
-            "sensitivities": profile.sensitivities if profile else "",
-            "communication_style": profile.communication_style if profile else "",
-            "emotional_baseline": profile.emotional_baseline if profile else "",
-            "keywords": profile.keywords if profile else {},
-        },
-        "payments": payments,
-        "journal_entries": journal_entries,
-        "conversations": conversations,
-        "wellbeing_checkins": wellbeing_checkins,
-    }
 
 
 def _send_activation_email(user) -> None:
@@ -261,6 +84,13 @@ class RegisterView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
+        track_event(
+            "user_registered",
+            source="backend",
+            user=user,
+            properties={"auth_method": "email"},
+        )
+
         return Response(
             {"detail": "Account created. Please confirm your email to activate your account."},
             status=status.HTTP_201_CREATED,
@@ -299,7 +129,12 @@ class ActivateAccountView(APIView):
 
         user.is_active = True
         user.save(update_fields=["is_active"])
-        user.start_trial()
+        track_event(
+            "user_activated",
+            source="backend",
+            user=user,
+            properties={"auth_method": "email"},
+        )
         return Response({"detail": "Account activated successfully."}, status=status.HTTP_200_OK)
 
 
@@ -368,16 +203,48 @@ class MeView(APIView):
         return Response(serializer.data)
 
     def delete(self, request):
+        from ai.models import Conversation
+        from core.models import UserWellbeingCheckin
+        from journal.models import JournalEntry
+
         user = request.user
-        if user.email in {_DELETED_ACCOUNT_EMAIL, _build_deleted_email(user.id)}:
-            return Response(
-                {"detail": "This account cannot be deleted."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        with transaction.atomic():
-            _anonymize_user(user)
+        # Remove user-owned personal records while preserving anonymized conversations.
+        JournalEntry.objects.filter(user=user).delete()
+        UserWellbeingCheckin.objects.filter(user=user).delete()
 
+        conversations = Conversation.objects.filter(user=user)
+        for conversation in conversations:
+            if user.email:
+                conversation.user_message = conversation.user_message.replace(user.email, "[redacted]")
+                conversation.ai_response = conversation.ai_response.replace(user.email, "[redacted]")
+            conversation.user = None
+            conversation.save(update_fields=["user", "user_message", "ai_response"])
+
+        user.is_active = False
+        user.is_premium = False
+        user.plan_tier = User.PLAN_FREE
+        user.email = f"deleted.user.{user.id}@doisense.local"
+        user.first_name = ""
+        user.last_name = ""
+        user.phone_contact = ""
+        user.tax_region = ""
+        user.onboarding_completed = True
+        user.set_unusable_password()
+        user.save(
+            update_fields=[
+                "is_active",
+                "is_premium",
+                "plan_tier",
+                "email",
+                "first_name",
+                "last_name",
+                "phone_contact",
+                "tax_region",
+                "onboarding_completed",
+                "password",
+            ]
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -385,10 +252,75 @@ class MeExportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        payload = _build_personal_data_export(request.user)
+        from ai.models import Conversation
+        from core.models import UserWellbeingCheckin
+        from journal.models import JournalEntry
+
+        user = request.user
+        payload = {
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "phone_contact": user.phone_contact,
+                "tax_region": user.tax_region,
+                "language": user.language,
+                "is_premium": user.is_premium,
+                "plan_tier": user.plan_tier,
+                "onboarding_completed": user.onboarding_completed,
+                "created_at": user.created_at,
+            },
+            "journal_entries": [
+                {
+                    "id": entry.id,
+                    "question_id": entry.question_id,
+                    "content": entry.content,
+                    "emotions": entry.emotions,
+                    "created_at": entry.created_at,
+                }
+                for entry in JournalEntry.objects.filter(user=user).order_by("-created_at")
+            ],
+            "conversations": [
+                {
+                    "id": conversation.id,
+                    "module": conversation.module,
+                    "plan_tier": conversation.plan_tier,
+                    "user_message": conversation.user_message,
+                    "ai_response": conversation.ai_response,
+                    "created_at": conversation.created_at,
+                }
+                for conversation in Conversation.objects.filter(user=user).order_by("-created_at")
+            ],
+            "wellbeing_checkins": [
+                {
+                    "id": checkin.id,
+                    "mood": checkin.mood,
+                    "energy_level": checkin.energy_level,
+                    "created_at": checkin.created_at,
+                }
+                for checkin in UserWellbeingCheckin.objects.filter(user=user).order_by("-created_at")
+            ],
+        }
         response = JsonResponse(payload)
         response["Content-Disposition"] = 'attachment; filename="doisense-personal-data.json"'
         return response
+
+
+class ReOnboardingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user.onboarding_completed = False
+        user.save(update_fields=["onboarding_completed"])
+        track_event(
+            "onboarding_restarted",
+            source="backend",
+            user=user,
+            properties={"entrypoint": "profile"},
+        )
+        return Response({"onboarding_completed": False}, status=status.HTTP_200_OK)
 
 
 class ChangePasswordView(APIView):
@@ -460,28 +392,49 @@ class SocialLoginView(APIView):
 
         user = User.objects.filter(email=email).first()
         if not user:
-            if not (
-                serializer.validated_data.get("accepted_terms")
-                and serializer.validated_data.get("accepted_privacy")
-                and serializer.validated_data.get("accepted_ai_usage")
-            ):
+            if not request.data.get("accepted_terms"):
                 return Response(
-                    {"detail": "You must accept the Terms, Privacy Policy, and AI Usage Agreement before creating an account."},
+                    {"detail": "Terms must be accepted for new accounts."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            accepted_at = timezone.now()
+            if not request.data.get("accepted_privacy"):
+                return Response(
+                    {"detail": "Privacy policy must be accepted for new accounts."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not request.data.get("accepted_ai_usage"):
+                return Response(
+                    {"detail": "AI usage policy must be accepted for new accounts."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             user = User.objects.create_user(
                 email=email,
                 password=None,
                 language=language,
                 onboarding_completed=False,
-                terms_accepted_at=accepted_at,
-                privacy_accepted_at=accepted_at,
-                ai_usage_accepted_at=accepted_at,
-                legal_consent_language=language,
             )
+            now = timezone.now()
+            user.terms_accepted_at = now
+            user.privacy_accepted_at = now
+            user.ai_usage_accepted_at = now
+            user.legal_consent_language = language
             user.set_unusable_password()
-            user.save(update_fields=["password"])
+            user.save(
+                update_fields=[
+                    "password",
+                    "terms_accepted_at",
+                    "privacy_accepted_at",
+                    "ai_usage_accepted_at",
+                    "legal_consent_language",
+                ]
+            )
+            track_event(
+                "user_registered",
+                source="backend",
+                user=user,
+                properties={"auth_method": provider},
+            )
 
         if not user.is_active:
             return Response(

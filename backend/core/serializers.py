@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import CMSPage, UserWellbeingCheckin
+from .analytics import EVENT_SCHEMA
 
 
 class CMSPageSerializer(serializers.ModelSerializer):
@@ -38,3 +39,10 @@ class WellbeingCheckinCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"energy_level": "Energy must be between 1 and 5."})
 
         return attrs
+
+
+class AnalyticsTrackSerializer(serializers.Serializer):
+    event_name = serializers.ChoiceField(choices=sorted(EVENT_SCHEMA.keys()))
+    source = serializers.ChoiceField(choices=["frontend", "backend", "system"], default="frontend")
+    session_id = serializers.CharField(required=False, allow_blank=True, max_length=128)
+    properties = serializers.JSONField(required=False)

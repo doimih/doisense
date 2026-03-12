@@ -13,7 +13,10 @@
 
       <section v-for="section in text.sections" :key="section.title" class="bg-white border border-stone-200 rounded-xl p-5">
         <h2 class="text-xl font-semibold text-stone-900 mb-2">{{ section.title }}</h2>
-        <p class="text-stone-700 text-sm leading-6 whitespace-pre-line">{{ section.body }}</p>
+        <p v-if="section.body" class="text-stone-700 text-sm leading-6 whitespace-pre-line">{{ section.body }}</p>
+        <ul v-if="section.items?.length" class="mt-3 space-y-2 pl-5 text-sm leading-6 text-stone-700 list-disc">
+          <li v-for="item in section.items" :key="item">{{ item }}</li>
+        </ul>
       </section>
     </template>
   </article>
@@ -30,7 +33,7 @@ const { cmsPage, hasCmsContent } = useLegalCmsPage('terms')
 const termsCopy: Record<string, {
   title: string
   updated: string
-  sections: Array<{ title: string; body: string }>
+  sections: Array<{ title: string; body?: string; items?: string[] }>
   seoTitle: string
   seoDescription: string
 }> = {
@@ -38,15 +41,92 @@ const termsCopy: Record<string, {
     title: 'Termeni și condiții',
     updated: 'Ultima actualizare: 11 martie 2026',
     sections: [
-      { title: '1. Introducere', body: 'Acest document stabilește termenii și condițiile de utilizare ale platformei Doisense, un serviciu digital de wellness bazat pe inteligență artificială.\nPrin utilizarea platformei, utilizatorul acceptă integral acești termeni.' },
-      { title: '2. Descrierea serviciului', body: 'Platforma oferă:\n• suport emoțional general\n• analiză a stărilor emoționale\n• generare de întrebări pentru auto-reflecție\n• rapoarte și planuri de wellness\n• recomandări non-medicale\n\nPlatforma NU oferă:\n• diagnostic medical\n• tratament psihologic\n• consiliere psihiatrică\n• intervenții terapeutice\n• recomandări medicale\n\nPlatforma este un instrument de auto-reflecție și dezvoltare personală.' },
+      {
+        title: '1. Introducere',
+        body: 'Acest document stabilește termenii și condițiile de utilizare ale platformei [Numele Platformei], un serviciu digital de wellness bazat pe inteligență artificială.\nPrin utilizarea platformei, utilizatorul acceptă integral acești termeni.',
+      },
+      {
+        title: '2. Descrierea serviciului',
+        body: 'Platforma oferă:',
+        items: [
+          'suport emoțional general',
+          'analiză a stărilor emoționale',
+          'generare de întrebări pentru auto-reflecție',
+          'rapoarte și planuri de wellness',
+          'recomandări non-medicale',
+        ],
+      },
+      {
+        title: 'Platforma NU oferă',
+        items: [
+          'diagnostic medical',
+          'tratament psihologic',
+          'consiliere psihiatrică',
+          'intervenții terapeutice',
+          'recomandări medicale',
+        ],
+      },
+      {
+        title: 'Clarificare',
+        body: 'Platforma este un instrument de auto-reflecție și dezvoltare personală.',
+      },
       { title: '3. Eligibilitate', body: 'Utilizatorul trebuie să aibă minimum 18 ani.' },
-      { title: '4. Contul utilizatorului', body: 'Utilizatorul este responsabil pentru:\n• confidențialitatea contului\n• acuratețea datelor introduse\n• activitatea desfășurată în cont' },
-      { title: '5. Abonamente și plăți', body: 'Platforma oferă planuri BASIC, PREMIUM și VIP. Plățile sunt procesate prin Stripe. Abonamentele sunt recurente. Utilizatorul poate anula oricând.\nLa anulare, accesul rămâne activ până la finalul perioadei plătite. Refund-urile sunt gestionate conform politicii de refund Stripe.' },
-      { title: '6. Trial', body: 'Utilizatorul beneficiază de 7 zile gratuite. La finalul trialului, accesul se suspendă dacă nu se activează un abonament.' },
-      { title: '7. Limitarea răspunderii', body: 'Platforma nu este responsabilă pentru:\n• deciziile utilizatorului\n• interpretarea recomandărilor\n• consecințele emoționale sau psihologice\n• pierderi financiare\n• indisponibilitatea temporară a serviciului\n\nPlatforma este oferită „ca atare".' },
-      { title: '8. Interdicții', body: 'Utilizatorul nu poate:\n• utiliza platforma în scopuri ilegale\n• încerca acces neautorizat\n• copia sau redistribui conținutul AI\n• abuza verbal AI-ul sau echipa' },
-      { title: '9. Suspendarea contului', body: 'Platforma poate suspenda contul în caz de:\n• abuz\n• fraudă\n• încălcarea termenilor' },
+      {
+        title: '4. Contul utilizatorului',
+        body: 'Utilizatorul este responsabil pentru:',
+        items: [
+          'confidențialitatea contului',
+          'acuratețea datelor introduse',
+          'activitatea desfășurată în cont',
+        ],
+      },
+      {
+        title: '5. Abonamente și plăți',
+        items: [
+          'Platforma oferă planuri BASIC, PREMIUM și VIP.',
+          'Plățile sunt procesate prin Stripe.',
+          'Abonamentele sunt recurente.',
+          'Utilizatorul poate anula oricând.',
+          'La anulare, accesul rămâne activ până la finalul perioadei plătite.',
+          'Refund-urile sunt gestionate conform politicii de refund Stripe.',
+        ],
+      },
+      {
+        title: '6. Trial',
+        items: [
+          'Utilizatorul beneficiază de 7 zile gratuite.',
+          'La finalul trialului, accesul se suspendă dacă nu se activează un abonament.',
+        ],
+      },
+      {
+        title: '7. Limitarea răspunderii',
+        body: 'Platforma nu este responsabilă pentru:',
+        items: [
+          'deciziile utilizatorului',
+          'interpretarea recomandărilor',
+          'consecințele emoționale sau psihologice',
+          'pierderi financiare',
+          'indisponibilitatea temporară a serviciului',
+        ],
+      },
+      {
+        title: 'Platforma este oferită „ca atare”.',
+      },
+      {
+        title: '8. Interdicții',
+        body: 'Utilizatorul nu poate:',
+        items: [
+          'utiliza platforma în scopuri ilegale',
+          'încerca acces neautorizat',
+          'copia sau redistribui conținutul AI',
+          'abuza verbal AI-ul sau echipa',
+        ],
+      },
+      {
+        title: '9. Suspendarea contului',
+        body: 'Platforma poate suspenda contul în caz de:',
+        items: ['abuz', 'fraudă', 'încălcarea termenilor'],
+      },
       { title: '10. Modificări', body: 'Termenii pot fi actualizați. Utilizatorul va fi notificat.' },
       { title: '11. Legea aplicabilă', body: 'Acest contract este guvernat de legislația din România și UE.' },
     ],

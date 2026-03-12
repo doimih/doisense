@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Payment
+from .models import Payment, StripeWebhookEvent
 
 
 @admin.register(Payment)
@@ -30,4 +30,30 @@ class PaymentAdmin(admin.ModelAdmin):
                 "fields": ("created_at", "updated_at"),
             },
         ),
+    )
+
+
+@admin.register(StripeWebhookEvent)
+class StripeWebhookEventAdmin(admin.ModelAdmin):
+    list_display = (
+        "event_id",
+        "event_type",
+        "last_status",
+        "delivery_attempts",
+        "first_received_at",
+        "last_received_at",
+    )
+    list_filter = ("event_type", "last_status")
+    search_fields = ("event_id", "event_type")
+    ordering = ("-first_received_at",)
+    readonly_fields = (
+        "event_id",
+        "event_type",
+        "last_status",
+        "delivery_attempts",
+        "payload",
+        "processing_error",
+        "processed_at",
+        "first_received_at",
+        "last_received_at",
     )

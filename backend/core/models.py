@@ -161,6 +161,13 @@ class RecaptchaConfig(SystemConfig):
         verbose_name_plural = "reCAPTCHA Configuration"
 
 
+class BackupConfig(SystemConfig):
+    class Meta:
+        proxy = True
+        verbose_name = "Backup Configuration"
+        verbose_name_plural = "Backup Configuration"
+
+
 class UserWellbeingCheckin(models.Model):
     MOOD_LOW = "low"
     MOOD_OK = "ok"
@@ -229,3 +236,177 @@ class NotificationDelivery(models.Model):
             f"{self.notification_type} for {self.user_id} on "
             f"{self.sent_for_date} ({self.context_key or 'default'})"
         )
+
+
+class InAppNotification(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="in_app_notifications",
+    )
+    notification_type = models.CharField(max_length=64)
+    title = models.CharField(max_length=160)
+    body = models.TextField(blank=True)
+    context_key = models.CharField(max_length=64, blank=True, default="")
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_inappnotification"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_read", "created_at"]),
+            models.Index(fields=["notification_type", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.notification_type} -> {self.user_id}"
+
+
+class UserNotificationPreference(models.Model):
+    user = models.OneToOneField(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="notification_preferences",
+    )
+    push_enabled = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "core_usernotificationpreference"
+
+    def __str__(self):
+        return f"Notification preferences for {self.user_id}"
+
+
+class SupportTicket(models.Model):
+    STATUS_OPEN = "open"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_RESOLVED = "resolved"
+    STATUS_CHOICES = [
+        (STATUS_OPEN, "Open"),
+        (STATUS_IN_PROGRESS, "In Progress"),
+        (STATUS_RESOLVED, "Resolved"),
+    ]
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="support_tickets",
+    )
+    subject = models.CharField(max_length=180)
+    message = models.TextField()
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "core_supportticket"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "status", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"Ticket #{self.id} ({self.status})"
+
+
+class FeatureAccessLog(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        related_name="feature_access_logs",
+        null=True,
+        blank=True,
+    )
+    feature_key = models.CharField(max_length=64)
+    required_tiers = models.JSONField(default=list)
+    user_tier = models.CharField(max_length=16, default="anonymous")
+    granted = models.BooleanField(default=False)
+    reason = models.CharField(max_length=128, blank=True, default="")
+    context = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_featureaccesslog"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["feature_key", "created_at"]),
+            models.Index(fields=["granted", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.feature_key} ({'granted' if self.granted else 'denied'})"
+
+
+class AnalyticsEvent(models.Model):
+    EVENT_SOURCE_CHOICES = [
+        ("backend", "Backend"),
+        ("frontend", "Frontend"),
+        ("system", "System"),
+    ]
+
+    event_name = models.CharField(max_length=96)
+    source = models.CharField(max_length=16, choices=EVENT_SOURCE_CHOICES, default="backend")
+    schema_version = models.CharField(max_length=16, default="v1")
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        related_name="analytics_events",
+        null=True,
+        blank=True,
+    )
+    session_id = models.CharField(max_length=128, blank=True, default="")
+    properties = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_analyticsevent"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["event_name", "created_at"]),
+            models.Index(fields=["source", "created_at"]),
+            models.Index(fields=["user", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.event_name} ({self.source})"
+
+
+class UserQuotaUsage(models.Model):
+    PERIOD_DAY = "day"
+    PERIOD_MONTH = "month"
+    PERIOD_CHOICES = [
+        (PERIOD_DAY, "Day"),
+        (PERIOD_MONTH, "Month"),
+    ]
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="quota_usage",
+    )
+    metric_key = models.CharField(max_length=64)
+    period_type = models.CharField(max_length=8, choices=PERIOD_CHOICES)
+    period_start = models.DateField()
+    used_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "core_userquotausage"
+        ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "metric_key", "period_type", "period_start"],
+                name="core_userquotausage_unique_period",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["metric_key", "period_start"]),
+            models.Index(fields=["user", "updated_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id} {self.metric_key} {self.used_count}"

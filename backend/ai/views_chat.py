@@ -7,6 +7,9 @@ from rest_framework.views import APIView
 from .models import Conversation
 from .router import complete
 from .prompt_builder import get_chat_system_prompt
+from core.analytics import track_event
+from core.feature_access import require_feature
+from core.quota import check_and_consume
 from core.system_config import get_ai_chat_rate_limit, get_ai_max_tokens
 
 
@@ -67,15 +70,24 @@ def _build_recent_context(user, plan_tier: str) -> str:
 class SendChatView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @require_feature("chat_ai")
     def post(self, request):
-        if not request.user.has_paid_access():
+        allowed, remaining, limit = check_and_consume(request.user, "chat_messages", amount=1)
+        if not allowed:
+            base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+            language = request.user.language or "en"
             return Response(
                 {
-                    "detail": "Your trial or subscription has expired. Choose a plan to continue.",
-                    "code": "subscription_required",
+                    "detail": "Daily chat quota exceeded for your tier.",
+                    "code": "quota_exceeded",
+                    "metric": "chat_messages",
+                    "limit": limit,
+                    "remaining": remaining,
+                    "cta_url": f"{base_url}/{language}/pricing",
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
+
         if not _check_rate_limit(request.user.id):
             return Response(
                 {"detail": "Rate limit exceeded. Try again later."},
@@ -110,5 +122,11 @@ class SendChatView(APIView):
             plan_tier=plan_tier,
             user_message=message,
             ai_response=reply,
+        )
+        track_event(
+            "chat_message_sent",
+            source="backend",
+            user=request.user,
+            properties={"module": _extract_module(message) or "general"},
         )
         return Response({"reply": reply})

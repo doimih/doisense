@@ -54,6 +54,133 @@
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.active_users_7d }}</p>
                 <p class="text-xs text-base-500 mt-2">Users with journal or AI activity</p>
             {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="MRR estimate (RON)" icon="payments" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.mrr }}</p>
+                <p class="text-xs text-base-500 mt-2">Active + trialing subscriptions</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Churn rate (30d)" icon="trending_down" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.churn_rate_30d }}%</p>
+                <p class="text-xs text-base-500 mt-2">Cancelled or past_due over active baseline</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Webhook failures (30d)" icon="warning" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.webhook_failed_30d }}</p>
+                <p class="text-xs text-base-500 mt-2">Ignored: {{ analytics.webhook_ignored_30d }} | Total: {{ analytics.webhook_events_30d }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Quota exceeded (period)" icon="bolt" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.quota_exceeded_period }}</p>
+                <p class="text-xs text-base-500 mt-2">30d total: {{ analytics.quota_exceeded_30d }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Onboarding completed (period)" icon="flag" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.onboarding_completed_period }}</p>
+                <p class="text-xs text-base-500 mt-2">Started: {{ analytics.onboarding_started_period }} | Restarted: {{ analytics.onboarding_restarted_period }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Program completions (period)" icon="emoji_events" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.program_completed_period }}</p>
+                <p class="text-xs text-base-500 mt-2">Dropouts: {{ analytics.program_dropout_period }} | Reflections: {{ analytics.program_reflection_period }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Support & inbox" icon="support_agent" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.support_ticket_open_total }}</p>
+                <p class="text-xs text-base-500 mt-2">Tickets in period: {{ analytics.support_ticket_created_period }} | Unread in-app: {{ analytics.in_app_unread_total }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Cancel requests (period)" icon="event_busy" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.subscription_cancel_requested_period }}</p>
+                <p class="text-xs text-base-500 mt-2">Refund events: {{ analytics.subscription_refunded_period }}</p>
+            {% endcomponent %}
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            {% component "unfold/components/card.html" with title="Quota usage (current month)" %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-base-500">
+                                <th class="py-2 pr-3">Metric</th>
+                                <th class="py-2 pr-3">Total used</th>
+                                <th class="py-2 pr-3">Users</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in analytics.quota_usage_rows %}
+                                <tr class="border-t border-stone-200">
+                                    <td class="py-2 pr-3 font-medium">{{ row.metric_key }}</td>
+                                    <td class="py-2 pr-3">{{ row.total_used }}</td>
+                                    <td class="py-2 pr-3">{{ row.users }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="py-3 text-base-500">No quota usage data for current month.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Payment lifecycle events" %}
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-base-500">Upgrades (30d)</span>
+                        <span class="text-base font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.upgrade_count_30d }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-base-500">Cancel requests (period)</span>
+                        <span class="text-base font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.subscription_cancel_requested_period }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-base-500">Refunded subscriptions (period)</span>
+                        <span class="text-base font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.subscription_refunded_period }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-base-500">Webhook failed (30d)</span>
+                        <span class="text-base font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.webhook_failed_30d }}</span>
+                    </div>
+                </div>
+            {% endcomponent %}
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+            {% component "unfold/components/card.html" with title="Program insights" %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-base-500">
+                                <th class="py-2 pr-3">Program</th>
+                                <th class="py-2 pr-3">Started</th>
+                                <th class="py-2 pr-3">Completed</th>
+                                <th class="py-2 pr-3">Paused</th>
+                                <th class="py-2 pr-3">Dropped</th>
+                                <th class="py-2 pr-3">Completion</th>
+                                <th class="py-2 pr-3">Dropout</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in analytics.program_insights %}
+                                <tr class="border-t border-stone-200">
+                                    <td class="py-2 pr-3 font-medium">{{ row.title }}</td>
+                                    <td class="py-2 pr-3">{{ row.started }}</td>
+                                    <td class="py-2 pr-3">{{ row.completed }}</td>
+                                    <td class="py-2 pr-3">{{ row.paused }}</td>
+                                    <td class="py-2 pr-3">{{ row.dropped }}</td>
+                                    <td class="py-2 pr-3">{{ row.completion_rate }}%</td>
+                                    <td class="py-2 pr-3">{{ row.dropout_rate }}%</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="py-3 text-base-500">No program activity available yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endcomponent %}
         </div>
 
         <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">

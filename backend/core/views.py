@@ -23,10 +23,18 @@ from rest_framework.views import APIView
 
 from journal.models import JournalQuestion
 from programs.models import GuidedProgram
+from core.analytics import track_event
 
 from .image_utils import convert_uploaded_image_to_webp
-from .models import CMSPage, SystemConfig, UserWellbeingCheckin
-from .serializers import CMSPageSerializer, WellbeingCheckinCreateSerializer
+from .models import (
+    CMSPage,
+    InAppNotification,
+    SystemConfig,
+    SupportTicket,
+    UserNotificationPreference,
+    UserWellbeingCheckin,
+)
+from .serializers import AnalyticsTrackSerializer, CMSPageSerializer, WellbeingCheckinCreateSerializer
 
 
 def public_cache_response(data, *, max_age: int = 300):
@@ -308,6 +316,30 @@ class SearchView(APIView):
         )
 
 
+class AnalyticsTrackView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = AnalyticsTrackSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        event_name = serializer.validated_data["event_name"]
+        source = serializer.validated_data.get("source", "frontend")
+        session_id = serializer.validated_data.get("session_id", "")
+        properties = serializer.validated_data.get("properties") or {}
+
+        user = request.user if request.user and request.user.is_authenticated else None
+        track_event(
+            event_name,
+            source=source,
+            user=user,
+            session_id=session_id,
+            properties=properties,
+        )
+
+        return Response({"tracked": True}, status=status.HTTP_201_CREATED)
+
+
 class WellbeingCheckinView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -406,6 +438,124 @@ class WellbeingSummaryView(APIView):
                     for item in energy_items
                 ],
             }
+        )
+
+
+class InAppNotificationListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        limit_raw = request.query_params.get("limit", "50")
+        try:
+            limit = max(1, min(int(limit_raw), 100))
+        except ValueError:
+            limit = 50
+
+        rows = InAppNotification.objects.filter(user=request.user).order_by("-created_at")[:limit]
+        unread = InAppNotification.objects.filter(user=request.user, is_read=False).count()
+
+        return Response(
+            {
+                "unread_count": unread,
+                "items": [
+                    {
+                        "id": row.id,
+                        "notification_type": row.notification_type,
+                        "title": row.title,
+                        "body": row.body,
+                        "context_key": row.context_key,
+                        "is_read": row.is_read,
+                        "read_at": row.read_at,
+                        "created_at": row.created_at,
+                    }
+                    for row in rows
+                ],
+            }
+        )
+
+
+class InAppNotificationReadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, notification_id):
+        row = InAppNotification.objects.filter(id=notification_id, user=request.user).first()
+        if not row:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not row.is_read:
+            row.is_read = True
+            row.read_at = timezone.now()
+            row.save(update_fields=["is_read", "read_at"])
+
+        return Response({"ok": True})
+
+
+class NotificationPreferenceView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prefs, _ = UserNotificationPreference.objects.get_or_create(user=request.user)
+        return Response({"push_enabled": prefs.push_enabled})
+
+    def post(self, request):
+        push_enabled = bool(request.data.get("push_enabled", False))
+        prefs, _ = UserNotificationPreference.objects.get_or_create(user=request.user)
+        prefs.push_enabled = push_enabled
+        prefs.save(update_fields=["push_enabled", "updated_at"])
+        return Response({"push_enabled": prefs.push_enabled})
+
+
+class SupportTicketListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        tickets = SupportTicket.objects.filter(user=request.user).order_by("-created_at")[:100]
+        return Response(
+            {
+                "items": [
+                    {
+                        "id": row.id,
+                        "subject": row.subject,
+                        "message": row.message,
+                        "status": row.status,
+                        "created_at": row.created_at,
+                        "updated_at": row.updated_at,
+                    }
+                    for row in tickets
+                ]
+            }
+        )
+
+    def post(self, request):
+        subject = str(request.data.get("subject") or "").strip()
+        message = str(request.data.get("message") or "").strip()
+
+        if not subject:
+            return Response({"detail": "subject is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not message:
+            return Response({"detail": "message is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        ticket = SupportTicket.objects.create(
+            user=request.user,
+            subject=subject[:180],
+            message=message,
+        )
+        track_event(
+            "support_ticket_created",
+            source="backend",
+            user=request.user,
+            properties={},
+        )
+        return Response(
+            {
+                "id": ticket.id,
+                "subject": ticket.subject,
+                "message": ticket.message,
+                "status": ticket.status,
+                "created_at": ticket.created_at,
+                "updated_at": ticket.updated_at,
+            },
+            status=status.HTTP_201_CREATED,
         )
 
 

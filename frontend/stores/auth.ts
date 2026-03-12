@@ -13,6 +13,23 @@ export const useAuthStore = defineStore('auth', {
     },
   },
   actions: {
+    async trackFrontendEvent(eventName: string, properties: Record<string, unknown> = {}) {
+      try {
+        const config = useRuntimeConfig()
+        const base = config.public.apiBase as string
+        await $fetch(`${base}/analytics/track`, {
+          method: 'POST',
+          body: {
+            event_name: eventName,
+            source: 'frontend',
+            properties,
+          },
+        })
+      } catch {
+        // Analytics tracking is best-effort and should not block auth UX.
+      }
+    },
+
     setTokens(access: string, refresh: string) {
       this.accessToken = access
       this.refreshToken = refresh
@@ -50,6 +67,10 @@ export const useAuthStore = defineStore('auth', {
           accepted_ai_usage: legalConsent.acceptedAiUsage,
         },
       })
+        .then(async (res) => {
+          await this.trackFrontendEvent('user_registered', { auth_method: 'email' })
+          return res
+        })
     },
     async login(email: string, password: string) {
       const config = useRuntimeConfig()
@@ -60,6 +81,7 @@ export const useAuthStore = defineStore('auth', {
       })
       this.setUser(res.user)
       this.setTokens(res.access, res.refresh)
+      await this.trackFrontendEvent('user_activated', { auth_method: 'email' })
     },
     async loginWithSocial(
       provider: 'google' | 'apple',
@@ -82,6 +104,7 @@ export const useAuthStore = defineStore('auth', {
       })
       this.setUser(res.user)
       this.setTokens(res.access, res.refresh)
+      await this.trackFrontendEvent('user_activated', { auth_method: provider })
     },
     logout() {
       this.user = null

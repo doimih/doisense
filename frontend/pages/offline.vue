@@ -6,17 +6,66 @@
       <p class="mb-6 leading-7 text-slate-700">
         Doisense cannot reach the network right now. You can retry when your connection is restored.
       </p>
-      <NuxtLink
-        to="/"
-        class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-4 py-3 font-semibold text-white transition hover:bg-teal-800"
-      >
-        Return to Doisense
-      </NuxtLink>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-xl bg-slate-200 px-4 py-3 font-semibold text-slate-800 transition hover:bg-slate-300"
+          @click="retryNow"
+        >
+          Retry now
+        </button>
+        <NuxtLink
+          to="/"
+          class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-4 py-3 font-semibold text-white transition hover:bg-teal-800"
+        >
+          Return to Doisense
+        </NuxtLink>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+const router = useRouter()
+
+async function clearServiceWorkers() {
+  if (!import.meta.client || !('serviceWorker' in navigator)) {
+    return
+  }
+
+  const registrations = await navigator.serviceWorker.getRegistrations()
+  await Promise.all(registrations.map((registration) => registration.unregister()))
+
+  if ('caches' in window) {
+    const cacheKeys = await caches.keys()
+    await Promise.all(cacheKeys.map((key) => caches.delete(key)))
+  }
+}
+
+async function retryNow() {
+  if (!import.meta.client) {
+    return
+  }
+
+  if (!navigator.onLine) {
+    window.location.reload()
+    return
+  }
+
+  await clearServiceWorkers()
+  await router.replace('/')
+  window.location.reload()
+}
+
+onMounted(async () => {
+  if (!import.meta.client || !navigator.onLine) {
+    return
+  }
+
+  await clearServiceWorkers()
+  await router.replace('/')
+})
+
 usePublicSeo({
   title: 'Offline - Doisense',
   description: 'Offline fallback page for Doisense.',

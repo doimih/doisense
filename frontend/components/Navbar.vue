@@ -1,9 +1,7 @@
 <template>
   <nav ref="navRef" :class="navClass">
     <div class="container mx-auto flex items-center justify-between gap-4">
-      <NuxtLink :to="localePath('/')" :class="brandClass" aria-label="Doisense home">
-        <BrandLogo size="sm" :is-dark="isOverDarkZone" />
-      </NuxtLink>
+      <NuxtLink :to="localePath('/')" :class="brandClass">Doisense</NuxtLink>
 
       <button
         type="button"
@@ -43,6 +41,12 @@
         </NuxtLink>
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" :class="navLinkClass">
           {{ $t('nav.profile') }}
+        </NuxtLink>
+        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" :class="navLinkClass">
+          {{ locale.startsWith('ro') ? 'Notificari' : 'Notifications' }}
+        </NuxtLink>
+        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" :class="navLinkClass">
+          {{ locale.startsWith('ro') ? 'Suport' : 'Support' }}
         </NuxtLink>
         <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" :class="navLinkClass">
           {{ $t('nav.admin') }}
@@ -105,6 +109,8 @@
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" class="block text-stone-700" @click="mobileOpen = false">{{ locale.startsWith('ro') ? 'Notificari' : 'Notifications' }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" class="block text-stone-700" @click="mobileOpen = false">{{ locale.startsWith('ro') ? 'Suport' : 'Support' }}</NuxtLink>
       <div class="pt-2">
         <p class="mb-1 text-xs text-stone-500">{{ $t('auth.language') }}</p>
         <div class="relative inline-block">
@@ -145,19 +151,12 @@
       @keydown.esc="closeAuthModal"
     >
       <div class="flex min-h-full items-center justify-center px-4 py-6">
-        <div class="relative w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl" @click.stop>
-      <button
-        type="button"
-        class="absolute right-5 top-5 text-stone-500 transition hover:text-stone-800"
-        @click="closeAuthModal"
-        aria-label="Close"
-      >
-        ✕
-      </button>
-
-      <div class="mb-5 text-center">
-        <BrandLogo class="mx-auto mb-4" size="md" centered show-tagline />
+        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @click.stop>
+      <div class="mb-4 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-stone-900">{{ $t('auth.accountTitle') }}</h2>
+        <button type="button" class="text-stone-500 hover:text-stone-800" @click="closeAuthModal" aria-label="Close">
+          ✕
+        </button>
       </div>
 
       <div class="mb-4 grid grid-cols-2 rounded-lg bg-stone-100 p-1">
@@ -182,25 +181,25 @@
       <div class="mb-4 grid grid-cols-2 gap-2">
         <button
           type="button"
-          class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3.5 font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50 flex items-center justify-center"
+          class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'apple'"
           @click="loginWithGoogle"
           aria-label="Continue with Google"
         >
           <span v-if="socialLoading === 'google'">...</span>
-          <svg v-else viewBox="0 0 24 24" class="h-8 w-8" aria-hidden="true">
+          <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5" aria-hidden="true">
             <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.1 14.6 2 12 2 6.5 2 2 6.5 2 12s4.5 10 10 10c5.8 0 9.6-4.1 9.6-9.8 0-.7-.1-1.2-.2-2H12z"/>
           </svg>
         </button>
         <button
           type="button"
-          class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3.5 font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50 flex items-center justify-center"
+          class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'google'"
           @click="loginWithApple"
           aria-label="Continue with Apple"
         >
           <span v-if="socialLoading === 'apple'">...</span>
-          <svg v-else viewBox="0 0 24 24" class="h-8 w-8 fill-current" aria-hidden="true">
+          <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5 fill-current" aria-hidden="true">
             <path d="M16.9 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.6 2.3 2.8 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.7-2.2.9-1.3 1.2-2.6 1.2-2.7 0 0-2.3-.9-2.3-3.4zM14.6 5.8c.6-.8 1-1.9.9-3-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.9-1 3 .9.1 2-.5 2.7-1.4z"/>
           </svg>
         </button>
@@ -229,13 +228,23 @@
         <button
           type="submit"
           :disabled="authLoading"
-          class="mx-auto block w-full max-w-sm rounded-lg bg-amber-600 py-2 text-white hover:bg-amber-700 disabled:opacity-50"
+          class="w-full rounded-lg bg-amber-600 py-2 text-white hover:bg-amber-700 disabled:opacity-50"
         >
           {{ authLoading ? $t('common.loading') : $t('auth.login') }}
         </button>
       </form>
 
       <form v-else class="space-y-3" @submit.prevent="submitRegister">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.firstName') }}</label>
+            <input v-model="registerFirstName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.lastName') }}</label>
+            <input v-model="registerLastName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          </div>
+        </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.email') }}</label>
           <input v-model="registerEmail" type="email" required class="w-full rounded-lg border border-stone-300 px-3 py-2" />
@@ -256,24 +265,12 @@
             <option value="pl">Polski</option>
           </select>
         </div>
-        <label class="block rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-700">
-          <input v-model="registerAcceptedLegal" type="checkbox" class="mr-2 align-middle" />
-          <span class="align-middle">
-            {{ legalText.prefix }}
-            <NuxtLink :to="localePath('/legal/terms')" class="font-medium text-blue-600 hover:underline">{{ legalText.terms }}</NuxtLink>
-            {{ legalText.and }}
-            <NuxtLink :to="localePath('/legal/privacy')" class="font-medium text-blue-600 hover:underline">{{ legalText.privacy }}</NuxtLink>
-            {{ legalText.and }}
-            <NuxtLink :to="localePath('/legal/ai-consent')" class="font-medium text-blue-600 hover:underline">{{ legalText.ai }}</NuxtLink>
-            .
-          </span>
-        </label>
         <p v-if="authError" class="text-sm text-red-600">{{ authError }}</p>
         <p v-if="authSuccess" class="text-sm text-emerald-700">{{ authSuccess }}</p>
         <button
           type="submit"
           :disabled="authLoading || !!authSuccess"
-          class="mx-auto block w-full max-w-sm rounded-lg bg-amber-600 py-2 text-white hover:bg-amber-700 disabled:opacity-50"
+          class="w-full rounded-lg bg-amber-600 py-2 text-white hover:bg-amber-700 disabled:opacity-50"
         >
           {{ authLoading ? $t('common.loading') : $t('auth.register') }}
         </button>
@@ -334,7 +331,8 @@ const navClass = computed(() => {
 })
 
 const brandClass = computed(() => [
-  'inline-flex items-center transition-colors',
+  'text-xl font-semibold transition-colors',
+  isOverDarkZone.value ? 'text-white' : 'text-stone-800',
 ])
 
 const navLinkClass = computed(() =>
@@ -369,18 +367,9 @@ const loginPassword = ref('')
 const registerEmail = ref('')
 const registerPassword = ref('')
 const registerLanguage = ref('en')
-const registerAcceptedLegal = ref(false)
+const registerFirstName = ref('')
+const registerLastName = ref('')
 
-const legalText = computed(() => ({
-  prefix: t('auth.legalAcceptPrefix'),
-  terms: t('auth.termsAndConditions'),
-  and: t('auth.and'),
-  privacy: t('auth.privacyPolicy'),
-  ai: locale.value?.startsWith('ro') ? 'Acordul de utilizare AI' : 'AI Usage Agreement',
-  validation: locale.value?.startsWith('ro')
-    ? 'Trebuie să accepți Termenii, Politica de confidențialitate și Acordul de utilizare AI.'
-    : 'You must accept the Terms, Privacy Policy, and AI Usage Agreement.',
-}))
 function openAuthModal() {
   showAuthModal.value = true
   authError.value = ''
@@ -427,11 +416,6 @@ function loadScript(src: string, id: string) {
 }
 
 async function loginWithGoogle() {
-  if (authTab.value === 'register' && !registerAcceptedLegal.value) {
-    authError.value = legalText.value.validation
-    return
-  }
-
   const clientId = (runtimeConfig.public.googleClientId as string) || ''
   if (!clientId) {
     authError.value = t('auth.googleNotConfigured')
@@ -461,14 +445,7 @@ async function loginWithGoogle() {
       google.accounts.id.prompt()
     })
 
-    await authStore.loginWithSocial(
-      'google',
-      credential,
-      preferredLanguage(),
-      authTab.value === 'register'
-        ? { acceptedTerms: true, acceptedPrivacy: true, acceptedAiUsage: true }
-        : undefined,
-    )
+    await authStore.loginWithSocial('google', credential, preferredLanguage())
     closeAuthModal()
     await router.push(getPostAuthPath())
   } catch {
@@ -479,11 +456,6 @@ async function loginWithGoogle() {
 }
 
 async function loginWithApple() {
-  if (authTab.value === 'register' && !registerAcceptedLegal.value) {
-    authError.value = legalText.value.validation
-    return
-  }
-
   const clientId = (runtimeConfig.public.appleClientId as string) || ''
   if (!clientId) {
     authError.value = t('auth.appleNotConfigured')
@@ -514,14 +486,7 @@ async function loginWithApple() {
     const credential = response?.authorization?.id_token as string | undefined
     if (!credential) throw new Error('Missing Apple credential')
 
-    await authStore.loginWithSocial(
-      'apple',
-      credential,
-      preferredLanguage(),
-      authTab.value === 'register'
-        ? { acceptedTerms: true, acceptedPrivacy: true, acceptedAiUsage: true }
-        : undefined,
-    )
+    await authStore.loginWithSocial('apple', credential, preferredLanguage())
     closeAuthModal()
     await router.push(getPostAuthPath())
   } catch {
@@ -549,19 +514,14 @@ async function submitLogin() {
 async function submitRegister() {
   authError.value = ''
   authSuccess.value = ''
-  if (!registerAcceptedLegal.value) {
-    authError.value = legalText.value.validation
-    return
-  }
   authLoading.value = true
   try {
     const res = await authStore.register(
       registerEmail.value,
       registerPassword.value,
       registerLanguage.value,
-      '',
-      '',
-      { acceptedTerms: true, acceptedPrivacy: true, acceptedAiUsage: true },
+      registerFirstName.value,
+      registerLastName.value,
     )
     authSuccess.value = res.detail || t('auth.registerSuccess')
   } catch (e: unknown) {
@@ -576,7 +536,7 @@ function logout() {
   router.push(localePath('/'))
 }
 
-async function changeLanguage(code: 'ro' | 'en' | 'de' | 'fr' | 'it' | 'es' | 'pl') {
+async function changeLanguage(code: string) {
   try {
     selectedLanguageCookie.value = code
     selectedLanguageCookieLegacy.value = code
