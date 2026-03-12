@@ -410,3 +410,98 @@ class UserQuotaUsage(models.Model):
 
     def __str__(self):
         return f"{self.user_id} {self.metric_key} {self.used_count}"
+
+
+class SystemErrorEvent(models.Model):
+    SEVERITY_LOW = "low"
+    SEVERITY_MEDIUM = "medium"
+    SEVERITY_HIGH = "high"
+    SEVERITY_CRITICAL = "critical"
+    SEVERITY_CHOICES = [
+        (SEVERITY_LOW, "Low"),
+        (SEVERITY_MEDIUM, "Medium"),
+        (SEVERITY_HIGH, "High"),
+        (SEVERITY_CRITICAL, "Critical"),
+    ]
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        related_name="system_error_events",
+        null=True,
+        blank=True,
+    )
+    severity = models.CharField(max_length=16, choices=SEVERITY_CHOICES, default=SEVERITY_HIGH)
+    component = models.CharField(max_length=64, default="backend")
+    endpoint = models.CharField(max_length=255, blank=True, default="")
+    http_method = models.CharField(max_length=12, blank=True, default="")
+    status_code = models.PositiveSmallIntegerField(null=True, blank=True)
+    error_type = models.CharField(max_length=128, blank=True, default="")
+    message = models.TextField(blank=True, default="")
+    context = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_systemerrorevent"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["severity", "created_at"]),
+            models.Index(fields=["component", "created_at"]),
+            models.Index(fields=["status_code", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.severity.upper()} {self.error_type or 'Error'}"
+
+
+class AdminAuditLog(models.Model):
+    actor = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        related_name="admin_audit_logs",
+        null=True,
+        blank=True,
+    )
+    action = models.CharField(max_length=64)
+    target_model = models.CharField(max_length=128)
+    target_object_id = models.CharField(max_length=64)
+    before_data = models.JSONField(default=dict, blank=True)
+    after_data = models.JSONField(default=dict, blank=True)
+    reason = models.CharField(max_length=255, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_adminauditlog"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["action", "created_at"]),
+            models.Index(fields=["target_model", "created_at"]),
+            models.Index(fields=["actor", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.action} on {self.target_model}:{self.target_object_id}"
+
+
+class BackupVerificationLog(models.Model):
+    STATUS_SUCCESS = "success"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_SUCCESS, "Success"),
+        (STATUS_FAILED, "Failed"),
+    ]
+
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES)
+    source = models.CharField(max_length=64, blank=True, default="backup_job")
+    notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_backupverificationlog"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["status", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.status} ({self.created_at})"

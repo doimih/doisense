@@ -7,7 +7,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 from ai.models import AILog, Conversation
-from core.models import AnalyticsEvent, InAppNotification, SupportTicket, UserQuotaUsage
+from core.models import (
+    AdminAuditLog,
+    AnalyticsEvent,
+    BackupVerificationLog,
+    InAppNotification,
+    SupportTicket,
+    SystemErrorEvent,
+    UserQuotaUsage,
+)
 from journal.models import JournalEntry
 from payments.models import Payment, StripeWebhookEvent
 from programs.models import GuidedProgram, UserProgramProgress
@@ -106,12 +114,12 @@ def _tier_distribution():
 
 def _mrr_estimate():
     """Return estimated MRR in RON based on active subscriptions by tier."""
-    prices = {"basic": 59, "premium": 129, "vip": 249}
+    prices = {"basic": 59, "premium": 129, "premium_discounted": 116.1, "vip": 249}
     active = Payment.objects.filter(status__in=["active", "trialing"])
     mrr = 0
     for payment in active.iterator():
         mrr += prices.get(payment.plan_tier, 0)
-    return mrr
+    return round(mrr, 1)
 
 
 def _churn_rate_30d():
@@ -242,6 +250,15 @@ def dashboard_callback(request, context):
         first_received_at__gte=start_30d,
         last_status=StripeWebhookEvent.STATUS_IGNORED,
     ).count()
+    system_errors_24h = SystemErrorEvent.objects.filter(created_at__gte=now - timedelta(hours=24)).count()
+    system_errors_7d = SystemErrorEvent.objects.filter(created_at__gte=start_7d).count()
+    critical_errors_7d = SystemErrorEvent.objects.filter(
+        created_at__gte=start_7d,
+        severity__in=[SystemErrorEvent.SEVERITY_HIGH, SystemErrorEvent.SEVERITY_CRITICAL],
+    ).count()
+    latest_system_error = SystemErrorEvent.objects.order_by("-created_at").values_list("created_at", flat=True).first()
+    admin_audit_7d = AdminAuditLog.objects.filter(created_at__gte=start_7d).count()
+    latest_backup = BackupVerificationLog.objects.order_by("-created_at").first()
     gdpr_delete_count = User.objects.filter(
         email__startswith="deleted.user.",
         is_active=False,
@@ -415,6 +432,33 @@ def dashboard_callback(request, context):
         for period in allowed_periods
     ]
 
+    log_shortcuts = [
+        {
+            "title": "System Errors",
+            "url": reverse("admin:core_systemerrorevent_changelist"),
+        },
+        {
+            "title": "Admin Audit Logs",
+            "url": reverse("admin:core_adminauditlog_changelist"),
+        },
+        {
+            "title": "Stripe Webhooks",
+            "url": reverse("admin:payments_stripewebhookevent_changelist"),
+        },
+        {
+            "title": "Feature Access Logs",
+            "url": reverse("admin:core_featureaccesslog_changelist"),
+        },
+        {
+            "title": "Support Tickets",
+            "url": reverse("admin:core_supportticket_changelist"),
+        },
+        {
+            "title": "Backup Verification",
+            "url": reverse("admin:core_backupverificationlog_changelist"),
+        },
+    ]
+
     context.update(
         {
             "analytics": {
@@ -451,10 +495,18 @@ def dashboard_callback(request, context):
                 "webhook_events_30d": webhook_events_30d,
                 "webhook_failed_30d": webhook_failed_30d,
                 "webhook_ignored_30d": webhook_ignored_30d,
+                "system_errors_24h": system_errors_24h,
+                "system_errors_7d": system_errors_7d,
+                "critical_errors_7d": critical_errors_7d,
+                "latest_system_error": latest_system_error,
+                "admin_audit_7d": admin_audit_7d,
+                "latest_backup_status": getattr(latest_backup, "status", "n/a"),
+                "latest_backup_at": getattr(latest_backup, "created_at", None),
                 "program_insights": program_insights,
             },
             "tier_distribution": tier_distribution,
             "period_filters": period_filters,
+            "log_shortcuts": log_shortcuts,
             "user_chart_data": user_chart_data,
             "journal_chart_data": journal_chart_data,
             "conversion_chart_data": conversion_chart_data,

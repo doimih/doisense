@@ -6,7 +6,7 @@ from django.views.generic import RedirectView
 
 admin.site.site_url = "https://projects.doimih.net/doisense"
 admin.site.has_permission = lambda request: bool(
-    request.user.is_active and request.user.is_superuser
+    request.user.is_active and request.user.is_staff
 )
 
 urlpatterns = [

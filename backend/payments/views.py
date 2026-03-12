@@ -22,6 +22,7 @@ from core.notifications import (
 )
 from core.analytics import track_event
 from core.feature_access import require_feature
+from core.models import SystemErrorEvent
 from core.system_config import (
     get_stripe_price_id_for_tier,
     get_stripe_secret_key,
@@ -33,6 +34,7 @@ from .models import Payment, StripeWebhookEvent
 
 
 VALID_PLAN_TIERS = {"basic", "premium", "vip"}
+EARLY_DISCOUNT_PERCENT = 10
 
 
 class CheckoutSessionRateThrottle(UserRateThrottle):
@@ -79,6 +81,19 @@ def _mark_webhook_failed(webhook_event: StripeWebhookEvent | None, error: str):
     webhook_event.last_status = StripeWebhookEvent.STATUS_FAILED
     webhook_event.processing_error = (error or "")[:5000]
     webhook_event.save(update_fields=["last_status", "processing_error", "last_received_at"])
+    try:
+        SystemErrorEvent.objects.create(
+            severity=SystemErrorEvent.SEVERITY_HIGH,
+            component="stripe_webhook",
+            endpoint=webhook_event.event_type,
+            http_method="POST",
+            status_code=500,
+            error_type="WebhookProcessingError",
+            message=(error or "")[:2000],
+            context={"event_id": webhook_event.event_id, "delivery_attempts": webhook_event.delivery_attempts},
+        )
+    except Exception:
+        return
 
 
 def _send_payment_notification_once(user: User, notification_type: str, context_key: str, sender) -> None:
@@ -123,7 +138,29 @@ def _price_id_to_tier(price_id: str) -> str:
     return "premium"
 
 
-def _activate_plan(user: User, plan_tier: str, *, source: str, customer_id: str | None = None, subscription_id: str | None = None) -> None:
+def _is_early_discount_applicable(user: User, requested_plan_tier: str) -> bool:
+    return (
+        requested_plan_tier == "premium"
+        and bool(getattr(user, "early_discount_eligible", False))
+        and not bool(getattr(user, "vip_manual_override", False))
+    )
+
+
+def _resolve_internal_payment_plan_tier(user: User, requested_plan_tier: str) -> str:
+    if _is_early_discount_applicable(user, requested_plan_tier):
+        return "premium_discounted"
+    return requested_plan_tier
+
+
+def _activate_plan(
+    user: User,
+    plan_tier: str,
+    *,
+    source: str,
+    customer_id: str | None = None,
+    subscription_id: str | None = None,
+    payment_plan_tier: str | None = None,
+) -> None:
     user.is_premium = True
     user.plan_tier = plan_tier
     user.save(update_fields=["is_premium", "plan_tier"])
@@ -134,7 +171,7 @@ def _activate_plan(user: User, plan_tier: str, *, source: str, customer_id: str 
             "stripe_customer_id": customer_id or ("" if source == "internal" else None),
             "stripe_subscription_id": subscription_id or ("" if source == "internal" else None),
             "status": "active",
-            "plan_tier": plan_tier,
+            "plan_tier": payment_plan_tier or plan_tier,
         },
     )
 
@@ -159,7 +196,13 @@ class CreateCheckoutSessionView(APIView):
         cancel_url = f"{base_url}/{language}/pricing"
 
         if not stripe_secret_key or not stripe_price_id:
-            _activate_plan(user, plan_tier, source="internal")
+            payment_plan_tier = _resolve_internal_payment_plan_tier(user, plan_tier)
+            _activate_plan(
+                user,
+                plan_tier,
+                source="internal",
+                payment_plan_tier=payment_plan_tier,
+            )
             track_event(
                 "checkout_initiated",
                 source="backend",
@@ -167,7 +210,14 @@ class CreateCheckoutSessionView(APIView):
                 properties={"plan_tier": plan_tier},
             )
             return Response(
-                {"url": success_url, "internal_activation": True, "plan_tier": plan_tier},
+                {
+                    "url": success_url,
+                    "internal_activation": True,
+                    "plan_tier": plan_tier,
+                    "applied_plan_tier": payment_plan_tier,
+                    "early_discount_applied": payment_plan_tier == "premium_discounted",
+                    "early_discount_percent": EARLY_DISCOUNT_PERCENT if payment_plan_tier == "premium_discounted" else 0,
+                },
                 status=status.HTTP_200_OK,
             )
 
@@ -333,14 +383,28 @@ class UpgradeSubscriptionView(APIView):
 
         if not stripe_secret_key or not stripe_price_id:
             # Fall back to internal activation when Stripe is not configured
-            _activate_plan(user, plan_tier, source="internal")
+            payment_plan_tier = _resolve_internal_payment_plan_tier(user, plan_tier)
+            _activate_plan(
+                user,
+                plan_tier,
+                source="internal",
+                payment_plan_tier=payment_plan_tier,
+            )
             track_event(
                 "subscription_change_requested",
                 source="backend",
                 user=user,
                 properties={"plan_tier": plan_tier},
             )
-            return Response({"upgraded": True, "plan_tier": plan_tier})
+            return Response(
+                {
+                    "upgraded": True,
+                    "plan_tier": plan_tier,
+                    "applied_plan_tier": payment_plan_tier,
+                    "early_discount_applied": payment_plan_tier == "premium_discounted",
+                    "early_discount_percent": EARLY_DISCOUNT_PERCENT if payment_plan_tier == "premium_discounted" else 0,
+                }
+            )
 
         payment = (
             Payment.objects.filter(user=user, status__in=["active", "trialing", "past_due"])

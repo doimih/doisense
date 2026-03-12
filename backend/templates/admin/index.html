@@ -70,6 +70,21 @@
                 <p class="text-xs text-base-500 mt-2">Ignored: {{ analytics.webhook_ignored_30d }} | Total: {{ analytics.webhook_events_30d }}</p>
             {% endcomponent %}
 
+            {% component "unfold/components/card.html" with title="System errors (24h)" icon="error" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.system_errors_24h }}</p>
+                <p class="text-xs text-base-500 mt-2">7d total: {{ analytics.system_errors_7d }} | High/Critical: {{ analytics.critical_errors_7d }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Admin audit changes (7d)" icon="admin_panel_settings" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.admin_audit_7d }}</p>
+                <p class="text-xs text-base-500 mt-2">Sensitive admin updates tracked</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="Backup verify status" icon="backup" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.latest_backup_status|upper }}</p>
+                <p class="text-xs text-base-500 mt-2">Last run: {{ analytics.latest_backup_at|default:"N/A" }}</p>
+            {% endcomponent %}
+
             {% component "unfold/components/card.html" with title="Quota exceeded (period)" icon="bolt" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.quota_exceeded_period }}</p>
                 <p class="text-xs text-base-500 mt-2">30d total: {{ analytics.quota_exceeded_30d }}</p>
@@ -143,6 +158,19 @@
                         <span class="text-base font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.webhook_failed_30d }}</span>
                     </div>
                 </div>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="LOG-uri shortcuts" %}
+                <div class="grid grid-cols-1 gap-2">
+                    {% for link in log_shortcuts %}
+                        <a href="{{ link.url }}" class="rounded border border-stone-300 px-3 py-2 text-sm text-stone-700 transition hover:border-stone-500 hover:text-stone-900">
+                            {{ link.title }}
+                        </a>
+                    {% endfor %}
+                </div>
+                {% if analytics.latest_system_error %}
+                    <p class="text-xs text-base-500 mt-3">Latest system error: {{ analytics.latest_system_error }}</p>
+                {% endif %}
             {% endcomponent %}
         </div>
 

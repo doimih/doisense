@@ -14,10 +14,13 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from unfold.admin import ModelAdmin
 
+from .audit import extract_form_changes, log_admin_change
 from .image_utils import convert_uploaded_image_to_webp
 from .models import (
+    AdminAuditLog,
     AIConfig,
     AnalyticsEvent,
+    BackupVerificationLog,
     BackupConfig,
     FeatureAccessLog,
     InAppNotification,
@@ -27,6 +30,7 @@ from .models import (
     SupportTicket,
     StripeConfig,
     SystemConfig,
+    SystemErrorEvent,
     UserNotificationPreference,
     UserQuotaUsage,
 )
@@ -275,6 +279,19 @@ class SystemConfigAdmin(ModelAdmin):
         # Only one configuration row should exist.
         return not SystemConfig.objects.exists()
 
+    def save_model(self, request, obj, form, change):
+        before_data, after_data = extract_form_changes(form)
+        super().save_model(request, obj, form, change)
+        if change and form.changed_data:
+            log_admin_change(
+                actor=request.user,
+                action="system_config_updated",
+                target_obj=obj,
+                before_data=before_data,
+                after_data=after_data,
+                reason="System config updated from admin",
+            )
+
 
 @admin.register(NotificationDelivery)
 class NotificationDeliveryAdmin(ModelAdmin):
@@ -306,6 +323,19 @@ class SupportTicketAdmin(ModelAdmin):
     list_filter = ("status", "created_at")
     search_fields = ("user__email", "subject", "message")
     ordering = ("-created_at",)
+
+    def save_model(self, request, obj, form, change):
+        before_data, after_data = extract_form_changes(form)
+        super().save_model(request, obj, form, change)
+        if change and form.changed_data:
+            log_admin_change(
+                actor=request.user,
+                action="support_ticket_updated",
+                target_obj=obj,
+                before_data=before_data,
+                after_data=after_data,
+                reason="Support ticket updated from admin",
+            )
 
 
 @admin.register(FeatureAccessLog)
@@ -399,6 +429,19 @@ class BackupConfigAdmin(ModelAdmin):
         # Only one configuration row should exist.
         return not BackupConfig.objects.exists()
 
+    def save_model(self, request, obj, form, change):
+        before_data, after_data = extract_form_changes(form)
+        super().save_model(request, obj, form, change)
+        if change and form.changed_data:
+            log_admin_change(
+                actor=request.user,
+                action="backup_config_updated",
+                target_obj=obj,
+                before_data=before_data,
+                after_data=after_data,
+                reason="Backup config updated from admin",
+            )
+
 
 class SingletonProxyConfigAdmin(ModelAdmin):
     form = SystemConfigAdminForm
@@ -412,6 +455,19 @@ class SingletonProxyConfigAdmin(ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def save_model(self, request, obj, form, change):
+        before_data, after_data = extract_form_changes(form)
+        super().save_model(request, obj, form, change)
+        if change and form.changed_data:
+            log_admin_change(
+                actor=request.user,
+                action=f"{self.model._meta.model_name}_updated",
+                target_obj=obj,
+                before_data=before_data,
+                after_data=after_data,
+                reason=f"{self.model._meta.verbose_name} updated from admin",
+            )
 
 
 @admin.register(OAuthConfig)
@@ -483,4 +539,71 @@ class RecaptchaConfigAdmin(SingletonProxyConfigAdmin):
             },
         ),
     )
+
+
+@admin.register(SystemErrorEvent)
+class SystemErrorEventAdmin(ModelAdmin):
+    list_display = (
+        "created_at",
+        "severity",
+        "component",
+        "status_code",
+        "error_type",
+        "endpoint",
+        "user",
+    )
+    list_filter = ("severity", "component", "status_code", "created_at")
+    search_fields = ("error_type", "message", "endpoint", "user__email")
+    ordering = ("-created_at",)
+    readonly_fields = (
+        "user",
+        "severity",
+        "component",
+        "endpoint",
+        "http_method",
+        "status_code",
+        "error_type",
+        "message",
+        "context",
+        "created_at",
+    )
+
+
+@admin.register(AdminAuditLog)
+class AdminAuditLogAdmin(ModelAdmin):
+    list_display = (
+        "created_at",
+        "actor",
+        "action",
+        "target_model",
+        "target_object_id",
+    )
+    list_filter = ("action", "target_model", "created_at")
+    search_fields = (
+        "actor__email",
+        "action",
+        "target_model",
+        "target_object_id",
+        "reason",
+    )
+    ordering = ("-created_at",)
+    readonly_fields = (
+        "actor",
+        "action",
+        "target_model",
+        "target_object_id",
+        "before_data",
+        "after_data",
+        "reason",
+        "created_at",
+    )
+
+
+@admin.register(BackupVerificationLog)
+class BackupVerificationLogAdmin(ModelAdmin):
+    list_display = ("created_at", "status", "source")
+    list_filter = ("status", "source", "created_at")
+    search_fields = ("source", "notes")
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at",)
 

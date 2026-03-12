@@ -178,6 +178,72 @@ UNFOLD = {
                     },
                 ],
             },
+            {
+                "title": "LOG-uri",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Analytics Events",
+                        "icon": "insights",
+                        "link": lambda request: reverse("admin:core_analyticsevent_changelist"),
+                        "permission": _perm("core.view_analyticsevent"),
+                    },
+                    {
+                        "title": "Feature Access",
+                        "icon": "rule",
+                        "link": lambda request: reverse("admin:core_featureaccesslog_changelist"),
+                        "permission": _perm("core.view_featureaccesslog"),
+                    },
+                    {
+                        "title": "Stripe Webhooks",
+                        "icon": "sync_problem",
+                        "link": lambda request: reverse("admin:payments_stripewebhookevent_changelist"),
+                        "permission": _perm("payments.view_stripewebhookevent"),
+                    },
+                    {
+                        "title": "Support Tickets",
+                        "icon": "support_agent",
+                        "link": lambda request: reverse("admin:core_supportticket_changelist"),
+                        "permission": _perm("core.view_supportticket"),
+                    },
+                    {
+                        "title": "Notification Delivery",
+                        "icon": "mail",
+                        "link": lambda request: reverse("admin:core_notificationdelivery_changelist"),
+                        "permission": _perm("core.view_notificationdelivery"),
+                    },
+                    {
+                        "title": "In-App Notifications",
+                        "icon": "notifications",
+                        "link": lambda request: reverse("admin:core_inappnotification_changelist"),
+                        "permission": _perm("core.view_inappnotification"),
+                    },
+                    {
+                        "title": "Quota Usage",
+                        "icon": "query_stats",
+                        "link": lambda request: reverse("admin:core_userquotausage_changelist"),
+                        "permission": _perm("core.view_userquotausage"),
+                    },
+                    {
+                        "title": "System Errors",
+                        "icon": "error",
+                        "link": lambda request: reverse("admin:core_systemerrorevent_changelist"),
+                        "permission": _perm("core.view_systemerrorevent"),
+                    },
+                    {
+                        "title": "Admin Audit",
+                        "icon": "admin_panel_settings",
+                        "link": lambda request: reverse("admin:core_adminauditlog_changelist"),
+                        "permission": _perm("core.view_adminauditlog"),
+                    },
+                    {
+                        "title": "Backup Verification",
+                        "icon": "backup",
+                        "link": lambda request: reverse("admin:core_backupverificationlog_changelist"),
+                        "permission": _perm("core.view_backupverificationlog"),
+                    },
+                ],
+            },
         ],
     },
 }
@@ -248,6 +314,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.SystemErrorLoggingMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
