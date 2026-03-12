@@ -73,7 +73,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    @property
+    def manual_vip(self) -> bool:
+        """Alias used by business rules: manual VIP override managed by admin."""
+        return bool(self.vip_manual_override)
+
     def is_in_trial(self) -> bool:
+        if self.manual_vip:
+            # Manual VIP users bypass trial lifecycle and expiration checks.
+            return False
         return (
             self.plan_tier == self.PLAN_TRIAL
             and self.trial_ends_at is not None
@@ -81,7 +89,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         )
 
     def has_unlimited_platform_access(self) -> bool:
-        return self.is_superuser or self.is_staff
+        return self.is_superuser or self.is_staff or self.manual_vip
 
     def effective_plan_tier(self) -> str:
         if self.has_unlimited_platform_access():

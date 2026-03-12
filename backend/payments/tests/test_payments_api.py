@@ -1,7 +1,13 @@
 import pytest
 from django.urls import reverse
+from django.core.cache import cache
 
 from payments.models import Payment
+
+
+@pytest.fixture(autouse=True)
+def _clear_throttle_cache():
+    cache.clear()
 
 
 @pytest.mark.django_db
@@ -61,12 +67,9 @@ def test_checkout_session_skips_early_discount_for_manual_vip(authenticated_clie
     )
 
     assert response.status_code == 200
-    assert response.data["internal_activation"] is True
-    assert response.data["applied_plan_tier"] == "premium"
-    assert response.data["early_discount_applied"] is False
-
-    payment = Payment.objects.get(user=user)
-    assert payment.plan_tier == "premium"
+    assert response.data["manual_vip"] is True
+    assert response.data["effective_tier"] == "vip"
+    assert Payment.objects.filter(user=user).count() == 0
 
 
 @pytest.mark.django_db
@@ -81,7 +84,7 @@ def test_early_discount_eligibility_persists_after_vip_toggle(authenticated_clie
         format="json",
     )
     assert first_response.status_code == 200
-    assert first_response.data["early_discount_applied"] is False
+    assert first_response.data["manual_vip"] is True
 
     user.refresh_from_db()
     assert user.early_discount_eligible is True
@@ -119,3 +122,65 @@ def test_cancel_subscription_marks_cancel_at_period_end(authenticated_client, us
 
     payment.refresh_from_db()
     assert payment.cancel_at_period_end is True
+
+
+@pytest.mark.django_db
+def test_manual_vip_checkout_bypasses_subscription_logic(authenticated_client, user):
+    user.vip_manual_override = True
+    user.save(update_fields=["vip_manual_override"])
+
+    response = authenticated_client.post(
+        reverse("create-checkout-session"),
+        {"plan_tier": "premium"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["manual_vip"] is True
+    assert response.data["effective_tier"] == "vip"
+    assert Payment.objects.filter(user=user).count() == 0
+
+
+@pytest.mark.django_db
+def test_manual_vip_upgrade_bypasses_subscription_logic(authenticated_client, user):
+    user.vip_manual_override = True
+    user.save(update_fields=["vip_manual_override"])
+
+    response = authenticated_client.post(
+        reverse("upgrade-subscription"),
+        {"plan_tier": "vip"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["manual_vip"] is True
+    assert response.data["upgraded"] is False
+
+
+@pytest.mark.django_db
+def test_manual_vip_cancel_bypasses_subscription_logic(authenticated_client, user):
+    user.vip_manual_override = True
+    user.save(update_fields=["vip_manual_override"])
+
+    response = authenticated_client.post(
+        reverse("cancel-subscription"),
+        {},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["manual_vip"] is True
+    assert response.data["cancel_at_period_end"] is False
+
+
+@pytest.mark.django_db
+def test_manual_vip_subscription_status_is_vip(authenticated_client, user):
+    user.vip_manual_override = True
+    user.save(update_fields=["vip_manual_override"])
+
+    response = authenticated_client.get(reverse("subscription-status"))
+
+    assert response.status_code == 200
+    assert response.data["manual_vip"] is True
+    assert response.data["effective_tier"] == "vip"
+    assert response.data["status"] == "manual_vip"

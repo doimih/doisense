@@ -97,12 +97,13 @@ class Command(BaseCommand):
             new_is_premium = new_status in ("active", "trialing")
             new_user_tier = new_tier if new_is_premium else User.PLAN_FREE
             user_changed = False
-            if payment.user.is_premium != new_is_premium:
-                payment.user.is_premium = new_is_premium
-                user_changed = True
-            if payment.user.plan_tier != new_user_tier:
-                payment.user.plan_tier = new_user_tier
-                user_changed = True
+            if not payment.user.vip_manual_override:
+                if payment.user.is_premium != new_is_premium:
+                    payment.user.is_premium = new_is_premium
+                    user_changed = True
+                if payment.user.plan_tier != new_user_tier:
+                    payment.user.plan_tier = new_user_tier
+                    user_changed = True
 
             if changed_fields:
                 changed_fields.append("updated_at")

@@ -51,6 +51,7 @@ class Command(BaseCommand):
         trial_basic_users = User.objects.filter(
             plan_tier__in=[User.PLAN_TRIAL, User.PLAN_BASIC],
             is_active=True,
+            vip_manual_override=False,
         )
         
         sent_count = 0

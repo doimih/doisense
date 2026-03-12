@@ -14,6 +14,7 @@ class Command(BaseCommand):
         expired = User.objects.filter(
             plan_tier=User.PLAN_TRIAL,
             trial_ends_at__lt=now,
+            vip_manual_override=False,
         )
         count = expired.count()
         expired.update(plan_tier=User.PLAN_FREE, is_premium=False)

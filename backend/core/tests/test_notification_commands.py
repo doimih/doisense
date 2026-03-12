@@ -284,6 +284,30 @@ def test_send_upgrade_recommendations_skips_vip_users():
 
 
 @pytest.mark.django_db
+def test_send_upgrade_recommendations_skips_manual_vip_override_users():
+    """send_upgrade_recommendations should skip users flagged as manual VIP."""
+    user = User.objects.create_user(
+        email="manual-vip-upsell@example.com",
+        password="testpass123",
+        plan_tier=User.PLAN_TRIAL,
+        vip_manual_override=True,
+    )
+
+    Conversation.objects.create(
+        user=user,
+        user_message="Hello",
+        ai_response="Hi",
+        module="wellness",
+        plan_tier="trial",
+    )
+
+    with patch('core.notifications.send_upgrade_recommendation') as mock_send:
+        out = StringIO()
+        call_command('send_upgrade_recommendations', '--min-journal-entries', '0', stdout=out)
+        assert user not in [call[0][0] for call in mock_send.call_args_list] if mock_send.call_args_list else True
+
+
+@pytest.mark.django_db
 def test_send_goal_reminders_targets_profiles_with_goals():
     """Goal reminders should use profile goals and create one delivery log."""
     user = User.objects.create_user(

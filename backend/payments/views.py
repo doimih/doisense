@@ -45,6 +45,10 @@ class UpgradeSessionRateThrottle(UserRateThrottle):
     rate = "12/hour"
 
 
+def _is_manual_vip(user: User) -> bool:
+    return bool(getattr(user, "manual_vip", False) or getattr(user, "vip_manual_override", False))
+
+
 def _register_webhook_event(event: dict):
     event_id = str(event.get("id") or "").strip()
     if not event_id:
@@ -187,6 +191,18 @@ class CreateCheckoutSessionView(APIView):
             plan_tier = "premium"
 
         user = request.user
+        if _is_manual_vip(user):
+            return Response(
+                {
+                    "url": None,
+                    "internal_activation": False,
+                    "manual_vip": True,
+                    "effective_tier": User.PLAN_VIP,
+                    "detail": "Manual VIP users bypass checkout and subscription logic.",
+                },
+                status=status.HTTP_200_OK,
+            )
+
         stripe_secret_key = get_stripe_secret_key()
         stripe_price_id = get_stripe_price_id_for_tier(plan_tier)
 
@@ -348,6 +364,19 @@ class SubscriptionStatusView(APIView):
 
     def get(self, request):
         user = request.user
+        if _is_manual_vip(user):
+            return Response(
+                {
+                    "has_subscription": True,
+                    "status": "manual_vip",
+                    "plan_tier": User.PLAN_VIP,
+                    "cancel_at_period_end": False,
+                    "current_period_end": None,
+                    "effective_tier": User.PLAN_VIP,
+                    "manual_vip": True,
+                }
+            )
+
         payment = (
             Payment.objects.filter(user=user)
             .order_by("-updated_at")
@@ -378,6 +407,17 @@ class UpgradeSubscriptionView(APIView):
             return Response({"detail": "Invalid plan tier."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user
+        if _is_manual_vip(user):
+            return Response(
+                {
+                    "upgraded": False,
+                    "manual_vip": True,
+                    "effective_tier": User.PLAN_VIP,
+                    "detail": "Manual VIP users bypass subscription upgrade logic.",
+                },
+                status=status.HTTP_200_OK,
+            )
+
         stripe_secret_key = get_stripe_secret_key()
         stripe_price_id = get_stripe_price_id_for_tier(plan_tier)
 
@@ -456,6 +496,17 @@ class CancelSubscriptionView(APIView):
 
     def post(self, request):
         user = request.user
+        if _is_manual_vip(user):
+            return Response(
+                {
+                    "cancel_at_period_end": False,
+                    "manual_vip": True,
+                    "effective_tier": User.PLAN_VIP,
+                    "detail": "Manual VIP users bypass cancellation and subscription lifecycle logic.",
+                },
+                status=status.HTTP_200_OK,
+            )
+
         stripe_secret_key = get_stripe_secret_key()
         payment = (
             Payment.objects.filter(user=user, status__in=["active", "trialing", "past_due"])
@@ -586,9 +637,10 @@ def stripe_webhook(request):
                     price_id = items[0].get("price", {}).get("id", "")
                     new_tier = _price_id_to_tier(price_id)
                     payment.plan_tier = new_tier
-                    payment.user.plan_tier = new_tier
-                    payment.user.save(update_fields=["plan_tier"])
-                if stripe_status == "past_due":
+                    if not _is_manual_vip(payment.user):
+                        payment.user.plan_tier = new_tier
+                        payment.user.save(update_fields=["plan_tier"])
+                if stripe_status == "past_due" and not _is_manual_vip(payment.user):
                     payment.user.is_premium = False
                     payment.user.save(update_fields=["is_premium"])
                 # Track billing cycle dates
@@ -629,9 +681,10 @@ def stripe_webhook(request):
             sub_id = subscription.get("id")
             payment = Payment.objects.filter(stripe_subscription_id=sub_id).first()
             if payment:
-                payment.user.is_premium = False
-                payment.user.plan_tier = User.PLAN_FREE
-                payment.user.save(update_fields=["is_premium", "plan_tier"])
+                if not _is_manual_vip(payment.user):
+                    payment.user.is_premium = False
+                    payment.user.plan_tier = User.PLAN_FREE
+                    payment.user.save(update_fields=["is_premium", "plan_tier"])
                 payment.status = "cancelled"
                 payment.save(update_fields=["status"])
 
@@ -642,8 +695,9 @@ def stripe_webhook(request):
             if payment:
                 payment.status = "past_due"
                 payment.save(update_fields=["status"])
-                payment.user.is_premium = False
-                payment.user.save(update_fields=["is_premium"])
+                if not _is_manual_vip(payment.user):
+                    payment.user.is_premium = False
+                    payment.user.save(update_fields=["is_premium"])
 
                 _send_payment_notification_once(
                     payment.user,
@@ -679,8 +733,9 @@ def stripe_webhook(request):
             if payment and payment.status == "past_due":
                 payment.status = "active"
                 payment.save(update_fields=["status"])
-                payment.user.is_premium = True
-                payment.user.save(update_fields=["is_premium"])
+                if not _is_manual_vip(payment.user):
+                    payment.user.is_premium = True
+                    payment.user.save(update_fields=["is_premium"])
 
         elif event_type == "charge.refunded":
             charge = event["data"]["object"]
@@ -700,9 +755,10 @@ def stripe_webhook(request):
                     payment.status = "cancelled"
                     payment.cancel_at_period_end = False
                     payment.save(update_fields=["status", "cancel_at_period_end", "updated_at"])
-                    payment.user.is_premium = False
-                    payment.user.plan_tier = User.PLAN_FREE
-                    payment.user.save(update_fields=["is_premium", "plan_tier"])
+                    if not _is_manual_vip(payment.user):
+                        payment.user.is_premium = False
+                        payment.user.plan_tier = User.PLAN_FREE
+                        payment.user.save(update_fields=["is_premium", "plan_tier"])
                     track_event(
                         "subscription_refunded",
                         source="backend",

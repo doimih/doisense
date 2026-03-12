@@ -131,6 +131,7 @@ class SocialLoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     membership_tier = serializers.SerializerMethodField()
     has_saved_card = serializers.SerializerMethodField()
+    manual_vip = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -144,6 +145,7 @@ class UserSerializer(serializers.ModelSerializer):
             "language",
             "is_premium",
             "plan_tier",
+            "manual_vip",
             "early_discount_eligible",
             "onboarding_completed",
             "membership_tier",
@@ -156,6 +158,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "is_premium",
             "plan_tier",
+            "manual_vip",
             "early_discount_eligible",
             "onboarding_completed",
             "membership_tier",
@@ -165,7 +168,10 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_membership_tier(self, obj):
-        return "premium" if obj.is_premium else "normal"
+        return "premium" if obj.effective_plan_tier() in (User.PLAN_PREMIUM, User.PLAN_VIP) else "normal"
+
+    def get_manual_vip(self, obj):
+        return bool(getattr(obj, "manual_vip", False))
 
     def get_has_saved_card(self, obj):
         return obj.payments.exclude(stripe_customer_id="").exclude(stripe_customer_id__isnull=True).exists()

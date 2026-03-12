@@ -86,6 +86,9 @@ def create_in_app_notification(
 
 def send_trial_expiration_warning(user, days_left: int) -> None:
     """Send trial expiration warning email (days 5, 6, 7)."""
+    if bool(getattr(user, "manual_vip", False) or getattr(user, "vip_manual_override", False)):
+        return
+
     language = (user.language or "en").lower()
     
     if language.startswith("ro"):
@@ -346,6 +349,9 @@ Doisense"""
 
 def send_upgrade_recommendation(user, reason: str) -> None:
     """Send targeted upgrade email based on user behavior."""
+    if bool(getattr(user, "manual_vip", False) or getattr(user, "vip_manual_override", False)):
+        return
+
     language = (user.language or "en").lower()
     
     if reason == "journal_limit":

@@ -25,6 +25,7 @@ class Command(BaseCommand):
             plan_tier=User.PLAN_TRIAL,
             trial_ends_at__lt=now,
             is_premium=True,
+            vip_manual_override=False,
         )
 
         count = expired_qs.count()
