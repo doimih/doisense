@@ -56,6 +56,21 @@ def get_stripe_price_id_vip() -> str:
     return (config.stripe_price_id_vip or getattr(settings, "STRIPE_PRICE_ID_VIP", "") or "").strip()
 
 
+def get_stripe_product_id_basic() -> str:
+    config = get_system_config()
+    return (config.stripe_product_id_basic or getattr(settings, "STRIPE_PRODUCT_ID_BASIC", "") or "").strip()
+
+
+def get_stripe_product_id_premium() -> str:
+    config = get_system_config()
+    return (config.stripe_product_id_premium or getattr(settings, "STRIPE_PRODUCT_ID_PREMIUM", "") or "").strip()
+
+
+def get_stripe_product_id_vip() -> str:
+    config = get_system_config()
+    return (config.stripe_product_id_vip or getattr(settings, "STRIPE_PRODUCT_ID_VIP", "") or "").strip()
+
+
 def get_stripe_price_id_for_tier(plan_tier: str) -> str:
     mapping = {
         "basic": get_stripe_price_id_basic,
@@ -64,6 +79,38 @@ def get_stripe_price_id_for_tier(plan_tier: str) -> str:
     }
     getter = mapping.get(plan_tier, get_stripe_price_id_premium)
     return getter()
+
+
+def get_stripe_product_id_for_tier(plan_tier: str) -> str:
+    mapping = {
+        "basic": get_stripe_product_id_basic,
+        "premium": get_stripe_product_id_premium,
+        "vip": get_stripe_product_id_vip,
+    }
+    getter = mapping.get(plan_tier, get_stripe_product_id_premium)
+    return getter()
+
+
+def plan_tier_from_stripe_price_id(price_id: str) -> str:
+    """Reverse-map a Stripe price ID to an internal plan tier."""
+    if price_id and price_id == get_stripe_price_id_basic():
+        return "basic"
+    if price_id and price_id == get_stripe_price_id_vip():
+        return "vip"
+    if price_id and price_id == get_stripe_price_id_premium():
+        return "premium"
+    return "premium"  # Default fallback
+
+
+def plan_tier_from_stripe_product_id(product_id: str) -> str:
+    """Reverse-map a Stripe product ID to an internal plan tier."""
+    if product_id and product_id == get_stripe_product_id_basic():
+        return "basic"
+    if product_id and product_id == get_stripe_product_id_vip():
+        return "vip"
+    if product_id and product_id == get_stripe_product_id_premium():
+        return "premium"
+    return "premium"  # Default fallback
 
 
 def get_enabled_languages() -> list[str]:

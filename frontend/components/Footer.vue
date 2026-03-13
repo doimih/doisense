@@ -15,11 +15,11 @@
           <!-- Contact Info -->
           <div class="space-y-3 text-sm">
             <div v-if="$t('footer.whatsapp')" class="flex flex-col">
-              <span class="text-slate-500 text-xs uppercase tracking-wide">WhatsApp</span>
+              <span class="text-slate-500 text-xs uppercase tracking-wide">{{ footerText.whatsapp }}</span>
               <a href="tel:+40749000000" class="text-white hover:text-slate-200">+40 749 000 000</a>
             </div>
             <div v-if="$t('footer.email')" class="flex flex-col">
-              <span class="text-slate-500 text-xs uppercase tracking-wide">Email</span>
+              <span class="text-slate-500 text-xs uppercase tracking-wide">{{ footerText.email }}</span>
               <a href="mailto:hello@doisense.com" class="text-white hover:text-slate-200">hello@doisense.com</a>
             </div>
           </div>
@@ -54,7 +54,7 @@
           <h3 class="mb-4 text-sm font-semibold text-white uppercase tracking-wide">{{ $t('footer.resources') || 'Resources' }}</h3>
           <ul class="space-y-2 text-sm">
             <li><NuxtLink :to="localePath('/contact')" class="text-slate-400 hover:text-white transition">{{ $t('footer.helpCenter') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/faq')" class="text-slate-400 hover:text-white transition">FAQ</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/faq')" class="text-slate-400 hover:text-white transition">{{ footerText.faq }}</NuxtLink></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.blog') || 'Blog' }}</a></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.documentation') || 'Documentation' }}</a></li>
           </ul>
@@ -81,7 +81,7 @@
       <!-- Bottom Footer -->
       <div class="border-t border-slate-800 pt-8">
         <p class="mb-6 rounded-lg border border-slate-800 bg-slate-950/50 px-4 py-3 text-sm leading-6 text-slate-300 text-center">
-          Platforma oferă suport emoțional general și instrumente de auto-reflecție. Nu oferă sfaturi medicale, psihologice sau terapeutice. Dacă te confrunți cu o situație gravă, caută ajutor specializat.
+          {{ footerText.disclaimer }}
         </p>
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
           <p class="text-sm text-slate-500">
@@ -173,5 +173,58 @@ const paymentsPolicyLabel = computed(() => {
     es: 'Política de pagos y suscripciones',
     pl: 'Polityka płatności i subskrypcji',
   }[code] || 'Payments and Subscriptions Policy'
+})
+
+const footerText = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: {
+      whatsapp: 'WhatsApp',
+      email: 'Email',
+      faq: 'Intrebari frecvente',
+      disclaimer: 'Platforma ofera suport emotional general si instrumente de auto-reflectie. Nu ofera sfaturi medicale, psihologice sau terapeutice. Daca te confrunti cu o situatie grava, cauta ajutor specializat.',
+    },
+    en: {
+      whatsapp: 'WhatsApp',
+      email: 'Email',
+      faq: 'FAQ',
+      disclaimer: 'The platform offers general emotional support and self-reflection tools. It does not provide medical, psychological, or therapeutic advice. If you are facing a serious situation, seek specialized help.',
+    },
+    de: {
+      whatsapp: 'WhatsApp',
+      email: 'E-Mail',
+      faq: 'FAQ',
+      disclaimer: 'Die Plattform bietet allgemeine emotionale Unterstuetzung und Werkzeuge zur Selbstreflexion. Sie bietet keine medizinische, psychologische oder therapeutische Beratung. Bei einer ernsten Situation suche bitte fachliche Hilfe.',
+    },
+    fr: {
+      whatsapp: 'WhatsApp',
+      email: 'E-mail',
+      faq: 'FAQ',
+      disclaimer: 'La plateforme offre un soutien emotionnel general et des outils d\'auto-reflexion. Elle ne fournit pas de conseils medicaux, psychologiques ou therapeutiques. En cas de situation grave, cherche une aide specialisee.',
+    },
+    it: {
+      whatsapp: 'WhatsApp',
+      email: 'Email',
+      faq: 'FAQ',
+      disclaimer: 'La piattaforma offre supporto emotivo generale e strumenti di auto-riflessione. Non fornisce consigli medici, psicologici o terapeutici. In caso di situazione grave, cerca aiuto specializzato.',
+    },
+    es: {
+      whatsapp: 'WhatsApp',
+      email: 'Correo',
+      faq: 'FAQ',
+      disclaimer: 'La plataforma ofrece apoyo emocional general y herramientas de auto-reflexion. No ofrece asesoramiento medico, psicologico ni terapeutico. Si atraviesas una situacion grave, busca ayuda especializada.',
+    },
+    pl: {
+      whatsapp: 'WhatsApp',
+      email: 'Email',
+      faq: 'FAQ',
+      disclaimer: 'Platforma oferuje ogolne wsparcie emocjonalne i narzedzia do autorefleksji. Nie zapewnia porad medycznych, psychologicznych ani terapeutycznych. W powaznej sytuacji skorzystaj ze specjalistycznej pomocy.',
+    },
+  }[code] || {
+    whatsapp: 'WhatsApp',
+    email: 'Email',
+    faq: 'FAQ',
+    disclaimer: 'The platform offers general emotional support and self-reflection tools. It does not provide medical, psychological, or therapeutic advice. If you are facing a serious situation, seek specialized help.',
+  }
 })
 </script>

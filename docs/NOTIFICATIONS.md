@@ -185,7 +185,7 @@ All notifications require SMTP configuration in Django admin:
    - Email Port (e.g., 587 for TLS)
    - Email User / Password
    - Use TLS or SSL
-   - From Email (e.g., noreply@doisense.app)
+  - From Email (e.g., noreply@doisense.eu)
 
 ## Testing
 

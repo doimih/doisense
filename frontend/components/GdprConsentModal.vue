@@ -18,7 +18,7 @@
                 <p class="text-sm font-semibold text-stone-800">{{ text.necessaryTitle }}</p>
                 <p class="text-xs text-stone-600">{{ text.necessaryDescription }}</p>
               </div>
-              <span class="rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white">On</span>
+              <span class="rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white">{{ text.necessaryAlwaysOn }}</span>
             </div>
           </div>
 
@@ -87,6 +87,7 @@ const consentCopy: Record<string, {
   marketingDescription: string
   personalizationTitle: string
   personalizationDescription: string
+  necessaryAlwaysOn: string
   acceptAll: string
   rejectOptional: string
   savePreferences: string
@@ -102,6 +103,7 @@ const consentCopy: Record<string, {
     marketingDescription: 'Folosite pentru mesaje relevante și campanii personalizate.',
     personalizationTitle: 'Personalizare',
     personalizationDescription: 'Memorează preferințe și adaptează experiența în pagini.',
+    necessaryAlwaysOn: 'Activ',
     acceptAll: 'Accept toate',
     rejectOptional: 'Refuz opționale',
     savePreferences: 'Salvează preferințele',
@@ -117,6 +119,7 @@ const consentCopy: Record<string, {
     marketingDescription: 'Used for relevant messages and personalized campaigns.',
     personalizationTitle: 'Personalization',
     personalizationDescription: 'Remembers preferences and adapts the page experience.',
+    necessaryAlwaysOn: 'On',
     acceptAll: 'Accept all',
     rejectOptional: 'Reject optional',
     savePreferences: 'Save preferences',
@@ -132,9 +135,26 @@ const consentCopy: Record<string, {
     marketingDescription: 'Für relevante Nachrichten und personalisierte Kampagnen.',
     personalizationTitle: 'Personalisierung',
     personalizationDescription: 'Speichert Präferenzen und passt das Seitenerlebnis an.',
+    necessaryAlwaysOn: 'Aktiv',
     acceptAll: 'Alles akzeptieren',
     rejectOptional: 'Optionale ablehnen',
     savePreferences: 'Präferenzen speichern',
+  },
+  fr: {
+    title: 'Parametres GDPR et cookies',
+    subtitle: 'Choisissez exactement les categories de donnees autorisees. Vous pouvez modifier ces choix a tout moment.',
+    necessaryTitle: 'Strictement necessaires',
+    necessaryDescription: 'Necessaires pour l\'authentification, la securite et le fonctionnement du site.',
+    analyticsTitle: 'Analytiques',
+    analyticsDescription: 'Nous aident a comprendre l\'utilisation du produit et a l\'ameliorer.',
+    marketingTitle: 'Marketing',
+    marketingDescription: 'Utilises pour des messages pertinents et des campagnes personnalisees.',
+    personalizationTitle: 'Personnalisation',
+    personalizationDescription: 'Memorise les preferences et adapte l\'experience sur le site.',
+    necessaryAlwaysOn: 'Actif',
+    acceptAll: 'Tout accepter',
+    rejectOptional: 'Refuser les optionnels',
+    savePreferences: 'Enregistrer les preferences',
   },
   it: {
     title: 'Impostazioni GDPR e cookie',
@@ -147,6 +167,7 @@ const consentCopy: Record<string, {
     marketingDescription: 'Usati per messaggi rilevanti e campagne personalizzate.',
     personalizationTitle: 'Personalizzazione',
     personalizationDescription: 'Memorizza preferenze e adatta l\'esperienza nelle pagine.',
+    necessaryAlwaysOn: 'Attivo',
     acceptAll: 'Accetta tutto',
     rejectOptional: 'Rifiuta opzionali',
     savePreferences: 'Salva preferenze',
@@ -162,6 +183,7 @@ const consentCopy: Record<string, {
     marketingDescription: 'Usadas para mensajes relevantes y campañas personalizadas.',
     personalizationTitle: 'Personalización',
     personalizationDescription: 'Recuerda preferencias y adapta la experiencia en páginas.',
+    necessaryAlwaysOn: 'Activo',
     acceptAll: 'Aceptar todo',
     rejectOptional: 'Rechazar opcionales',
     savePreferences: 'Guardar preferencias',
@@ -177,6 +199,7 @@ const consentCopy: Record<string, {
     marketingDescription: 'Używane do trafnych komunikatów i kampanii personalizowanych.',
     personalizationTitle: 'Personalizacja',
     personalizationDescription: 'Zapamiętuje preferencje i dopasowuje doświadczenie w serwisie.',
+    necessaryAlwaysOn: 'Wlaczone',
     acceptAll: 'Akceptuj wszystko',
     rejectOptional: 'Odrzuć opcjonalne',
     savePreferences: 'Zapisz preferencje',

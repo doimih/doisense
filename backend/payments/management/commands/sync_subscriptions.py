@@ -3,23 +3,11 @@ from django.core.management.base import BaseCommand
 import stripe
 
 from core.system_config import (
-    get_stripe_price_id_basic,
-    get_stripe_price_id_premium,
-    get_stripe_price_id_vip,
     get_stripe_secret_key,
+    plan_tier_from_stripe_price_id,
 )
 from payments.models import Payment
 from users.models import User
-
-
-def _price_id_to_tier(price_id: str) -> str:
-    if price_id and price_id == get_stripe_price_id_basic():
-        return "basic"
-    if price_id and price_id == get_stripe_price_id_vip():
-        return "vip"
-    if price_id and price_id == get_stripe_price_id_premium():
-        return "premium"
-    return "premium"
 
 
 class Command(BaseCommand):
@@ -69,7 +57,7 @@ class Command(BaseCommand):
             new_tier = payment.plan_tier
             if items:
                 price_id = items[0].get("price", {}).get("id", "")
-                new_tier = _price_id_to_tier(price_id)
+                new_tier = plan_tier_from_stripe_price_id(price_id)
 
             changed_fields = []
             if payment.status != new_status:

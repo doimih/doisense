@@ -23,7 +23,7 @@
         type="button"
         :class="mobileToggleClass"
         @click="mobileOpen = !mobileOpen"
-        aria-label="Toggle navigation"
+        :aria-label="uiText.toggleNavigation"
       >
         <span v-if="!mobileOpen">☰</span>
         <span v-else>✕</span>
@@ -43,7 +43,7 @@
           {{ $t('nav.contact') }}
         </NuxtLink>
         <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/faq')" :class="navLinkClass">
-          FAQ
+          {{ faqLabel }}
         </NuxtLink>
 
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" :class="navLinkClass">
@@ -64,6 +64,9 @@
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" :class="navLinkClass">
           {{ $t('nav.support') }}
         </NuxtLink>
+        <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/support-admin')" :class="navLinkClass">
+          {{ supportAdminLabel }}
+        </NuxtLink>
         <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" :class="navLinkClass">
           {{ $t('nav.admin') }}
         </a>
@@ -72,7 +75,7 @@
           type="button"
           :class="accountButtonClass"
           @click="openAuthModal"
-          aria-label="Open authentication"
+          :aria-label="uiText.openAuthentication"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
             <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5Z" />
@@ -82,7 +85,7 @@
           <button
             type="button"
             :class="languageButtonClass"
-            aria-label="Open language menu"
+            :aria-label="uiText.openLanguageMenu"
             @click="desktopLanguageMenuOpen = !desktopLanguageMenuOpen"
           >
             {{ activeLanguageLabel }}
@@ -120,20 +123,21 @@
       <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.pricing') }}</NuxtLink>
       <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.about') }}</NuxtLink>
       <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.contact') }}</NuxtLink>
-      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/faq')" class="block text-stone-700" @click="mobileOpen = false">FAQ</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/faq')" class="block text-stone-700" @click="mobileOpen = false">{{ faqLabel }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.chat') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.notifications') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.support') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/support-admin')" class="block text-stone-700" @click="mobileOpen = false">{{ supportAdminLabel }}</NuxtLink>
       <div class="pt-2">
         <p class="mb-1 text-xs text-stone-500">{{ $t('auth.language') }}</p>
         <div class="relative inline-block">
           <button
             type="button"
             class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-700"
-            aria-label="Open language menu"
+            :aria-label="uiText.openLanguageMenu"
             @click="mobileLanguageMenuOpen = !mobileLanguageMenuOpen"
           >
             {{ activeLanguageLabel }}
@@ -168,12 +172,13 @@
     >
       <div class="flex min-h-full items-center justify-center px-4 py-6">
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @click.stop>
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-stone-900">{{ $t('auth.accountTitle') }}</h2>
-        <button type="button" class="text-stone-500 hover:text-stone-800" @click="closeAuthModal" aria-label="Close">
-          ✕
-        </button>
-      </div>
+          <BrandLogo size="sm" centered class="mb-4" />
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-stone-900">{{ $t('auth.accountTitle') }}</h2>
+            <button type="button" class="text-stone-500 hover:text-stone-800" @click="closeAuthModal" :aria-label="uiText.close">
+              ✕
+            </button>
+          </div>
 
       <div class="mb-4 grid grid-cols-2 rounded-lg bg-stone-100 p-1">
         <button
@@ -200,7 +205,7 @@
           class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'apple'"
           @click="loginWithGoogle"
-          aria-label="Continue with Google"
+          :aria-label="uiText.continueGoogle"
         >
           <span v-if="socialLoading === 'google'">...</span>
           <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5" aria-hidden="true">
@@ -212,7 +217,7 @@
           class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'google'"
           @click="loginWithApple"
-          aria-label="Continue with Apple"
+          :aria-label="uiText.continueApple"
         >
           <span v-if="socialLoading === 'apple'">...</span>
           <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5 fill-current" aria-hidden="true">
@@ -332,6 +337,101 @@ const languageOptions: Array<{ code: LocaleCode; label: string }> = [
 const activeLanguageLabel = computed(() => {
   const current = languageOptions.find((lang) => locale.value.startsWith(lang.code))
   return current?.label ?? 'en'
+})
+
+const faqLabel = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: 'Intrebari frecvente',
+    en: 'FAQ',
+    de: 'FAQ',
+    fr: 'FAQ',
+    it: 'FAQ',
+    es: 'FAQ',
+    pl: 'FAQ',
+  }[code] || 'FAQ'
+})
+
+const supportAdminLabel = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: 'Administrare suport',
+    en: 'Support Admin',
+    de: 'Support Admin',
+    fr: 'Support Admin',
+    it: 'Support Admin',
+    es: 'Support Admin',
+    pl: 'Support Admin',
+  }[code] || 'Support Admin'
+})
+
+const uiText = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: {
+      toggleNavigation: 'Comuta navigarea',
+      openAuthentication: 'Deschide autentificarea',
+      openLanguageMenu: 'Deschide meniul de limba',
+      close: 'Inchide',
+      continueGoogle: 'Continua cu Google',
+      continueApple: 'Continua cu Apple',
+    },
+    en: {
+      toggleNavigation: 'Toggle navigation',
+      openAuthentication: 'Open authentication',
+      openLanguageMenu: 'Open language menu',
+      close: 'Close',
+      continueGoogle: 'Continue with Google',
+      continueApple: 'Continue with Apple',
+    },
+    de: {
+      toggleNavigation: 'Navigation umschalten',
+      openAuthentication: 'Authentifizierung oeffnen',
+      openLanguageMenu: 'Sprachmenue oeffnen',
+      close: 'Schliessen',
+      continueGoogle: 'Mit Google fortfahren',
+      continueApple: 'Mit Apple fortfahren',
+    },
+    fr: {
+      toggleNavigation: 'Basculer la navigation',
+      openAuthentication: 'Ouvrir l\'authentification',
+      openLanguageMenu: 'Ouvrir le menu de langue',
+      close: 'Fermer',
+      continueGoogle: 'Continuer avec Google',
+      continueApple: 'Continuer avec Apple',
+    },
+    it: {
+      toggleNavigation: 'Attiva la navigazione',
+      openAuthentication: 'Apri autenticazione',
+      openLanguageMenu: 'Apri menu lingua',
+      close: 'Chiudi',
+      continueGoogle: 'Continua con Google',
+      continueApple: 'Continua con Apple',
+    },
+    es: {
+      toggleNavigation: 'Cambiar navegacion',
+      openAuthentication: 'Abrir autenticacion',
+      openLanguageMenu: 'Abrir menu de idioma',
+      close: 'Cerrar',
+      continueGoogle: 'Continuar con Google',
+      continueApple: 'Continuar con Apple',
+    },
+    pl: {
+      toggleNavigation: 'Przelacz nawigacje',
+      openAuthentication: 'Otworz uwierzytelnianie',
+      openLanguageMenu: 'Otworz menu jezyka',
+      close: 'Zamknij',
+      continueGoogle: 'Kontynuuj z Google',
+      continueApple: 'Kontynuuj z Apple',
+    },
+  }[code] || {
+    toggleNavigation: 'Toggle navigation',
+    openAuthentication: 'Open authentication',
+    openLanguageMenu: 'Open language menu',
+    close: 'Close',
+    continueGoogle: 'Continue with Google',
+    continueApple: 'Continue with Apple',
+  }
 })
 
 const navClass = computed(() => {

@@ -80,10 +80,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def expected_early_discount_eligibility(self) -> bool:
         return bool(
-            self.is_active
-            and self.id
+            self.id
             and self.id <= EARLY_DISCOUNT_USER_LIMIT
-            and not self.manual_vip
         )
 
     def is_in_trial(self) -> bool:

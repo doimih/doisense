@@ -21,7 +21,7 @@
       <section class="bg-stone-900 text-white rounded-xl p-5 space-y-2">
         <h2 class="text-xl font-semibold">{{ text.requestTitle }}</h2>
         <p class="text-sm text-stone-100">{{ text.requestText }}</p>
-        <p class="text-sm">privacy@doisense.app</p>
+        <p class="text-sm">privacy@doisense.eu</p>
         <p class="text-xs text-stone-200">{{ text.requestNote }}</p>
       </section>
     </template>

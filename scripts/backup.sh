@@ -14,7 +14,7 @@ else
 fi
 
 echo "[backup] Triggering WAL-G backup inside db container..."
-$COMPOSE exec -T db /usr/local/bin/walg-backup.sh
+$COMPOSE exec -T -e BACKUP_LOG_SOURCE=manual_backup_script db /usr/local/bin/walg-backup.sh
 
 echo "[backup] Verifying latest backup is visible..."
 $COMPOSE exec -T db sh -lc '

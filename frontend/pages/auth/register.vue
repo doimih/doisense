@@ -17,7 +17,7 @@
           type="button"
           class="flex w-full items-center justify-center gap-3 rounded-2xl border border-stone-300 bg-white px-4 py-3.5 text-xl font-semibold text-stone-700 transition hover:bg-stone-50"
           :disabled="socialLoading === 'google'"
-          aria-label="Continue with Google"
+          :aria-label="uiText.googleAria"
           @click="registerWithGoogle"
         >
           <span v-if="socialLoading === 'google'">...</span>
@@ -33,7 +33,7 @@
           type="button"
           class="flex w-full items-center justify-center gap-3 rounded-2xl border border-stone-300 bg-white px-4 py-3.5 text-xl font-semibold text-stone-700 transition hover:bg-stone-50"
           :disabled="socialLoading === 'apple'"
-          aria-label="Continue with Apple"
+          :aria-label="uiText.appleAria"
           @click="registerWithApple"
         >
           <span v-if="socialLoading === 'apple'">...</span>
@@ -48,7 +48,7 @@
 
       <div class="my-7 flex items-center gap-4">
         <span class="h-px flex-1 bg-stone-300" />
-        <span class="text-2xl font-semibold text-stone-700">OR</span>
+        <span class="text-2xl font-semibold text-stone-700">{{ uiText.orSeparator }}</span>
         <span class="h-px flex-1 bg-stone-300" />
       </div>
 
@@ -129,13 +129,70 @@ const loading = ref(false)
 const success = ref('')
 const socialLoading = ref<'' | 'google' | 'apple'>('')
 
-const text = computed(() => ({
-  hasAccountPrefix: locale.value?.startsWith('ro') ? 'Ai deja cont?' : 'Already have an account?',
-  hasAccountAction: locale.value?.startsWith('ro') ? 'Autentifica-te' : 'Sign in',
-  continueGoogle: locale.value?.startsWith('ro') ? 'Continua cu Google' : 'Continue with Google',
-  continueApple: locale.value?.startsWith('ro') ? 'Continua cu Apple' : 'Continue with Apple',
-  continueLabel: locale.value?.startsWith('ro') ? 'Continua' : 'Continue',
-}))
+const localeCode = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
+})
+
+const text = computed(() => {
+  return {
+    ro: {
+      hasAccountPrefix: 'Ai deja cont?',
+      hasAccountAction: 'Autentifica-te',
+      continueGoogle: 'Continua cu Google',
+      continueApple: 'Continua cu Apple',
+      continueLabel: 'Continua',
+    },
+    en: {
+      hasAccountPrefix: 'Already have an account?',
+      hasAccountAction: 'Sign in',
+      continueGoogle: 'Continue with Google',
+      continueApple: 'Continue with Apple',
+      continueLabel: 'Continue',
+    },
+    de: {
+      hasAccountPrefix: 'Hast du bereits ein Konto?',
+      hasAccountAction: 'Anmelden',
+      continueGoogle: 'Mit Google fortfahren',
+      continueApple: 'Mit Apple fortfahren',
+      continueLabel: 'Fortfahren',
+    },
+    fr: {
+      hasAccountPrefix: 'Vous avez deja un compte ?',
+      hasAccountAction: 'Se connecter',
+      continueGoogle: 'Continuer avec Google',
+      continueApple: 'Continuer avec Apple',
+      continueLabel: 'Continuer',
+    },
+    it: {
+      hasAccountPrefix: 'Hai gia un account?',
+      hasAccountAction: 'Accedi',
+      continueGoogle: 'Continua con Google',
+      continueApple: 'Continua con Apple',
+      continueLabel: 'Continua',
+    },
+    es: {
+      hasAccountPrefix: 'Ya tienes una cuenta?',
+      hasAccountAction: 'Iniciar sesion',
+      continueGoogle: 'Continuar con Google',
+      continueApple: 'Continuar con Apple',
+      continueLabel: 'Continuar',
+    },
+    pl: {
+      hasAccountPrefix: 'Masz juz konto?',
+      hasAccountAction: 'Zaloguj sie',
+      continueGoogle: 'Kontynuuj z Google',
+      continueApple: 'Kontynuuj z Apple',
+      continueLabel: 'Kontynuuj',
+    },
+  }[localeCode.value] || {
+    hasAccountPrefix: 'Already have an account?',
+    hasAccountAction: 'Sign in',
+    continueGoogle: 'Continue with Google',
+    continueApple: 'Continue with Apple',
+    continueLabel: 'Continue',
+  }
+})
 
 usePublicSeo({
   title: computed(() => `${t('auth.register')} - Doisense`),
@@ -148,12 +205,38 @@ const legalText = computed(() => ({
   terms: t('auth.termsAndConditions'),
   and: t('auth.and'),
   privacy: t('auth.privacyPolicy'),
-  ai: locale.value?.startsWith('ro') ? 'Acordul de utilizare AI' : 'AI Usage Agreement',
+  ai: {
+    ro: 'Acordul de utilizare AI',
+    en: 'AI Usage Agreement',
+    de: 'Vereinbarung zur KI-Nutzung',
+    fr: 'Accord d\'utilisation de l\'IA',
+    it: 'Accordo di utilizzo dell\'IA',
+    es: 'Acuerdo de uso de la IA',
+    pl: 'Umowa korzystania z AI',
+  }[localeCode.value] || 'AI Usage Agreement',
   suffix: '.',
-  validation: locale.value?.startsWith('ro')
-    ? 'Trebuie să accepți Termenii, Politica de confidențialitate și Acordul de utilizare AI.'
-    : 'You must accept the Terms, Privacy Policy, and AI Usage Agreement.',
+  validation: {
+    ro: 'Trebuie sa accepti Termenii, Politica de confidentialitate si Acordul de utilizare AI.',
+    en: 'You must accept the Terms, Privacy Policy, and AI Usage Agreement.',
+    de: 'Du musst den Bedingungen, der Datenschutzrichtlinie und der KI-Nutzungsvereinbarung zustimmen.',
+    fr: 'Vous devez accepter les Conditions, la Politique de confidentialite et l\'accord d\'utilisation de l\'IA.',
+    it: 'Devi accettare i Termini, l\'Informativa sulla privacy e l\'accordo di utilizzo AI.',
+    es: 'Debes aceptar los Terminos, la Politica de privacidad y el Acuerdo de uso de IA.',
+    pl: 'Musisz zaakceptowac Regulamin, Polityke prywatnosci i Umowe korzystania z AI.',
+  }[localeCode.value] || 'You must accept the Terms, Privacy Policy, and AI Usage Agreement.',
 }))
+
+const uiText = computed(() => {
+  return {
+    ro: { googleAria: 'Continua cu Google', appleAria: 'Continua cu Apple', orSeparator: 'SAU' },
+    en: { googleAria: 'Continue with Google', appleAria: 'Continue with Apple', orSeparator: 'OR' },
+    de: { googleAria: 'Mit Google fortfahren', appleAria: 'Mit Apple fortfahren', orSeparator: 'ODER' },
+    fr: { googleAria: 'Continuer avec Google', appleAria: 'Continuer avec Apple', orSeparator: 'OU' },
+    it: { googleAria: 'Continua con Google', appleAria: 'Continua con Apple', orSeparator: 'OPPURE' },
+    es: { googleAria: 'Continuar con Google', appleAria: 'Continuar con Apple', orSeparator: 'O' },
+    pl: { googleAria: 'Kontynuuj z Google', appleAria: 'Kontynuuj z Apple', orSeparator: 'LUB' },
+  }[localeCode.value] || { googleAria: 'Continue with Google', appleAria: 'Continue with Apple', orSeparator: 'OR' }
+})
 
 async function register() {
   error.value = ''

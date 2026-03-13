@@ -3,7 +3,7 @@
     <div class="grid gap-4 lg:grid-cols-[220px,1fr,290px]">
       <aside class="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/90 shadow-sm backdrop-blur">
         <div class="border-b border-slate-100 px-4 py-4">
-          <p class="text-[11px] uppercase tracking-[0.2em] text-slate-400">Module AI</p>
+          <p class="text-[11px] uppercase tracking-[0.2em] text-slate-400">{{ text.moduleLabel }}</p>
         </div>
         <div class="space-y-2 p-3">
           <button
@@ -217,6 +217,7 @@ const localeCode = computed(() => {
 })
 
 type ChatUiText = {
+  moduleLabel: string
   coachBadge: string
   quickActions: string
   crisisTitle: string
@@ -227,6 +228,7 @@ type ChatUiText = {
   energyCheckin: string
   energyToday: string
   disclaimer: string
+  sendError: string
 }
 
 const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
@@ -237,7 +239,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Invata', name: 'Educatie', description: 'Concepte psihologice explicate simplu.', welcome: 'Buna! Pot explica pe scurt concepte de psihologie aplicata.', prompts: ['Ce este burnout-ul?', 'Cum functioneaza anxietatea?', 'Ce inseamna CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Suport', name: 'Suport', description: 'Spatiu sigur pentru descarcare emotionala.', welcome: 'Sunt aici sa te ascult, fara judecata. Ce apasa azi pe tine?', prompts: ['Am o zi grea', 'Ma simt coplesit/a', 'Nu stiu ce simt'] },
     ],
-    ui: { coachBadge: 'Coach AI', quickActions: 'Actiuni rapide', crisisTitle: 'Este posibil sa ai nevoie de ajutor imediat.', crisisSubtitle: 'Daca e urgenta, suna la 112 sau contacteaza o linie locala de suport.', streak: 'Serie', streakDays: 'zile consecutive', mood: 'Stare', energyCheckin: 'Energie zilnica', energyToday: 'Nivel energie azi', disclaimer: 'Asistentul AI ofera suport complementar, nu inlocuieste un specialist licentiat.' },
+    ui: { moduleLabel: 'Module AI', coachBadge: 'Coach AI', quickActions: 'Actiuni rapide', crisisTitle: 'Este posibil sa ai nevoie de ajutor imediat.', crisisSubtitle: 'Daca e urgenta, suna la 112 sau contacteaza o linie locala de suport.', streak: 'Serie', streakDays: 'zile consecutive', mood: 'Stare', energyCheckin: 'Energie zilnica', energyToday: 'Nivel energie azi', disclaimer: 'Asistentul AI ofera suport complementar, nu inlocuieste un specialist licentiat.', sendError: 'Eroare la trimiterea mesajului.' },
   },
   en: {
     modules: [
@@ -246,7 +248,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Learn', name: 'Education', description: 'Psychology concepts explained simply.', welcome: 'Hi! I can explain practical psychology concepts in a short way.', prompts: ['What is burnout?', 'How does anxiety work?', 'What is CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Care', name: 'Support', description: 'Safe space for emotional release.', welcome: 'I am here to listen without judgment. What feels heavy today?', prompts: ['I am having a hard day', 'I feel overwhelmed', 'I do not know what I feel'] },
     ],
-    ui: { coachBadge: 'AI Coach', quickActions: 'Quick actions', crisisTitle: 'You may need immediate help.', crisisSubtitle: 'If this is an emergency, call your local emergency number now.', streak: 'Streak', streakDays: 'days in a row', mood: 'Mood', energyCheckin: 'Energy check-in', energyToday: 'Energy level today', disclaimer: 'AI assistant support is complementary and does not replace licensed care.' },
+    ui: { moduleLabel: 'AI modules', coachBadge: 'AI Coach', quickActions: 'Quick actions', crisisTitle: 'You may need immediate help.', crisisSubtitle: 'If this is an emergency, call your local emergency number now.', streak: 'Streak', streakDays: 'days in a row', mood: 'Mood', energyCheckin: 'Energy check-in', energyToday: 'Energy level today', disclaimer: 'AI assistant support is complementary and does not replace licensed care.', sendError: 'Failed to send message.' },
   },
   de: {
     modules: [
@@ -255,7 +257,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Lern', name: 'Bildung', description: 'Psychologische Konzepte einfach erklart.', welcome: 'Hallo! Ich kann psychologische Konzepte kurz und klar erklaren.', prompts: ['Was ist Burnout?', 'Wie funktioniert Angst?', 'Was bedeutet CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Hilfe', name: 'Support', description: 'Sicherer Raum fur emotionale Entlastung.', welcome: 'Ich hore dir ohne Bewertung zu. Was belastet dich heute?', prompts: ['Ich habe einen schweren Tag', 'Ich fuhle mich uberfordert', 'Ich weiss nicht, was ich fuhle'] },
     ],
-    ui: { coachBadge: 'KI Coach', quickActions: 'Schnellaktionen', crisisTitle: 'Du brauchst moglicherweise sofort Hilfe.', crisisSubtitle: 'Bei einem Notfall rufe sofort die lokale Notrufnummer an.', streak: 'Serie', streakDays: 'Tage in Folge', mood: 'Stimmung', energyCheckin: 'Energie-Check-in', energyToday: 'Energie heute', disclaimer: 'Die KI-Unterstutzung ist erganzend und ersetzt keine fachliche Behandlung.' },
+    ui: { moduleLabel: 'KI-Module', coachBadge: 'KI Coach', quickActions: 'Schnellaktionen', crisisTitle: 'Du brauchst moglicherweise sofort Hilfe.', crisisSubtitle: 'Bei einem Notfall rufe sofort die lokale Notrufnummer an.', streak: 'Serie', streakDays: 'Tage in Folge', mood: 'Stimmung', energyCheckin: 'Energie-Check-in', energyToday: 'Energie heute', disclaimer: 'Die KI-Unterstutzung ist erganzend und ersetzt keine fachliche Behandlung.', sendError: 'Nachricht konnte nicht gesendet werden.' },
   },
   fr: {
     modules: [
@@ -264,7 +266,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Appr', name: 'Education', description: 'Concepts psychologiques expliques simplement.', welcome: 'Bonjour ! Je peux expliquer des concepts de psychologie de facon simple.', prompts: ['Qu\'est-ce que le burnout ?', 'Comment fonctionne l\'anxiete ?', 'Que signifie CBT ?'] },
       { id: 'support', icon: '🤝', shortName: 'Soin', name: 'Soutien', description: 'Espace sur pour relacher les emotions.', welcome: 'Je suis la pour t\'ecouter sans jugement. Qu\'est-ce qui te pese aujourd\'hui ?', prompts: ['Je passe une journee difficile', 'Je me sens depasse(e)', 'Je ne sais pas ce que je ressens'] },
     ],
-    ui: { coachBadge: 'Coach IA', quickActions: 'Actions rapides', crisisTitle: 'Tu pourrais avoir besoin d\'aide immediate.', crisisSubtitle: 'En cas d\'urgence, appelle immediatement le numero d\'urgence local.', streak: 'Serie', streakDays: 'jours d\'affilee', mood: 'Humeur', energyCheckin: 'Check-in energie', energyToday: 'Niveau d\'energie aujourd\'hui', disclaimer: 'L\'assistant IA offre un soutien complementaire et ne remplace pas un professionnel de sante.' },
+    ui: { moduleLabel: 'Modules IA', coachBadge: 'Coach IA', quickActions: 'Actions rapides', crisisTitle: 'Tu pourrais avoir besoin d\'aide immediate.', crisisSubtitle: 'En cas d\'urgence, appelle immediatement le numero d\'urgence local.', streak: 'Serie', streakDays: 'jours d\'affilee', mood: 'Humeur', energyCheckin: 'Check-in energie', energyToday: 'Niveau d\'energie aujourd\'hui', disclaimer: 'L\'assistant IA offre un soutien complementaire et ne remplace pas un professionnel de sante.', sendError: 'Impossible d\'envoyer le message.' },
   },
   it: {
     modules: [
@@ -273,7 +275,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Impara', name: 'Educazione', description: 'Concetti psicologici spiegati in modo semplice.', welcome: 'Ciao! Posso spiegare in breve concetti utili di psicologia.', prompts: ['Cos\'e il burnout?', 'Come funziona l\'ansia?', 'Che cos\'e la CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Cura', name: 'Supporto', description: 'Spazio sicuro per il rilascio emotivo.', welcome: 'Sono qui per ascoltarti senza giudicare. Cosa ti pesa oggi?', prompts: ['Sto vivendo una giornata difficile', 'Mi sento sopraffatto/a', 'Non so cosa provo'] },
     ],
-    ui: { coachBadge: 'Coach AI', quickActions: 'Azioni rapide', crisisTitle: 'Potresti aver bisogno di aiuto immediato.', crisisSubtitle: 'In caso di emergenza chiama subito il numero locale di emergenza.', streak: 'Serie', streakDays: 'giorni consecutivi', mood: 'Umore', energyCheckin: 'Check energia', energyToday: 'Livello energia oggi', disclaimer: 'L\'assistente AI offre supporto complementare e non sostituisce specialisti abilitati.' },
+    ui: { moduleLabel: 'Moduli AI', coachBadge: 'Coach AI', quickActions: 'Azioni rapide', crisisTitle: 'Potresti aver bisogno di aiuto immediato.', crisisSubtitle: 'In caso di emergenza chiama subito il numero locale di emergenza.', streak: 'Serie', streakDays: 'giorni consecutivi', mood: 'Umore', energyCheckin: 'Check energia', energyToday: 'Livello energia oggi', disclaimer: 'L\'assistente AI offre supporto complementare e non sostituisce specialisti abilitati.', sendError: 'Invio del messaggio non riuscito.' },
   },
   es: {
     modules: [
@@ -282,7 +284,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Aprende', name: 'Educacion', description: 'Conceptos de psicologia explicados de forma simple.', welcome: 'Hola, puedo explicar conceptos de psicologia de forma practica.', prompts: ['Que es el burnout?', 'Como funciona la ansiedad?', 'Que significa CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Apoyo', name: 'Apoyo', description: 'Espacio seguro para descarga emocional.', welcome: 'Estoy aqui para escucharte sin juicio. Que te pesa hoy?', prompts: ['Tengo un dia dificil', 'Me siento abrumado/a', 'No se que siento'] },
     ],
-    ui: { coachBadge: 'Coach IA', quickActions: 'Acciones rapidas', crisisTitle: 'Podrias necesitar ayuda inmediata.', crisisSubtitle: 'Si es una emergencia, llama ahora al numero local de emergencias.', streak: 'Racha', streakDays: 'dias seguidos', mood: 'Estado de animo', energyCheckin: 'Chequeo de energia', energyToday: 'Nivel de energia hoy', disclaimer: 'El asistente AI brinda apoyo complementario y no sustituye atencion profesional.' },
+    ui: { moduleLabel: 'Modulos IA', coachBadge: 'Coach IA', quickActions: 'Acciones rapidas', crisisTitle: 'Podrias necesitar ayuda inmediata.', crisisSubtitle: 'Si es una emergencia, llama ahora al numero local de emergencias.', streak: 'Racha', streakDays: 'dias seguidos', mood: 'Estado de animo', energyCheckin: 'Chequeo de energia', energyToday: 'Nivel de energia hoy', disclaimer: 'El asistente AI brinda apoyo complementario y no sustituye atencion profesional.', sendError: 'No se pudo enviar el mensaje.' },
   },
   pl: {
     modules: [
@@ -291,7 +293,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Nauka', name: 'Edukacja', description: 'Pojecia psychologiczne wyjasnione prosto.', welcome: 'Czesc! Moge krotko wyjasnic praktyczne pojecia psychologiczne.', prompts: ['Co to jest wypalenie?', 'Jak dziala lek?', 'Co oznacza CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Pomoc', name: 'Wsparcie', description: 'Bezpieczna przestrzen na emocje.', welcome: 'Jestem tutaj, by wysluchac bez oceniania. Co cie dzis obciaza?', prompts: ['Mam trudny dzien', 'Czuje przytloczenie', 'Nie wiem, co czuje'] },
     ],
-    ui: { coachBadge: 'AI Coach', quickActions: 'Szybkie akcje', crisisTitle: 'Mozesz potrzebowac natychmiastowej pomocy.', crisisSubtitle: 'Jesli to nagla sytuacja, zadzwon pod lokalny numer alarmowy.', streak: 'Seria', streakDays: 'dni z rzedu', mood: 'Nastroj', energyCheckin: 'Dzienna energia', energyToday: 'Poziom energii dzis', disclaimer: 'Asystent AI wspiera dodatkowo i nie zastepuje specjalisty.' },
+    ui: { moduleLabel: 'Moduly AI', coachBadge: 'AI Coach', quickActions: 'Szybkie akcje', crisisTitle: 'Mozesz potrzebowac natychmiastowej pomocy.', crisisSubtitle: 'Jesli to nagla sytuacja, zadzwon pod lokalny numer alarmowy.', streak: 'Seria', streakDays: 'dni z rzedu', mood: 'Nastroj', energyCheckin: 'Dzienna energia', energyToday: 'Poziom energii dzis', disclaimer: 'Asystent AI wspiera dodatkowo i nie zastepuje specjalisty.', sendError: 'Nie udalo sie wyslac wiadomosci.' },
   },
 }
 
@@ -439,7 +441,7 @@ async function send(quickPrompt?: string) {
     }
   } catch (e) {
     messages.value.push({
-      message: (e as Error).message || 'Error sending message',
+      message: (e as Error).message || text.value.sendError,
       isUser: false,
     })
   } finally {

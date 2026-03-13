@@ -64,6 +64,11 @@ fi
 
 clean_endpoint=$(printf "%s" "$endpoint" | sed 's:/*$::')
 
+echo "export PGHOST='127.0.0.1'"
+echo "export PGPORT='5432'"
+echo "export PGUSER='$(escape_single_quotes "$POSTGRES_USER")'"
+echo "export PGPASSWORD='$(escape_single_quotes "$POSTGRES_PASSWORD")'"
+echo "export PGDATABASE='$(escape_single_quotes "$POSTGRES_DB")'"
 echo "export AWS_ACCESS_KEY_ID='$(escape_single_quotes "$access_key")'"
 echo "export AWS_SECRET_ACCESS_KEY='$(escape_single_quotes "$secret_key")'"
 echo "export AWS_REGION='$(escape_single_quotes "$region")'"

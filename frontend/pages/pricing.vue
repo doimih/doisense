@@ -19,7 +19,7 @@
     <div class="mx-auto max-w-7xl space-y-0 px-4 py-10 sm:px-6 lg:px-8">
     <section class="mt-[100px] mb-[100px] grid gap-6 lg:grid-cols-3">
       <article
-        v-for="plan in displayedPlans"
+        v-for="plan in text.plans"
         :key="plan.key"
         :class="[
           'relative rounded-3xl border p-6 shadow-sm transition-transform md:p-7',
@@ -47,15 +47,7 @@
         <h2 class="mt-2 text-2xl font-bold text-stone-900">{{ plan.title }}</h2>
         <p class="mt-3 text-sm leading-6 text-stone-700">{{ plan.description }}</p>
 
-        <p
-          v-if="plan.earlyAccessBadge"
-          class="mt-4 inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-emerald-700"
-        >
-          {{ plan.earlyAccessBadge }}
-        </p>
-
         <div class="mt-5 flex items-end gap-2 border-b border-stone-200 pb-5">
-          <p v-if="plan.originalPrice" class="text-base font-semibold text-stone-400 line-through">{{ plan.originalPrice }}</p>
           <p class="text-5xl font-bold tracking-tight text-stone-900">{{ plan.price }}</p>
           <p class="pb-1 text-sm font-medium text-stone-600">{{ plan.period }}</p>
         </div>
@@ -72,13 +64,6 @@
           class="mt-5 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-medium leading-6 text-sky-900"
         >
           {{ text.premiumArgument }}
-        </p>
-
-        <p
-          v-if="plan.key === 'premium'"
-          class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-800"
-        >
-          {{ premiumEarlyAccessNote }}
         </p>
 
         <button
@@ -183,7 +168,6 @@ const { fetchApi } = useApi()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const loadingPlan = ref<string | null>(null)
-const promoState = ref<{ is_active: boolean, discount_percent: number } | null>(null)
 const loadingText = computed(() => {
   const code = localeCode.value
   const labels: Record<string, string> = { ro: 'Se procesează...', en: 'Processing...', de: 'Verarbeitung...', fr: 'En cours...', it: 'In elaborazione...', es: 'Procesando...', pl: 'Przetwarzanie...' }
@@ -197,37 +181,6 @@ const currentPlanKey = computed(() => {
   if (tier === 'premium_discounted') return 'premium'
   return tier
 })
-
-const isEarlyDiscountEligible = computed(() => {
-  if (!isLoggedIn.value) return false
-  if (promoState.value) return Boolean(promoState.value.is_active)
-  return Boolean(authStore.user?.early_discount_eligible)
-})
-
-async function fetchPromoState() {
-  if (!isLoggedIn.value) {
-    promoState.value = null
-    return
-  }
-  try {
-    const state = await fetchApi<{ is_active: boolean, discount_percent: number }>('/payments/promo-state')
-    promoState.value = state || null
-  } catch {
-    promoState.value = null
-  }
-}
-
-watch(
-  () => isLoggedIn.value,
-  async (loggedIn) => {
-    if (loggedIn) {
-      await fetchPromoState()
-      return
-    }
-    promoState.value = null
-  },
-  { immediate: true },
-)
 
 async function startCheckout(planKey: string) {
   loadingPlan.value = planKey
@@ -282,8 +235,6 @@ type Plan = {
   items: string[]
   action: string
   highlight?: boolean
-  originalPrice?: string
-  earlyAccessBadge?: string
 }
 
 type ComparisonRow = {
@@ -322,7 +273,7 @@ const pricingCopy: Record<string, {
         key: 'basic',
         tone: 'Simplu și clar',
         title: 'BASIC Start',
-        price: '59 lei',
+        price: '€12',
         period: '/ lună',
         description: 'Un plan echilibrat pentru rutină de bază și claritate zilnică.',
         items: [
@@ -338,7 +289,7 @@ const pricingCopy: Record<string, {
         key: 'premium',
         tone: 'Echilibru și consistență',
         title: 'PREMIUM Flow',
-        price: '129 lei',
+        price: '€25',
         period: '/ lună',
         description: 'Pentru cei care vor structură, ritm și evoluție clară de la o săptămână la alta.',
         items: [
@@ -356,7 +307,7 @@ const pricingCopy: Record<string, {
         key: 'vip',
         tone: 'Exclusiv și strategic',
         title: 'VIP Executive',
-        price: '249 lei',
+        price: '€49',
         period: '/ lună',
         description: 'Un nivel premium complet pentru decizii strategice și progres pe termen lung.',
         items: [
@@ -411,7 +362,7 @@ const pricingCopy: Record<string, {
         key: 'basic',
         tone: 'Simple and practical',
         title: 'BASIC Start',
-        price: '59 RON',
+        price: '€12',
         period: '/ month',
         description: 'A clean starting plan for daily structure and emotional clarity.',
         items: [
@@ -427,7 +378,7 @@ const pricingCopy: Record<string, {
         key: 'premium',
         tone: 'Balanced and consistent',
         title: 'PREMIUM Flow',
-        price: '129 RON',
+        price: '€25',
         period: '/ month',
         description: 'Built for people who want rhythm, structure, and measurable weekly progress.',
         items: [
@@ -445,7 +396,7 @@ const pricingCopy: Record<string, {
         key: 'vip',
         tone: 'Exclusive and strategic',
         title: 'VIP Executive',
-        price: '249 RON',
+        price: '€49',
         period: '/ month',
         description: 'A complete premium level for long-term strategic direction.',
         items: [
@@ -501,7 +452,7 @@ const pricingCopy: Record<string, {
         key: 'basic',
         tone: 'Einfach und klar',
         title: 'BASIC Start',
-        price: '59 RON',
+        price: '€12',
         period: '/ Monat',
         description: 'Ein ausgewogener Plan für Grundroutine und tägliche Klarheit.',
         items: [
@@ -517,7 +468,7 @@ const pricingCopy: Record<string, {
         key: 'premium',
         tone: 'Balance und Konsistenz',
         title: 'PREMIUM Flow',
-        price: '129 RON',
+        price: '€25',
         period: '/ Monat',
         description: 'Für alle, die Struktur, Rhythmus und klaren wöchentlichen Fortschritt wollen.',
         items: [
@@ -535,7 +486,7 @@ const pricingCopy: Record<string, {
         key: 'vip',
         tone: 'Exklusiv und strategisch',
         title: 'VIP Executive',
-        price: '249 RON',
+        price: '€49',
         period: '/ Monat',
         description: 'Ein vollständiges Premium-Niveau für strategische Ausrichtung und langfristiges Wachstum.',
         items: [
@@ -590,7 +541,7 @@ const pricingCopy: Record<string, {
         key: 'basic',
         tone: 'Simple et pratique',
         title: 'BASIC Start',
-        price: '59 RON',
+        price: '€12',
         period: '/ mois',
         description: 'Un plan équilibré pour une routine de base et une clarté quotidienne.',
         items: [
@@ -606,7 +557,7 @@ const pricingCopy: Record<string, {
         key: 'premium',
         tone: 'Équilibre et régularité',
         title: 'PREMIUM Flow',
-        price: '129 RON',
+        price: '€25',
         period: '/ mois',
         description: 'Pour ceux qui veulent structure, rythme et progression hebdomadaire mesurable.',
         items: [
@@ -624,7 +575,7 @@ const pricingCopy: Record<string, {
         key: 'vip',
         tone: 'Exclusif et stratégique',
         title: 'VIP Executive',
-        price: '249 RON',
+        price: '€49',
         period: '/ mois',
         description: 'Un niveau premium complet pour une orientation stratégique et un progrès à long terme.',
         items: [
@@ -679,7 +630,7 @@ const pricingCopy: Record<string, {
         key: 'basic',
         tone: 'Semplice e chiaro',
         title: 'BASIC Start',
-        price: '59 RON',
+        price: '€12',
         period: '/ mese',
         description: 'Un piano equilibrato per una routine di base e chiarezza quotidiana.',
         items: [
@@ -695,7 +646,7 @@ const pricingCopy: Record<string, {
         key: 'premium',
         tone: 'Equilibrio e costanza',
         title: 'PREMIUM Flow',
-        price: '129 RON',
+        price: '€25',
         period: '/ mese',
         description: 'Per chi vuole struttura, ritmo e progressi settimanali misurabili.',
         items: [
@@ -713,7 +664,7 @@ const pricingCopy: Record<string, {
         key: 'vip',
         tone: 'Esclusivo e strategico',
         title: 'VIP Executive',
-        price: '249 RON',
+        price: '€49',
         period: '/ mese',
         description: 'Un livello premium completo per una direzione strategica e una crescita a lungo termine.',
         items: [
@@ -768,7 +719,7 @@ const pricingCopy: Record<string, {
         key: 'basic',
         tone: 'Simple y claro',
         title: 'BASIC Start',
-        price: '59 RON',
+        price: '€12',
         period: '/ mes',
         description: 'Un plan equilibrado para una rutina básica y claridad diaria.',
         items: [
@@ -784,7 +735,7 @@ const pricingCopy: Record<string, {
         key: 'premium',
         tone: 'Equilibrio y consistencia',
         title: 'PREMIUM Flow',
-        price: '129 RON',
+        price: '€25',
         period: '/ mes',
         description: 'Para quienes quieren estructura, ritmo y progreso semanal medible.',
         items: [
@@ -802,7 +753,7 @@ const pricingCopy: Record<string, {
         key: 'vip',
         tone: 'Exclusivo y estratégico',
         title: 'VIP Executive',
-        price: '249 RON',
+        price: '€49',
         period: '/ mes',
         description: 'Un nivel premium completo para una dirección estratégica y un progreso a largo plazo.',
         items: [
@@ -857,7 +808,7 @@ const pricingCopy: Record<string, {
         key: 'basic',
         tone: 'Prosty i przejrzysty',
         title: 'BASIC Start',
-        price: '59 RON',
+        price: '€12',
         period: '/ miesiąc',
         description: 'Zrównoważony plan dla podstawowej rutyny i codziennej jasności.',
         items: [
@@ -873,7 +824,7 @@ const pricingCopy: Record<string, {
         key: 'premium',
         tone: 'Równowaga i konsekwencja',
         title: 'PREMIUM Flow',
-        price: '129 RON',
+        price: '€25',
         period: '/ miesiąc',
         description: 'Dla osób, które chcą struktury, rytmu i mierzalnego tygodniowego postępu.',
         items: [
@@ -891,7 +842,7 @@ const pricingCopy: Record<string, {
         key: 'vip',
         tone: 'Ekskluzywny i strategiczny',
         title: 'VIP Executive',
-        price: '249 RON',
+        price: '€49',
         period: '/ miesiąc',
         description: 'Kompletny poziom premium dla strategicznego kierunku i długoterminowego wzrostu.',
         items: [
@@ -937,40 +888,6 @@ const pricingCopy: Record<string, {
 }
 
 const text = computed(() => pricingCopy[localeCode.value] || pricingCopy.ro)
-const premiumEarlyAccessNote = computed(() => {
-  const labels: Record<string, string> = {
-    ro: 'Primele 500 inscrieri la PREMIUM beneficiaza de reducere permanenta de 10% (129 lei -> 116.10 lei / luna).',
-    en: 'The first 500 PREMIUM sign-ups receive a permanent 10% discount (129 RON -> 116.10 RON / month).',
-    de: 'Die ersten 500 PREMIUM-Anmeldungen erhalten dauerhaft 10% Rabatt (129 RON -> 116.10 RON / Monat).',
-    fr: 'Les 500 premiers abonnements PREMIUM beneficient d une reduction permanente de 10% (129 RON -> 116.10 RON / mois).',
-    it: 'I primi 500 iscritti PREMIUM ricevono uno sconto permanente del 10% (129 RON -> 116.10 RON / mese).',
-    es: 'Los primeros 500 registros PREMIUM reciben un descuento permanente del 10% (129 RON -> 116.10 RON / mes).',
-    pl: 'Pierwsze 500 rejestracji PREMIUM otrzymuje staly rabat 10% (129 RON -> 116.10 RON / miesiac).',
-  }
-  return labels[localeCode.value] || labels.en
-})
-
-const displayedPlans = computed<Plan[]>(() => {
-  const plans = text.value.plans.map((plan) => ({ ...plan }))
-  if (!isEarlyDiscountEligible.value) {
-    return plans
-  }
-
-  return plans.map((plan) => {
-    if (plan.key !== 'premium') {
-      return plan
-    }
-
-    return {
-      ...plan,
-      originalPrice: plan.price,
-      price: localeCode.value === 'ro' ? '116.10 lei' : '116.10 RON',
-      earlyAccessBadge: localeCode.value === 'ro'
-        ? 'Reducere Early Access -10%'
-        : 'Early Access Discount -10%',
-    }
-  })
-})
 const seoTitle = computed(() => text.value.seoTitle)
 const seoDescription = computed(() => text.value.seoDescription)
 

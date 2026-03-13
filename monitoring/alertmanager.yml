@@ -16,8 +16,8 @@ route:
 receivers:
   - name: ops-default
     email_configs:
-      - to: ${ALERTS_EMAIL_TO:-ops@doisense.app}
-        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.app}
+      - to: ${ALERTS_EMAIL_TO:-ops@doisense.eu}
+        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.eu}
         smarthost: ${ALERTS_SMARTHOST:-smtp.gmail.com:587}
         auth_username: ${ALERTS_SMTP_USERNAME:-}
         auth_password: ${ALERTS_SMTP_PASSWORD:-}
@@ -25,8 +25,8 @@ receivers:
 
   - name: ops-critical
     email_configs:
-      - to: ${ALERTS_EMAIL_TO:-ops@doisense.app}
-        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.app}
+      - to: ${ALERTS_EMAIL_TO:-ops@doisense.eu}
+        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.eu}
         smarthost: ${ALERTS_SMARTHOST:-smtp.gmail.com:587}
         auth_username: ${ALERTS_SMTP_USERNAME:-}
         auth_password: ${ALERTS_SMTP_PASSWORD:-}

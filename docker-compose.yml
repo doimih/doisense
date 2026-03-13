@@ -20,6 +20,7 @@ services:
       - "5432"
     networks:
       - app_internal
+      - traefik
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U doisense"]
       interval: 5s
@@ -58,6 +59,9 @@ services:
       CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://projects.doimih.net}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRODUCT_ID_BASIC: ${STRIPE_PRODUCT_ID_BASIC}
+      STRIPE_PRODUCT_ID_PREMIUM: ${STRIPE_PRODUCT_ID_PREMIUM}
+      STRIPE_PRODUCT_ID_VIP: ${STRIPE_PRODUCT_ID_VIP}
       STRIPE_PRICE_ID_PREMIUM: ${STRIPE_PRICE_ID_PREMIUM}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}

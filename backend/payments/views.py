@@ -25,8 +25,11 @@ from core.feature_access import require_feature
 from core.models import SystemErrorEvent
 from core.system_config import (
     get_stripe_price_id_for_tier,
+    get_stripe_product_id_for_tier,
     get_stripe_secret_key,
     get_stripe_webhook_secret,
+    plan_tier_from_stripe_price_id,
+    plan_tier_from_stripe_product_id,
 )
 from users.models import User
 
@@ -139,26 +142,11 @@ def _send_payment_notification_once(user: User, notification_type: str, context_
 
 def _price_id_to_tier(price_id: str) -> str:
     """Reverse-map a Stripe price ID to an internal plan tier."""
-    from core.system_config import (
-        get_stripe_price_id_basic,
-        get_stripe_price_id_premium,
-        get_stripe_price_id_vip,
-    )
-
-    if price_id and price_id == get_stripe_price_id_basic():
-        return "basic"
-    if price_id and price_id == get_stripe_price_id_vip():
-        return "vip"
-    if price_id and price_id == get_stripe_price_id_premium():
-        return "premium"
-    return "premium"
+    return plan_tier_from_stripe_price_id(price_id)
 
 
 def _is_early_discount_applicable(user: User, requested_plan_tier: str) -> bool:
-    expected_discount = getattr(user, "expected_early_discount_eligibility", None)
-    is_discount_eligible = expected_discount() if callable(expected_discount) else bool(
-        getattr(user, "early_discount_eligible", False) and not getattr(user, "vip_manual_override", False)
-    )
+    is_discount_eligible = bool(getattr(user, "early_discount_eligible", False)) and not _is_manual_vip(user)
     return (
         requested_plan_tier == "premium"
         and is_discount_eligible
@@ -203,7 +191,10 @@ class CreateCheckoutSessionView(APIView):
     def post(self, request):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
         if plan_tier not in VALID_PLAN_TIERS:
-            plan_tier = "premium"
+            return Response(
+                {"detail": f"Invalid plan_tier. Must be one of: {', '.join(sorted(VALID_PLAN_TIERS))}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user = request.user
         if _is_manual_vip(user):
@@ -428,7 +419,10 @@ class UpgradeSubscriptionView(APIView):
     def post(self, request):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
         if plan_tier not in VALID_PLAN_TIERS:
-            return Response({"detail": "Invalid plan tier."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": f"Invalid plan_tier. Must be one of: {', '.join(sorted(VALID_PLAN_TIERS))}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user = request.user
         if _is_manual_vip(user):

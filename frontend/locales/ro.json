@@ -57,7 +57,17 @@
     "save": "Salvează",
     "saving": "Se salvează...",
     "saved": "Salvat.",
-    "noQuestions": "Nicio întrebare disponibilă"
+    "noQuestions": "Nicio întrebare disponibilă",
+    "categories": {
+      "emotions": "Emoții",
+      "daily": "Reflecții zilnice",
+      "goals": "Obiective și progres",
+      "wellness": "Bine-ființă",
+      "relationships": "Relații",
+      "health": "Sănătate",
+      "work": "Muncă și carieră",
+      "general": "General"
+    }
   },
   "programs": {
     "noDescription": "Fără descriere.",

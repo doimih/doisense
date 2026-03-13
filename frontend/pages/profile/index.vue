@@ -108,33 +108,33 @@
 
       <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-4">
         <p class="text-sm text-slate-700">
-          {{ localeCode === 'ro' ? 'Vrei un tur rapid pentru redescoperirea funcțiilor?' : 'Need a quick feature rediscovery tour?' }}
+          {{ text.featureTourPrompt }}
         </p>
         <button
           type="button"
           class="mt-3 rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
           @click="restartOnboarding"
         >
-          {{ localeCode === 'ro' ? 'Repornește onboarding' : 'Restart onboarding' }}
+          {{ text.restartOnboarding }}
         </button>
       </div>
 
       <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-4">
         <p class="text-sm text-slate-700">
-          {{ localeCode === 'ro' ? 'Gestioneaza notificarile si cere ajutor direct din cont.' : 'Manage notifications and request support directly from your account.' }}
+          {{ text.manageNotificationsSupport }}
         </p>
         <div class="mt-3 flex flex-wrap gap-2">
           <NuxtLink
             :to="localePath('/notifications')"
             class="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
           >
-            {{ localeCode === 'ro' ? 'Notificari' : 'Notifications' }}
+            {{ text.notificationsCta }}
           </NuxtLink>
           <NuxtLink
             :to="localePath('/support')"
             class="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
           >
-            {{ localeCode === 'ro' ? 'Support tickets' : 'Support tickets' }}
+            {{ text.supportTicketsCta }}
           </NuxtLink>
         </div>
       </div>
@@ -299,13 +299,13 @@ const planTierLabel = computed(() => {
 })
 
 const UPGRADE_PLAN_LABELS: Record<string, { key: string; label: string }[]> = {
-  ro: [{ key: 'basic', label: 'BASIC – 59 lei/lună' }, { key: 'premium', label: 'PREMIUM – 129 lei/lună' }, { key: 'vip', label: 'VIP – 249 lei/lună' }],
-  en: [{ key: 'basic', label: 'BASIC – 59 RON/mo' }, { key: 'premium', label: 'PREMIUM – 129 RON/mo' }, { key: 'vip', label: 'VIP – 249 RON/mo' }],
-  de: [{ key: 'basic', label: 'BASIC – 59 RON/Mo.' }, { key: 'premium', label: 'PREMIUM – 129 RON/Mo.' }, { key: 'vip', label: 'VIP – 249 RON/Mo.' }],
-  fr: [{ key: 'basic', label: 'BASIC – 59 RON/mois' }, { key: 'premium', label: 'PREMIUM – 129 RON/mois' }, { key: 'vip', label: 'VIP – 249 RON/mois' }],
-  it: [{ key: 'basic', label: 'BASIC – 59 RON/mese' }, { key: 'premium', label: 'PREMIUM – 129 RON/mese' }, { key: 'vip', label: 'VIP – 249 RON/mese' }],
-  es: [{ key: 'basic', label: 'BASIC – 59 RON/mes' }, { key: 'premium', label: 'PREMIUM – 129 RON/mes' }, { key: 'vip', label: 'VIP – 249 RON/mes' }],
-  pl: [{ key: 'basic', label: 'BASIC – 59 RON/mies.' }, { key: 'premium', label: 'PREMIUM – 129 RON/mies.' }, { key: 'vip', label: 'VIP – 249 RON/mies.' }],
+  ro: [{ key: 'basic', label: 'BASIC – €12/lună' }, { key: 'premium', label: 'PREMIUM – €25/lună' }, { key: 'vip', label: 'VIP – €49/lună' }],
+  en: [{ key: 'basic', label: 'BASIC – €12/mo' }, { key: 'premium', label: 'PREMIUM – €25/mo' }, { key: 'vip', label: 'VIP – €49/mo' }],
+  de: [{ key: 'basic', label: 'BASIC – €12/Mo.' }, { key: 'premium', label: 'PREMIUM – €25/Mo.' }, { key: 'vip', label: 'VIP – €49/Mo.' }],
+  fr: [{ key: 'basic', label: 'BASIC – €12/mois' }, { key: 'premium', label: 'PREMIUM – €25/mois' }, { key: 'vip', label: 'VIP – €49/mois' }],
+  it: [{ key: 'basic', label: 'BASIC – €12/mese' }, { key: 'premium', label: 'PREMIUM – €25/mese' }, { key: 'vip', label: 'VIP – €49/mese' }],
+  es: [{ key: 'basic', label: 'BASIC – €12/mes' }, { key: 'premium', label: 'PREMIUM – €25/mes' }, { key: 'vip', label: 'VIP – €49/mes' }],
+  pl: [{ key: 'basic', label: 'BASIC – €12/mies.' }, { key: 'premium', label: 'PREMIUM – €25/mies.' }, { key: 'vip', label: 'VIP – €49/mies.' }],
 }
 
 const upgradePlans = computed(() => UPGRADE_PLAN_LABELS[localeCode.value] || UPGRADE_PLAN_LABELS.en)
@@ -333,6 +333,11 @@ const profileCopy: Record<string, {
   newPassword: string
   confirmNewPassword: string
   changePassword: string
+  featureTourPrompt: string
+  restartOnboarding: string
+  manageNotificationsSupport: string
+  notificationsCta: string
+  supportTicketsCta: string
   deleteTitle: string
   deleteBody: string
   deleteWarning: string
@@ -355,6 +360,11 @@ const profileCopy: Record<string, {
     firstName: 'Prenume', lastName: 'Nume', phone: 'Telefon contact',
     savedCard: 'Card salvat', expires: 'Expira', manageCard: 'Gestioneaza cardul', noCard: 'Nu exista card salvat inca.', saveProfile: 'Salveaza profilul',
     passwordChange: 'Schimbare parola', currentPassword: 'Parola curenta', newPassword: 'Parola noua', confirmNewPassword: 'Confirmare parola noua', changePassword: 'Schimba parola',
+    featureTourPrompt: 'Vrei un tur rapid pentru redescoperirea functiilor?',
+    restartOnboarding: 'Reporneste onboarding',
+    manageNotificationsSupport: 'Gestioneaza notificarile si cere ajutor direct din cont.',
+    notificationsCta: 'Notificari',
+    supportTicketsCta: 'Support tickets',
     deleteTitle: 'Sterge contul', deleteBody: 'Actiunea elimina datele personale ale contului, sterge jurnalul si check-in-urile, iar conversatiile raman in platforma doar dupa anonimizare.',
     deleteWarning: 'Aceasta actiune este ireversibila.', deleteAction: 'Sterge contul', deleteConfirm: 'Esti sigur ca vrei sa stergi contul?',
     deleteSuccess: 'Contul a fost sters.', deleteError: 'Nu am putut sterge contul.',
@@ -369,6 +379,11 @@ const profileCopy: Record<string, {
     firstName: 'First name', lastName: 'Last name', phone: 'Contact phone',
     savedCard: 'Saved card', expires: 'Expires', manageCard: 'Manage card', noCard: 'No saved card yet.', saveProfile: 'Save profile',
     passwordChange: 'Change password', currentPassword: 'Current password', newPassword: 'New password', confirmNewPassword: 'Confirm new password', changePassword: 'Change password',
+    featureTourPrompt: 'Need a quick feature rediscovery tour?',
+    restartOnboarding: 'Restart onboarding',
+    manageNotificationsSupport: 'Manage notifications and request support directly from your account.',
+    notificationsCta: 'Notifications',
+    supportTicketsCta: 'Support tickets',
     deleteTitle: 'Delete account', deleteBody: 'This action removes personal account data, deletes journal and wellbeing entries, and keeps conversations only in anonymized form.',
     deleteWarning: 'This action cannot be undone.', deleteAction: 'Delete account', deleteConfirm: 'Are you sure you want to delete your account?',
     deleteSuccess: 'Account deleted.', deleteError: 'Could not delete account.',
@@ -383,6 +398,11 @@ const profileCopy: Record<string, {
     firstName: 'Vorname', lastName: 'Nachname', phone: 'Kontakttelefon',
     savedCard: 'Gespeicherte Karte', expires: 'Ablauf', manageCard: 'Karte verwalten', noCard: 'Noch keine Karte gespeichert.', saveProfile: 'Profil speichern',
     passwordChange: 'Passwort ändern', currentPassword: 'Aktuelles Passwort', newPassword: 'Neues Passwort', confirmNewPassword: 'Neues Passwort bestätigen', changePassword: 'Passwort ändern',
+    featureTourPrompt: 'Brauchst du eine kurze Tour zur Wiederentdeckung der Funktionen?',
+    restartOnboarding: 'Onboarding neu starten',
+    manageNotificationsSupport: 'Verwalte Benachrichtigungen und fordere direkt im Konto Hilfe an.',
+    notificationsCta: 'Benachrichtigungen',
+    supportTicketsCta: 'Support-Tickets',
     deleteTitle: 'Konto löschen', deleteBody: 'Diese Aktion entfernt personenbezogene Kontodaten, löscht Journal- und Check-in-Daten und behält Gespräche nur in anonymisierter Form.',
     deleteWarning: 'Diese Aktion ist nicht rückgängig zu machen.', deleteAction: 'Konto löschen', deleteConfirm: 'Möchtest du dein Konto wirklich löschen?',
     deleteSuccess: 'Konto gelöscht.', deleteError: 'Konto konnte nicht gelöscht werden.',
@@ -397,6 +417,11 @@ const profileCopy: Record<string, {
     firstName: 'Prenom', lastName: 'Nom', phone: 'Telephone de contact',
     savedCard: 'Carte enregistree', expires: 'Expire', manageCard: 'Gerer la carte', noCard: 'Aucune carte enregistree pour le moment.', saveProfile: 'Enregistrer le profil',
     passwordChange: 'Changer le mot de passe', currentPassword: 'Mot de passe actuel', newPassword: 'Nouveau mot de passe', confirmNewPassword: 'Confirmer le nouveau mot de passe', changePassword: 'Changer le mot de passe',
+    featureTourPrompt: 'Besoin d\'une visite rapide des fonctionnalites ?',
+    restartOnboarding: 'Redemarrer l\'onboarding',
+    manageNotificationsSupport: 'Gerez les notifications et demandez de l\'aide directement depuis votre compte.',
+    notificationsCta: 'Notifications',
+    supportTicketsCta: 'Tickets support',
     deleteTitle: 'Supprimer le compte', deleteBody: 'Cette action supprime les donnees personnelles du compte, efface le journal et les check-ins, et conserve les conversations uniquement sous forme anonymisee.',
     deleteWarning: 'Cette action est irreversible.', deleteAction: 'Supprimer le compte', deleteConfirm: 'Voulez-vous vraiment supprimer votre compte ?',
     deleteSuccess: 'Compte supprime.', deleteError: 'Impossible de supprimer le compte.',
@@ -411,6 +436,11 @@ const profileCopy: Record<string, {
     firstName: 'Nome', lastName: 'Cognome', phone: 'Telefono di contatto',
     savedCard: 'Carta salvata', expires: 'Scadenza', manageCard: 'Gestisci carta', noCard: 'Nessuna carta salvata.', saveProfile: 'Salva profilo',
     passwordChange: 'Cambia password', currentPassword: 'Password attuale', newPassword: 'Nuova password', confirmNewPassword: 'Conferma nuova password', changePassword: 'Cambia password',
+    featureTourPrompt: 'Vuoi un tour rapido per riscoprire le funzionalita?',
+    restartOnboarding: 'Riavvia onboarding',
+    manageNotificationsSupport: 'Gestisci notifiche e richiedi supporto direttamente dal tuo account.',
+    notificationsCta: 'Notifiche',
+    supportTicketsCta: 'Ticket di supporto',
     deleteTitle: 'Elimina account', deleteBody: 'Questa azione rimuove i dati personali dell\'account, elimina diario e check-in e mantiene le conversazioni solo in forma anonimizzata.',
     deleteWarning: 'Questa azione e irreversibile.', deleteAction: 'Elimina account', deleteConfirm: 'Sei sicuro di voler eliminare il tuo account?',
     deleteSuccess: 'Account eliminato.', deleteError: 'Impossibile eliminare l\'account.',
@@ -425,6 +455,11 @@ const profileCopy: Record<string, {
     firstName: 'Nombre', lastName: 'Apellido', phone: 'Telefono de contacto',
     savedCard: 'Tarjeta guardada', expires: 'Caduca', manageCard: 'Gestionar tarjeta', noCard: 'Aun no hay tarjeta guardada.', saveProfile: 'Guardar perfil',
     passwordChange: 'Cambiar contraseña', currentPassword: 'Contraseña actual', newPassword: 'Nueva contraseña', confirmNewPassword: 'Confirmar nueva contraseña', changePassword: 'Cambiar contraseña',
+    featureTourPrompt: 'Necesitas un recorrido rapido para redescubrir funciones?',
+    restartOnboarding: 'Reiniciar onboarding',
+    manageNotificationsSupport: 'Gestiona notificaciones y solicita ayuda directamente desde tu cuenta.',
+    notificationsCta: 'Notificaciones',
+    supportTicketsCta: 'Tickets de soporte',
     deleteTitle: 'Eliminar cuenta', deleteBody: 'Esta acción elimina los datos personales de la cuenta, borra diario y check-ins, y conserva las conversaciones solo de forma anonimizada.',
     deleteWarning: 'Esta accion no se puede deshacer.', deleteAction: 'Eliminar cuenta', deleteConfirm: '¿Seguro que quieres eliminar tu cuenta?',
     deleteSuccess: 'Cuenta eliminada.', deleteError: 'No se pudo eliminar la cuenta.',
@@ -439,6 +474,11 @@ const profileCopy: Record<string, {
     firstName: 'Imie', lastName: 'Nazwisko', phone: 'Telefon kontaktowy',
     savedCard: 'Zapisana karta', expires: 'Wazna do', manageCard: 'Zarzadzaj karta', noCard: 'Brak zapisanej karty.', saveProfile: 'Zapisz profil',
     passwordChange: 'Zmiana hasla', currentPassword: 'Aktualne haslo', newPassword: 'Nowe haslo', confirmNewPassword: 'Potwierdz nowe haslo', changePassword: 'Zmien haslo',
+    featureTourPrompt: 'Potrzebujesz szybkiego przypomnienia funkcji?',
+    restartOnboarding: 'Uruchom onboarding ponownie',
+    manageNotificationsSupport: 'Zarzadzaj powiadomieniami i popros o pomoc bezposrednio z konta.',
+    notificationsCta: 'Powiadomienia',
+    supportTicketsCta: 'Zgloszenia wsparcia',
     deleteTitle: 'Usun konto', deleteBody: 'Ta akcja usuwa dane osobowe konta, kasuje dziennik i check-iny oraz zachowuje rozmowy tylko w formie zanonimizowanej.',
     deleteWarning: 'Tej akcji nie da sie cofnac.', deleteAction: 'Usun konto', deleteConfirm: 'Czy na pewno chcesz usunac konto?',
     deleteSuccess: 'Konto usuniete.', deleteError: 'Nie udalo sie usunac konta.',
@@ -450,18 +490,64 @@ const profileCopy: Record<string, {
 const text = computed(() => profileCopy[localeCode.value] || profileCopy.en)
 
 const dataRightsText = computed(() => {
-  if (localeCode.value === 'ro') {
-    return {
+  return {
+    ro: {
       title: 'Datele tale personale',
-      body: 'Poți exporta imediat datele personale asociate contului tău în format JSON.',
+      body: 'Poti exporta imediat datele personale asociate contului tau in format JSON.',
       exportAction: 'Exporta datele personale',
       exportLoading: 'Se exporta...',
       exportSuccess: 'Exportul a fost generat.',
       exportError: 'Nu am putut genera exportul de date.',
-    }
-  }
-
-  return {
+    },
+    en: {
+      title: 'Your personal data',
+      body: 'You can export the personal data linked to your account as a JSON file at any time.',
+      exportAction: 'Export personal data',
+      exportLoading: 'Exporting...',
+      exportSuccess: 'Your export is ready.',
+      exportError: 'We could not generate your data export.',
+    },
+    de: {
+      title: 'Deine personenbezogenen Daten',
+      body: 'Du kannst die mit deinem Konto verknuepften personenbezogenen Daten jederzeit als JSON exportieren.',
+      exportAction: 'Personendaten exportieren',
+      exportLoading: 'Export laeuft...',
+      exportSuccess: 'Der Export ist bereit.',
+      exportError: 'Der Datenexport konnte nicht erstellt werden.',
+    },
+    fr: {
+      title: 'Vos donnees personnelles',
+      body: 'Vous pouvez exporter a tout moment les donnees personnelles liees a votre compte au format JSON.',
+      exportAction: 'Exporter les donnees personnelles',
+      exportLoading: 'Export en cours...',
+      exportSuccess: 'Votre export est pret.',
+      exportError: 'Impossible de generer l\'export des donnees.',
+    },
+    it: {
+      title: 'I tuoi dati personali',
+      body: 'Puoi esportare in qualsiasi momento i dati personali del tuo account in formato JSON.',
+      exportAction: 'Esporta dati personali',
+      exportLoading: 'Esportazione in corso...',
+      exportSuccess: 'Il tuo export e pronto.',
+      exportError: 'Non siamo riusciti a generare l\'export dei dati.',
+    },
+    es: {
+      title: 'Tus datos personales',
+      body: 'Puedes exportar en cualquier momento los datos personales de tu cuenta en formato JSON.',
+      exportAction: 'Exportar datos personales',
+      exportLoading: 'Exportando...',
+      exportSuccess: 'Tu exportacion esta lista.',
+      exportError: 'No pudimos generar la exportacion de datos.',
+    },
+    pl: {
+      title: 'Twoje dane osobowe',
+      body: 'W dowolnym momencie mozesz wyeksportowac dane osobowe konta w formacie JSON.',
+      exportAction: 'Eksportuj dane osobowe',
+      exportLoading: 'Trwa eksport...',
+      exportSuccess: 'Eksport jest gotowy.',
+      exportError: 'Nie mozna wygenerowac eksportu danych.',
+    },
+  }[localeCode.value] || {
     title: 'Your personal data',
     body: 'You can export the personal data linked to your account as a JSON file at any time.',
     exportAction: 'Export personal data',

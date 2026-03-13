@@ -21,4 +21,5 @@ pytest-django>=4.5,<5
 black>=24,<25
 ruff>=0.1,<0.2
 google-auth>=2.35,<3
+boto3>=1.35,<2
 PyJWT[crypto]>=2.9,<3

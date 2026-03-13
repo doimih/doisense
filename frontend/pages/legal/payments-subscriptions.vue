@@ -101,6 +101,166 @@ const copy: Record<string, {
     seoTitle: 'Payments and Subscriptions Policy - Doisense',
     seoDescription: 'Review payment processing, subscriptions, recurrence, cancellation, refunds, and invoicing in Doisense.',
   },
+  de: {
+    title: 'Richtlinie zu Zahlungen und Abonnements',
+    updated: 'Zuletzt aktualisiert: 11. März 2026',
+    sections: [
+      {
+        title: '1. Zahlungsabwickler',
+        body: 'Stripe.',
+      },
+      {
+        title: '2. Abonnementarten',
+        items: ['BASIC', 'PREMIUM', 'VIP'],
+      },
+      {
+        title: '3. Verlängerung',
+        body: 'Abonnements verlängern sich automatisch.',
+      },
+      {
+        title: '4. Kündigung',
+        body: 'Der Nutzer kann jederzeit kündigen.',
+      },
+      {
+        title: '5. Rückerstattungen',
+        body: 'Rückerstattungen werden gemäß der Stripe-Richtlinie bearbeitet.',
+      },
+      {
+        title: '6. Rechnungsstellung',
+        body: 'Stripe stellt PDF-Rechnungen automatisch aus.',
+      },
+    ],
+    seoTitle: 'Richtlinie zu Zahlungen und Abonnements - Doisense',
+    seoDescription: 'Informiere dich über Zahlungsabwicklung, Abonnements, Verlängerung, Kündigung, Rückerstattungen und Rechnungsstellung bei Doisense.',
+  },
+  fr: {
+    title: 'Politique de paiements et d’abonnements',
+    updated: 'Dernière mise à jour : 11 mars 2026',
+    sections: [
+      {
+        title: '1. Prestataire de paiement',
+        body: 'Stripe.',
+      },
+      {
+        title: '2. Types d’abonnements',
+        items: ['BASIC', 'PREMIUM', 'VIP'],
+      },
+      {
+        title: '3. Reconduction',
+        body: 'Les abonnements sont renouvelés automatiquement.',
+      },
+      {
+        title: '4. Résiliation',
+        body: 'L’utilisateur peut résilier à tout moment.',
+      },
+      {
+        title: '5. Remboursements',
+        body: 'Les remboursements sont traités conformément à la politique de Stripe.',
+      },
+      {
+        title: '6. Facturation',
+        body: 'Stripe émet automatiquement des factures PDF.',
+      },
+    ],
+    seoTitle: 'Politique de paiements et d’abonnements - Doisense',
+    seoDescription: 'Consulte les informations sur le traitement des paiements, les abonnements, la reconduction, la résiliation, les remboursements et la facturation dans Doisense.',
+  },
+  it: {
+    title: 'Politica di pagamenti e abbonamenti',
+    updated: 'Ultimo aggiornamento: 11 marzo 2026',
+    sections: [
+      {
+        title: '1. Processore di pagamento',
+        body: 'Stripe.',
+      },
+      {
+        title: '2. Tipi di abbonamento',
+        items: ['BASIC', 'PREMIUM', 'VIP'],
+      },
+      {
+        title: '3. Rinnovo',
+        body: 'Gli abbonamenti si rinnovano automaticamente.',
+      },
+      {
+        title: '4. Annullamento',
+        body: 'L’utente può annullare in qualsiasi momento.',
+      },
+      {
+        title: '5. Rimborsi',
+        body: 'I rimborsi vengono gestiti secondo la politica di Stripe.',
+      },
+      {
+        title: '6. Fatturazione',
+        body: 'Stripe emette automaticamente fatture PDF.',
+      },
+    ],
+    seoTitle: 'Politica di pagamenti e abbonamenti - Doisense',
+    seoDescription: 'Consulta le informazioni su elaborazione dei pagamenti, abbonamenti, rinnovo, annullamento, rimborsi e fatturazione in Doisense.',
+  },
+  es: {
+    title: 'Política de pagos y suscripciones',
+    updated: 'Última actualización: 11 de marzo de 2026',
+    sections: [
+      {
+        title: '1. Procesador de pagos',
+        body: 'Stripe.',
+      },
+      {
+        title: '2. Tipos de suscripción',
+        items: ['BASIC', 'PREMIUM', 'VIP'],
+      },
+      {
+        title: '3. Renovación',
+        body: 'Las suscripciones se renuevan automáticamente.',
+      },
+      {
+        title: '4. Cancelación',
+        body: 'El usuario puede cancelar en cualquier momento.',
+      },
+      {
+        title: '5. Reembolsos',
+        body: 'Los reembolsos se gestionan según la política de Stripe.',
+      },
+      {
+        title: '6. Facturación',
+        body: 'Stripe emite automáticamente facturas en PDF.',
+      },
+    ],
+    seoTitle: 'Política de pagos y suscripciones - Doisense',
+    seoDescription: 'Consulta la información sobre procesamiento de pagos, suscripciones, renovación, cancelación, reembolsos y facturación en Doisense.',
+  },
+  pl: {
+    title: 'Polityka płatności i subskrypcji',
+    updated: 'Ostatnia aktualizacja: 11 marca 2026',
+    sections: [
+      {
+        title: '1. Operator płatności',
+        body: 'Stripe.',
+      },
+      {
+        title: '2. Rodzaje subskrypcji',
+        items: ['BASIC', 'PREMIUM', 'VIP'],
+      },
+      {
+        title: '3. Odnawianie',
+        body: 'Subskrypcje odnawiają się automatycznie.',
+      },
+      {
+        title: '4. Anulowanie',
+        body: 'Użytkownik może anulować w dowolnym momencie.',
+      },
+      {
+        title: '5. Zwroty',
+        body: 'Zwroty są obsługiwane zgodnie z polityką Stripe.',
+      },
+      {
+        title: '6. Fakturowanie',
+        body: 'Stripe automatycznie wystawia faktury PDF.',
+      },
+    ],
+    seoTitle: 'Polityka płatności i subskrypcji - Doisense',
+    seoDescription: 'Sprawdź informacje o przetwarzaniu płatności, subskrypcjach, odnawianiu, anulowaniu, zwrotach i fakturowaniu w Doisense.',
+  },
 }
 
 const text = computed(() => copy[localeCode.value] || copy.en)

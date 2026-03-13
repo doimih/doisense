@@ -1,0 +1,63 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch, tag, or commit SHA)"
+        required: true
+        default: "main"
+      run_migrations:
+        description: "Run backend migrations after deploy"
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Validate required secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -e
+          for v in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_PATH; do
+            if [ -z "${!v}" ]; then
+              echo "Missing required secret: $v"
+              exit 1
+            fi
+          done
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy application
+        env:
+          REF_TO_DEPLOY: ${{ github.event.inputs.ref }}
+          RUN_MIGRATIONS: ${{ github.event.inputs.run_migrations }}
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "REF_TO_DEPLOY='${REF_TO_DEPLOY}' RUN_MIGRATIONS='${RUN_MIGRATIONS}' bash -s" << 'EOF'
+          set -Eeuo pipefail
+          cd "${{ secrets.DEPLOY_PATH }}"
+          git fetch --all --tags --prune
+          git checkout "$REF_TO_DEPLOY"
+          bash scripts/site/rebuild_all.sh
+          if [ "$RUN_MIGRATIONS" = "true" ]; then
+            docker compose run --rm backend python manage.py migrate
+          fi
+          EOF

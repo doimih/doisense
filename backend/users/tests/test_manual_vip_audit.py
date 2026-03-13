@@ -6,7 +6,7 @@ from django.core.management import call_command
 
 from core.models import NotificationDelivery
 from payments.models import Payment
-from users.models import User
+from users.models import EARLY_DISCOUNT_USER_LIMIT, User
 
 
 @pytest.mark.django_db
@@ -46,7 +46,6 @@ def test_manual_vip_audit_reports_conflicts_and_possible_wrong_marks():
     assert payload["manual_vip_count"] == 1
     assert payload["validated_manual_vip_users"][0]["effective_tier"] == "vip"
     assert {item["conflict"] for item in payload["detected_conflicts"]} >= {
-        "early_discount_flag_active",
         "trial_notifications_sent",
         "upsell_notifications_sent",
         "discounted_subscription_attached",
@@ -59,6 +58,7 @@ def test_manual_vip_audit_reports_conflicts_and_possible_wrong_marks():
 @pytest.mark.django_db
 def test_manual_vip_audit_can_fix_discount_flags():
     user = User.objects.create_user(
+        id=EARLY_DISCOUNT_USER_LIMIT + 1,
         email="manual-vip-fix@example.com",
         password="StrongPass123",
         vip_manual_override=True,

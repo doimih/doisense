@@ -168,11 +168,11 @@ def test_notification_email_uses_correct_from_address(user):
     
     with patch('core.notifications.EmailMessage') as mock_email:
         with patch('core.notifications._get_from_email') as mock_from:
-            mock_from.return_value = "noreply@doisense.app"
+            mock_from.return_value = "noreply@doisense.eu"
             send_trial_expiration_warning(user, 5)
             
             call_args = mock_email.call_args
-            assert call_args.kwargs['from_email'] == "noreply@doisense.app"
+            assert call_args.kwargs['from_email'] == "noreply@doisense.eu"
 
 
 @pytest.mark.django_db

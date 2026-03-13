@@ -6,7 +6,7 @@ while ! pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; do
 done
 
 while true; do
-  /usr/local/bin/walg-backup.sh || true
+  BACKUP_LOG_SOURCE=backup_daemon /usr/local/bin/walg-backup.sh || true
 
   SCHEDULE_MINUTES=$(psql -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
     SELECT COALESCE(NULLIF(backup_schedule_minutes, 0), 10)

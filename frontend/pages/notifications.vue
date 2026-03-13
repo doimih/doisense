@@ -77,8 +77,8 @@ const pushEnabled = ref(false)
 
 const text = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  if (code === 'ro') {
-    return {
+  return {
+    ro: {
       title: 'Notificari',
       unread: 'Necitite',
       pushTitle: 'Notificari push in browser',
@@ -88,9 +88,74 @@ const text = computed(() => {
       loading: 'Se incarca notificarile...',
       empty: 'Nu ai notificari momentan.',
       markRead: 'Marcheaza citit',
-    }
-  }
-  return {
+    },
+    en: {
+      title: 'Notifications',
+      unread: 'Unread',
+      pushTitle: 'Browser push notifications',
+      pushSubtitle: 'Enable or disable quick notifications for important updates.',
+      pushOn: 'Push enabled',
+      pushOff: 'Push disabled',
+      loading: 'Loading notifications...',
+      empty: 'No notifications yet.',
+      markRead: 'Mark read',
+    },
+    de: {
+      title: 'Benachrichtigungen',
+      unread: 'Ungelesen',
+      pushTitle: 'Browser-Push-Benachrichtigungen',
+      pushSubtitle: 'Schnelle Benachrichtigungen fuer wichtige Updates aktivieren oder deaktivieren.',
+      pushOn: 'Push aktiv',
+      pushOff: 'Push inaktiv',
+      loading: 'Benachrichtigungen werden geladen...',
+      empty: 'Noch keine Benachrichtigungen.',
+      markRead: 'Als gelesen markieren',
+    },
+    fr: {
+      title: 'Notifications',
+      unread: 'Non lues',
+      pushTitle: 'Notifications push navigateur',
+      pushSubtitle: 'Activer ou desactiver les notifications rapides pour les mises a jour importantes.',
+      pushOn: 'Push actif',
+      pushOff: 'Push inactif',
+      loading: 'Chargement des notifications...',
+      empty: 'Aucune notification pour le moment.',
+      markRead: 'Marquer comme lu',
+    },
+    it: {
+      title: 'Notifiche',
+      unread: 'Non lette',
+      pushTitle: 'Notifiche push del browser',
+      pushSubtitle: 'Attiva o disattiva le notifiche rapide per gli aggiornamenti importanti.',
+      pushOn: 'Push attivo',
+      pushOff: 'Push inattivo',
+      loading: 'Caricamento notifiche...',
+      empty: 'Nessuna notifica al momento.',
+      markRead: 'Segna come letta',
+    },
+    es: {
+      title: 'Notificaciones',
+      unread: 'No leidas',
+      pushTitle: 'Notificaciones push del navegador',
+      pushSubtitle: 'Activa o desactiva notificaciones rapidas para actualizaciones importantes.',
+      pushOn: 'Push activo',
+      pushOff: 'Push inactivo',
+      loading: 'Cargando notificaciones...',
+      empty: 'No tienes notificaciones por ahora.',
+      markRead: 'Marcar como leida',
+    },
+    pl: {
+      title: 'Powiadomienia',
+      unread: 'Nieprzeczytane',
+      pushTitle: 'Powiadomienia push w przegladarce',
+      pushSubtitle: 'Wlacz lub wylacz szybkie powiadomienia o waznych aktualizacjach.',
+      pushOn: 'Push wlaczony',
+      pushOff: 'Push wylaczony',
+      loading: 'Ladowanie powiadomien...',
+      empty: 'Brak powiadomien.',
+      markRead: 'Oznacz jako przeczytane',
+    },
+  }[code] || {
     title: 'Notifications',
     unread: 'Unread',
     pushTitle: 'Browser push notifications',
@@ -105,7 +170,7 @@ const text = computed(() => {
 
 function formatDate(value: string) {
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(locale.value)
 }
 
 async function loadNotifications() {

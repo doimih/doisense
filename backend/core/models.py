@@ -57,6 +57,11 @@ class SystemConfig(models.Model):
     # Stripe settings
     stripe_secret_key = models.CharField(max_length=255, blank=True)
     stripe_webhook_secret = models.CharField(max_length=255, blank=True)
+    # Product IDs (new)
+    stripe_product_id_basic = models.CharField(max_length=255, blank=True)
+    stripe_product_id_premium = models.CharField(max_length=255, blank=True)
+    stripe_product_id_vip = models.CharField(max_length=255, blank=True)
+    # Price IDs (legacy - kept for backward compatibility)
     stripe_price_id_basic = models.CharField(max_length=255, blank=True)
     stripe_price_id_premium = models.CharField(max_length=255, blank=True)
     stripe_price_id_vip = models.CharField(max_length=255, blank=True)
@@ -441,6 +446,45 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return f"Ticket #{self.id} ({self.status})"
+
+
+class SupportTicketMessage(models.Model):
+    SENDER_USER = "user"
+    SENDER_ADMIN = "admin"
+    SENDER_SYSTEM = "system"
+    SENDER_CHOICES = [
+        (SENDER_USER, "User"),
+        (SENDER_ADMIN, "Admin"),
+        (SENDER_SYSTEM, "System"),
+    ]
+
+    ticket = models.ForeignKey(
+        "core.SupportTicket",
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    author = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_ticket_messages",
+    )
+    sender_role = models.CharField(max_length=16, choices=SENDER_CHOICES, default=SENDER_USER)
+    message = models.TextField()
+    is_internal = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_supportticketmessage"
+        ordering = ["created_at"]
+        indexes = [
+            models.Index(fields=["ticket", "created_at"]),
+            models.Index(fields=["is_internal", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"Ticket message #{self.id} ({self.sender_role})"
 
 
 class BackupRestoreRequest(models.Model):

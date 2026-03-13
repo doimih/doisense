@@ -26,7 +26,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--fix-discount-flags",
             action="store_true",
-            help="Normalize stored early_discount_eligible values to match current business rules.",
+            help="Normalize stored early_discount_eligible values to match first-500 registration rules.",
         )
 
     def handle(self, *args, **options):
@@ -66,9 +66,6 @@ class Command(BaseCommand):
 
             if user.is_in_trial():
                 user_conflicts.append("trial_logic_still_active")
-
-            if user.early_discount_eligible:
-                user_conflicts.append("early_discount_flag_active")
 
             if NotificationDelivery.objects.filter(
                 user=user,
@@ -110,7 +107,7 @@ class Command(BaseCommand):
                     "trial_notifications_blocked": "trial_notifications_sent" not in user_conflicts,
                     "upsell_notifications_blocked": "upsell_notifications_sent" not in user_conflicts,
                     "subscription_logic_bypassed": user.effective_plan_tier() == User.PLAN_VIP,
-                    "discount_logic_bypassed": not user.early_discount_eligible,
+                    "discount_logic_bypassed": True,
                     "payment_status": getattr(payment, "status", None),
                     "payment_plan_tier": getattr(payment, "plan_tier", None),
                 }

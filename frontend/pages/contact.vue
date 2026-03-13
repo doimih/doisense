@@ -77,7 +77,7 @@
         <button
           type="submit"
           :disabled="submitting"
-          class="w-full rounded-full bg-black px-6 py-3 text-base font-semibold text-white transition hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex min-w-[220px] items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {{ submitting ? text.sendingAction : text.sendAction }}
         </button>
@@ -131,6 +131,9 @@ const copy: Record<string, {
   sendAction: string
   sendingAction: string
   successMessage: string
+  sendFailedMessage: string
+  recaptchaNotReady: string
+  recaptchaFailed: string
   supportTitle: string
   supportText: string
   gdprTitle: string
@@ -157,10 +160,13 @@ const copy: Record<string, {
     sendAction: 'Trimite mesajul',
     sendingAction: 'Se trimite...',
     successMessage: 'Mesaj trimis cu succes. Revenim către tine cât mai curând.',
+    sendFailedMessage: 'Nu am putut trimite mesajul acum.',
+    recaptchaNotReady: 'Verificarea reCAPTCHA nu este gata.',
+    recaptchaFailed: 'Verificarea reCAPTCHA a esuat.',
     supportTitle: 'Suport general',
-    supportText: 'Email: support@doisense.app',
+    supportText: 'Email: support@doisense.eu',
     gdprTitle: 'Solicitări GDPR',
-    gdprText: 'Email: privacy@doisense.app',
+    gdprText: 'Email: privacy@doisense.eu',
     responseTitle: 'Timp de răspuns',
     responseText: 'Încercăm să răspundem în 1-3 zile lucrătoare, în funcție de complexitatea cererii.',
     note: 'Pentru drepturile tale asupra datelor personale, vezi ',
@@ -183,10 +189,13 @@ const copy: Record<string, {
     sendAction: 'Send Message',
     sendingAction: 'Sending...',
     successMessage: 'Message sent successfully. We will get back to you soon.',
+    sendFailedMessage: 'Unable to send message right now.',
+    recaptchaNotReady: 'reCAPTCHA is not ready.',
+    recaptchaFailed: 'reCAPTCHA execution failed.',
     supportTitle: 'General support',
-    supportText: 'Email: support@doisense.app',
+    supportText: 'Email: support@doisense.eu',
     gdprTitle: 'GDPR requests',
-    gdprText: 'Email: privacy@doisense.app',
+    gdprText: 'Email: privacy@doisense.eu',
     responseTitle: 'Response time',
     responseText: 'We aim to respond in 1-3 business days depending on request complexity.',
     note: 'For your personal data rights, see the ',
@@ -209,10 +218,13 @@ const copy: Record<string, {
     sendAction: 'Nachricht senden',
     sendingAction: 'Wird gesendet...',
     successMessage: 'Nachricht erfolgreich gesendet. Wir melden uns bald bei dir.',
+    sendFailedMessage: 'Nachricht konnte gerade nicht gesendet werden.',
+    recaptchaNotReady: 'reCAPTCHA ist noch nicht bereit.',
+    recaptchaFailed: 'reCAPTCHA-Pruefung ist fehlgeschlagen.',
     supportTitle: 'Allgemeiner Support',
-    supportText: 'E-Mail: support@doisense.app',
+    supportText: 'E-Mail: support@doisense.eu',
     gdprTitle: 'DSGVO-Anfragen',
-    gdprText: 'E-Mail: privacy@doisense.app',
+    gdprText: 'E-Mail: privacy@doisense.eu',
     responseTitle: 'Antwortzeit',
     responseText: 'Wir antworten in der Regel innerhalb von 1-3 Werktagen, je nach Komplexität der Anfrage.',
     note: 'Für deine Datenschutzrechte siehe die ',
@@ -235,10 +247,13 @@ const copy: Record<string, {
     sendAction: 'Envoyer le message',
     sendingAction: 'Envoi en cours...',
     successMessage: 'Message envoye avec succes. Nous revenons vers vous rapidement.',
+    sendFailedMessage: 'Impossible d\'envoyer le message pour le moment.',
+    recaptchaNotReady: 'reCAPTCHA n\'est pas pret.',
+    recaptchaFailed: 'L\'execution de reCAPTCHA a echoue.',
     supportTitle: 'Support general',
-    supportText: 'Email: support@doisense.app',
+    supportText: 'Email: support@doisense.eu',
     gdprTitle: 'Demandes GDPR',
-    gdprText: 'Email: privacy@doisense.app',
+    gdprText: 'Email: privacy@doisense.eu',
     responseTitle: 'Delai de reponse',
     responseText: 'Nous essayons de repondre sous 1 a 3 jours ouvrables selon la complexite de la demande.',
     note: 'Pour vos droits sur les donnees personnelles, consultez la ',
@@ -261,10 +276,13 @@ const copy: Record<string, {
     sendAction: 'Invia messaggio',
     sendingAction: 'Invio in corso...',
     successMessage: 'Messaggio inviato con successo. Ti risponderemo presto.',
+    sendFailedMessage: 'Impossibile inviare il messaggio in questo momento.',
+    recaptchaNotReady: 'reCAPTCHA non e pronto.',
+    recaptchaFailed: 'Esecuzione reCAPTCHA non riuscita.',
     supportTitle: 'Supporto generale',
-    supportText: 'Email: support@doisense.app',
+    supportText: 'Email: support@doisense.eu',
     gdprTitle: 'Richieste GDPR',
-    gdprText: 'Email: privacy@doisense.app',
+    gdprText: 'Email: privacy@doisense.eu',
     responseTitle: 'Tempi di risposta',
     responseText: 'Cerchiamo di rispondere entro 1-3 giorni lavorativi, in base alla complessità della richiesta.',
     note: 'Per i tuoi diritti sui dati personali, consulta la ',
@@ -287,10 +305,13 @@ const copy: Record<string, {
     sendAction: 'Enviar mensaje',
     sendingAction: 'Enviando...',
     successMessage: 'Mensaje enviado correctamente. Te responderemos pronto.',
+    sendFailedMessage: 'No se pudo enviar el mensaje en este momento.',
+    recaptchaNotReady: 'reCAPTCHA no esta listo.',
+    recaptchaFailed: 'La ejecucion de reCAPTCHA ha fallado.',
     supportTitle: 'Soporte general',
-    supportText: 'Email: support@doisense.app',
+    supportText: 'Email: support@doisense.eu',
     gdprTitle: 'Solicitudes GDPR',
-    gdprText: 'Email: privacy@doisense.app',
+    gdprText: 'Email: privacy@doisense.eu',
     responseTitle: 'Tiempo de respuesta',
     responseText: 'Intentamos responder en 1-3 días hábiles, según la complejidad de la solicitud.',
     note: 'Para tus derechos sobre datos personales, consulta la ',
@@ -313,10 +334,13 @@ const copy: Record<string, {
     sendAction: 'Wyślij wiadomość',
     sendingAction: 'Wysyłanie...',
     successMessage: 'Wiadomość została wysłana. Odpowiemy wkrótce.',
+    sendFailedMessage: 'Nie mozna teraz wyslac wiadomosci.',
+    recaptchaNotReady: 'reCAPTCHA nie jest jeszcze gotowe.',
+    recaptchaFailed: 'Wykonanie reCAPTCHA nie powiodlo sie.',
     supportTitle: 'Wsparcie ogólne',
-    supportText: 'Email: support@doisense.app',
+    supportText: 'Email: support@doisense.eu',
     gdprTitle: 'Wnioski GDPR',
-    gdprText: 'Email: privacy@doisense.app',
+    gdprText: 'Email: privacy@doisense.eu',
     responseTitle: 'Czas odpowiedzi',
     responseText: 'Staramy się odpowiadać w ciągu 1-3 dni roboczych, zależnie od złożoności sprawy.',
     note: 'Aby poznać prawa dotyczące danych osobowych, zobacz ',
@@ -371,7 +395,7 @@ async function getRecaptchaToken() {
 
   const instance = window.grecaptcha
   if (!instance) {
-    throw new Error('reCAPTCHA is not ready.')
+    throw new Error(text.value.recaptchaNotReady)
   }
 
   return new Promise<string>((resolve, reject) => {
@@ -380,7 +404,7 @@ async function getRecaptchaToken() {
         const token = await instance.execute(recaptchaSiteKey.value, { action: 'contact_form' })
         resolve(token)
       } catch {
-        reject(new Error('reCAPTCHA execution failed.'))
+        reject(new Error(text.value.recaptchaFailed))
       }
     })
   })
@@ -411,7 +435,7 @@ async function submitForm() {
     form.subject = ''
     form.message = ''
   } catch (error: any) {
-    errorMessage.value = error?.data?.detail || error?.message || 'Unable to send message.'
+    errorMessage.value = error?.data?.detail || error?.message || text.value.sendFailedMessage
   } finally {
     submitting.value = false
   }

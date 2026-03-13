@@ -175,9 +175,6 @@ class UserSerializer(serializers.ModelSerializer):
         return bool(getattr(obj, "manual_vip", False))
 
     def get_early_discount_eligible(self, obj):
-        resolver = getattr(obj, "expected_early_discount_eligibility", None)
-        if callable(resolver):
-            return resolver()
         return bool(getattr(obj, "early_discount_eligible", False))
 
     def get_has_saved_card(self, obj):

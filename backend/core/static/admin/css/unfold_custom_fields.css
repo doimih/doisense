@@ -79,3 +79,24 @@ body.app-payments.model-payment .form-row .select2-container {
 body.app-payments.model-payment .related-widget-wrapper {
   max-width: 680px;
 }
+
+/* Keep current sidebar page link clearly visible after navigation. */
+#nav-sidebar-apps a.active,
+#nav-sidebar-apps a[aria-current="page"] {
+  background: #e6fffb !important;
+  border-left: 3px solid #0f766e;
+  color: #0f766e !important;
+  font-weight: 700;
+}
+
+#nav-sidebar-apps a.active:visited,
+#nav-sidebar-apps a[aria-current="page"]:visited {
+  color: #0f766e !important;
+}
+
+.dark #nav-sidebar-apps a.active,
+.dark #nav-sidebar-apps a[aria-current="page"] {
+  background: rgba(20, 184, 166, 0.18) !important;
+  border-left-color: #2dd4bf;
+  color: #5eead4 !important;
+}

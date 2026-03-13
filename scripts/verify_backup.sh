@@ -13,16 +13,7 @@ else
   exit 1
 fi
 
-VERIFY_DIR="/tmp/walg-verify-$(date +%s)"
-
-echo "[verify] Fetching latest backup to ${VERIFY_DIR}..."
-$COMPOSE exec -T db sh -lc "
-  set -eu
-  eval \"\$(/usr/local/bin/walg-env.sh)\"
-  mkdir -p '${VERIFY_DIR}'
-  wal-g backup-fetch '${VERIFY_DIR}' LATEST
-  pg_controldata '${VERIFY_DIR}' >/dev/null
-  rm -rf '${VERIFY_DIR}'
-"
+echo "[verify] Fetching latest backup and validating restore metadata..."
+$COMPOSE exec -T -e BACKUP_LOG_SOURCE=manual_verify_script db /usr/local/bin/walg-verify.sh
 
 echo "[verify] Backup restore validation passed."

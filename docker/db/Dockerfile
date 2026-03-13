@@ -14,14 +14,18 @@ RUN wget -qO /tmp/wal-g.tar.gz "https://github.com/wal-g/wal-g/releases/download
     && rm -f /tmp/wal-g-pg-22.04-amd64
 
 COPY scripts/walg-env.sh /usr/local/bin/walg-env.sh
+COPY scripts/walg-log.sh /usr/local/bin/walg-log.sh
 COPY scripts/walg-archive.sh /usr/local/bin/walg-archive.sh
 COPY scripts/walg-backup.sh /usr/local/bin/walg-backup.sh
+COPY scripts/walg-verify.sh /usr/local/bin/walg-verify.sh
 COPY scripts/walg-backup-daemon.sh /usr/local/bin/walg-backup-daemon.sh
 COPY scripts/db-entrypoint.sh /usr/local/bin/db-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/walg-env.sh \
+    /usr/local/bin/walg-log.sh \
     /usr/local/bin/walg-archive.sh \
     /usr/local/bin/walg-backup.sh \
+    /usr/local/bin/walg-verify.sh \
     /usr/local/bin/walg-backup-daemon.sh \
     /usr/local/bin/db-entrypoint.sh
 

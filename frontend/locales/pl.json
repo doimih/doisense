@@ -57,7 +57,17 @@
     "save": "Zapisz",
     "saving": "Zapisywanie...",
     "saved": "Zapisano.",
-    "noQuestions": "Brak dostępnych pytań"
+    "noQuestions": "Brak dostępnych pytań",
+    "categories": {
+      "emotions": "Emocje",
+      "daily": "Codzienne refleksje",
+      "goals": "Cele i postęp",
+      "wellness": "Dobrostan",
+      "relationships": "Relacje",
+      "health": "Zdrowie",
+      "work": "Praca i kariera",
+      "general": "Ogólne"
+    }
   },
   "programs": {
     "noDescription": "Brak opisu.",

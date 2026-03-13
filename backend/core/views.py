@@ -21,7 +21,6 @@ from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from journal.models import JournalQuestion
@@ -35,6 +34,7 @@ from .models import (
     BackupVerificationLog,
     CMSPage,
     InAppNotification,
+    SupportTicketMessage,
     SystemErrorEvent,
     SystemConfig,
     SupportTicket,
@@ -52,8 +52,6 @@ def public_cache_response(data, *, max_age: int = 300):
 
 class HealthCheckView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "health"
 
     def get(self, request):
         db_ok = True
@@ -153,8 +151,6 @@ class CMSPageDetailView(APIView):
 
 class CMSPublicPageView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "public_read"
 
     def get(self, request, slug):
         language = (request.query_params.get("language") or "ro").strip()
@@ -186,8 +182,6 @@ class CMSPublicPageView(APIView):
 
 class CMSPublicPreviewPageView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "public_read"
 
     def get(self, request, slug):
         language = (request.query_params.get("language") or "ro").strip().lower()
@@ -211,8 +205,6 @@ class CMSPublicPreviewPageView(APIView):
 
 class CMSMenuLinksView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "public_read"
 
     def get(self, request):
         language = (request.query_params.get("language") or "ro").strip()
@@ -234,8 +226,6 @@ class CMSMenuLinksView(APIView):
 
 class GeoLanguageView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "geo"
 
     COUNTRY_LANGUAGE_MAP = {
         "RO": "ro",
@@ -299,8 +289,6 @@ class GeoLanguageView(APIView):
 
 class SearchView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "search"
 
     def get(self, request):
         query = (request.query_params.get("q") or "").strip()
@@ -381,8 +369,6 @@ class SearchView(APIView):
 
 class AnalyticsTrackView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "analytics_track"
 
     def post(self, request):
         serializer = AnalyticsTrackSerializer(data=request.data)
@@ -392,10 +378,6 @@ class AnalyticsTrackView(APIView):
         source = serializer.validated_data.get("source", "frontend")
         session_id = serializer.validated_data.get("session_id", "")
         properties = serializer.validated_data.get("properties") or {}
-
-        # Guard against oversized JSON payloads and event-flood storage abuse.
-        if len(json.dumps(properties, ensure_ascii=True)) > 4096:
-            return Response({"detail": "properties payload is too large."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user if request.user and request.user.is_authenticated else None
         track_event(
@@ -577,24 +559,49 @@ class NotificationPreferenceView(APIView):
 class SupportTicketListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _serialize_message(row: SupportTicketMessage):
+        return {
+            "id": row.id,
+            "sender_role": row.sender_role,
+            "author_id": row.author_id,
+            "author_email": getattr(row.author, "email", "") if row.author_id else "",
+            "message": row.message,
+            "is_internal": row.is_internal,
+            "created_at": row.created_at,
+        }
+
+    @classmethod
+    def _serialize_ticket(cls, row: SupportTicket, *, include_messages: bool = False, include_internal: bool = False):
+        payload = {
+            "id": row.id,
+            "user_id": row.user_id,
+            "user_email": getattr(row.user, "email", ""),
+            "subject": row.subject,
+            "message": row.message,
+            "priority": row.priority,
+            "status": row.status,
+            "assigned_to_id": row.assigned_to_id,
+            "assigned_to_email": getattr(row.assigned_to, "email", "") if row.assigned_to_id else "",
+            "first_response_due_at": row.first_response_due_at,
+            "resolution_due_at": row.resolution_due_at,
+            "first_responded_at": row.first_responded_at,
+            "resolved_at": row.resolved_at,
+            "created_at": row.created_at,
+            "updated_at": row.updated_at,
+        }
+        if include_messages:
+            qs = row.messages.select_related("author").order_by("created_at")
+            if not include_internal:
+                qs = qs.filter(is_internal=False)
+            payload["messages"] = [cls._serialize_message(item) for item in qs]
+        return payload
+
     def get(self, request):
-        tickets = SupportTicket.objects.filter(user=request.user).order_by("-created_at")[:100]
+        tickets = SupportTicket.objects.filter(user=request.user).select_related("user", "assigned_to").order_by("-created_at")[:100]
         return Response(
             {
-                "items": [
-                    {
-                        "id": row.id,
-                        "subject": row.subject,
-                        "message": row.message,
-                        "priority": row.priority,
-                        "status": row.status,
-                        "first_response_due_at": row.first_response_due_at,
-                        "resolution_due_at": row.resolution_due_at,
-                        "created_at": row.created_at,
-                        "updated_at": row.updated_at,
-                    }
-                    for row in tickets
-                ]
+                "items": [self._serialize_ticket(row) for row in tickets]
             }
         )
 
@@ -615,26 +622,136 @@ class SupportTicketListCreateView(APIView):
             first_response_due_at=now + timedelta(hours=4),
             resolution_due_at=now + timedelta(hours=48),
         )
+        SupportTicketMessage.objects.create(
+            ticket=ticket,
+            author=request.user,
+            sender_role=SupportTicketMessage.SENDER_USER,
+            message=message,
+            is_internal=False,
+        )
         track_event(
             "support_ticket_created",
             source="backend",
             user=request.user,
             properties={},
         )
+        return Response(self._serialize_ticket(ticket, include_messages=True), status=status.HTTP_201_CREATED)
+
+
+class SupportTicketDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @staticmethod
+    def _is_staff_user(user) -> bool:
+        return bool(getattr(user, "is_staff", False) or getattr(user, "is_superuser", False))
+
+    def _get_ticket_for_request(self, request, ticket_id: int) -> SupportTicket | None:
+        qs = SupportTicket.objects.select_related("user", "assigned_to")
+        if self._is_staff_user(request.user):
+            return qs.filter(id=ticket_id).first()
+        return qs.filter(id=ticket_id, user=request.user).first()
+
+    def get(self, request, ticket_id: int):
+        ticket = self._get_ticket_for_request(request, ticket_id)
+        if not ticket:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        include_internal = self._is_staff_user(request.user)
+        return Response(SupportTicketListCreateView._serialize_ticket(ticket, include_messages=True, include_internal=include_internal))
+
+    def post(self, request, ticket_id: int):
+        ticket = self._get_ticket_for_request(request, ticket_id)
+        if not ticket:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        message = str(request.data.get("message") or "").strip()
+        if not message:
+            return Response({"detail": "message is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_staff = self._is_staff_user(request.user)
+        is_internal = bool(request.data.get("is_internal", False)) if is_staff else False
+        sender_role = SupportTicketMessage.SENDER_ADMIN if is_staff else SupportTicketMessage.SENDER_USER
+
+        reply = SupportTicketMessage.objects.create(
+            ticket=ticket,
+            author=request.user,
+            sender_role=sender_role,
+            message=message[:4000],
+            is_internal=is_internal,
+        )
+
+        now = timezone.now()
+        if is_staff:
+            new_status = str(request.data.get("status") or "").strip()
+            if new_status in {choice[0] for choice in SupportTicket.STATUS_CHOICES}:
+                ticket.status = new_status
+
+            new_priority = str(request.data.get("priority") or "").strip()
+            if new_priority in {choice[0] for choice in SupportTicket.PRIORITY_CHOICES}:
+                ticket.priority = new_priority
+
+            if ticket.assigned_to_id is None:
+                ticket.assigned_to = request.user
+
+            if not is_internal and ticket.first_responded_at is None:
+                ticket.first_responded_at = now
+
+            if ticket.status == SupportTicket.STATUS_RESOLVED:
+                if ticket.resolved_at is None:
+                    ticket.resolved_at = now
+            else:
+                ticket.resolved_at = None
+
+            ticket.save()
+
+            if not is_internal:
+                InAppNotification.objects.create(
+                    user=ticket.user,
+                    notification_type="support_ticket_reply",
+                    title=f"Support ticket #{ticket.id} updated",
+                    body=message[:180],
+                    context_key=str(ticket.id),
+                )
+                track_event(
+                    "support_ticket_updated",
+                    source="backend",
+                    user=ticket.user,
+                    properties={"ticket_id": ticket.id, "status": ticket.status},
+                )
+        else:
+            if ticket.status == SupportTicket.STATUS_RESOLVED:
+                ticket.status = SupportTicket.STATUS_IN_PROGRESS
+                ticket.resolved_at = None
+                ticket.save()
+
+        include_internal = is_staff
         return Response(
             {
-                "id": ticket.id,
-                "subject": ticket.subject,
-                "message": ticket.message,
-                "priority": ticket.priority,
-                "status": ticket.status,
-                "first_response_due_at": ticket.first_response_due_at,
-                "resolution_due_at": ticket.resolution_due_at,
-                "created_at": ticket.created_at,
-                "updated_at": ticket.updated_at,
+                "ok": True,
+                "reply": SupportTicketListCreateView._serialize_message(reply),
+                "ticket": SupportTicketListCreateView._serialize_ticket(ticket, include_messages=True, include_internal=include_internal),
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class SupportTicketAdminListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+        status_filter = str(request.query_params.get("status") or "").strip()
+        qs = SupportTicket.objects.select_related("user", "assigned_to").order_by("-updated_at")
+        if status_filter in {choice[0] for choice in SupportTicket.STATUS_CHOICES}:
+            qs = qs.filter(status=status_filter)
+
+        items = [
+            SupportTicketListCreateView._serialize_ticket(row)
+            for row in qs[:200]
+        ]
+        return Response({"items": items})
 
 
 class BackupRestoreRequestView(APIView):
@@ -869,8 +986,6 @@ class SettingsImageLibraryView(APIView):
 
 class ContactConfigView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "contact_config"
 
     def get(self, request):
         config = SystemConfig.get_solo()
@@ -885,8 +1000,6 @@ class ContactConfigView(APIView):
 
 class ContactSubmitView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "contact_submit"
 
     def post(self, request):
         full_name = str(request.data.get("full_name") or "").strip()
@@ -894,13 +1007,6 @@ class ContactSubmitView(APIView):
         subject = str(request.data.get("subject") or "").strip()
         message = str(request.data.get("message") or "").strip()
         recaptcha_token = str(request.data.get("recaptcha_token") or "").strip()
-
-        if len(full_name) > 120:
-            return Response({"detail": "Full name too long."}, status=status.HTTP_400_BAD_REQUEST)
-        if len(subject) > 180:
-            return Response({"detail": "Subject too long."}, status=status.HTTP_400_BAD_REQUEST)
-        if len(message) > 5000:
-            return Response({"detail": "Message too long."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not full_name:
             return Response({"detail": "Full name is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -944,7 +1050,7 @@ class ContactSubmitView(APIView):
         from_email = (
             config.contact_from_email
             or config.email_host_user
-            or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.app")
+            or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.eu")
         )
 
         body = (

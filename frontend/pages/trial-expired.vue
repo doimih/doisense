@@ -76,9 +76,9 @@ const copy: Record<string, {
     footer: 'Plăți securizate prin Stripe. Poți anula oricând.',
     compareLink: 'Compară toate planurile →',
     plans: [
-      { key: 'basic', tone: 'Simplu și clar', title: 'BASIC Start', price: '59 lei', period: '/ lună', action: 'Alege BASIC' },
-      { key: 'premium', tone: 'Echilibru și consistență', title: 'PREMIUM Flow', price: '129 lei', period: '/ lună', action: 'Alege PREMIUM' },
-      { key: 'vip', tone: 'Exclusiv și strategic', title: 'VIP Executive', price: '249 lei', period: '/ lună', action: 'Alege VIP' },
+      { key: 'basic', tone: 'Simplu și clar', title: 'BASIC Start', price: '€12', period: '/ lună', action: 'Alege BASIC' },
+      { key: 'premium', tone: 'Echilibru și consistență', title: 'PREMIUM Flow', price: '€25', period: '/ lună', action: 'Alege PREMIUM' },
+      { key: 'vip', tone: 'Exclusiv și strategic', title: 'VIP Executive', price: '€49', period: '/ lună', action: 'Alege VIP' },
     ],
   },
   en: {
@@ -88,9 +88,9 @@ const copy: Record<string, {
     footer: 'Secure payments via Stripe. Cancel anytime.',
     compareLink: 'Compare all plans →',
     plans: [
-      { key: 'basic', tone: 'Simple & practical', title: 'BASIC Start', price: '59 RON', period: '/ month', action: 'Choose BASIC' },
-      { key: 'premium', tone: 'Balanced & consistent', title: 'PREMIUM Flow', price: '129 RON', period: '/ month', action: 'Choose PREMIUM' },
-      { key: 'vip', tone: 'Exclusive & strategic', title: 'VIP Executive', price: '249 RON', period: '/ month', action: 'Choose VIP' },
+      { key: 'basic', tone: 'Simple & practical', title: 'BASIC Start', price: '€12', period: '/ month', action: 'Choose BASIC' },
+      { key: 'premium', tone: 'Balanced & consistent', title: 'PREMIUM Flow', price: '€25', period: '/ month', action: 'Choose PREMIUM' },
+      { key: 'vip', tone: 'Exclusive & strategic', title: 'VIP Executive', price: '€49', period: '/ month', action: 'Choose VIP' },
     ],
   },
   de: {
@@ -100,9 +100,9 @@ const copy: Record<string, {
     footer: 'Sichere Zahlung über Stripe. Jederzeit kündbar.',
     compareLink: 'Alle Pläne vergleichen →',
     plans: [
-      { key: 'basic', tone: 'Einfach & klar', title: 'BASIC Start', price: '59 RON', period: '/ Monat', action: 'BASIC wählen' },
-      { key: 'premium', tone: 'Ausgewogen & konsistent', title: 'PREMIUM Flow', price: '129 RON', period: '/ Monat', action: 'PREMIUM wählen' },
-      { key: 'vip', tone: 'Exklusiv & strategisch', title: 'VIP Executive', price: '249 RON', period: '/ Monat', action: 'VIP wählen' },
+      { key: 'basic', tone: 'Einfach & klar', title: 'BASIC Start', price: '€12', period: '/ Monat', action: 'BASIC wählen' },
+      { key: 'premium', tone: 'Ausgewogen & konsistent', title: 'PREMIUM Flow', price: '€25', period: '/ Monat', action: 'PREMIUM wählen' },
+      { key: 'vip', tone: 'Exklusiv & strategisch', title: 'VIP Executive', price: '€49', period: '/ Monat', action: 'VIP wählen' },
     ],
   },
   fr: {
@@ -112,9 +112,9 @@ const copy: Record<string, {
     footer: 'Paiements sécurisés via Stripe. Annulation à tout moment.',
     compareLink: 'Comparer tous les plans →',
     plans: [
-      { key: 'basic', tone: 'Simple et clair', title: 'BASIC Start', price: '59 RON', period: '/ mois', action: 'Choisir BASIC' },
-      { key: 'premium', tone: 'Équilibré et cohérent', title: 'PREMIUM Flow', price: '129 RON', period: '/ mois', action: 'Choisir PREMIUM' },
-      { key: 'vip', tone: 'Exclusif et stratégique', title: 'VIP Executive', price: '249 RON', period: '/ mois', action: 'Choisir VIP' },
+      { key: 'basic', tone: 'Simple et clair', title: 'BASIC Start', price: '€12', period: '/ mois', action: 'Choisir BASIC' },
+      { key: 'premium', tone: 'Équilibré et cohérent', title: 'PREMIUM Flow', price: '€25', period: '/ mois', action: 'Choisir PREMIUM' },
+      { key: 'vip', tone: 'Exclusif et stratégique', title: 'VIP Executive', price: '€49', period: '/ mois', action: 'Choisir VIP' },
     ],
   },
   it: {
@@ -124,9 +124,9 @@ const copy: Record<string, {
     footer: 'Pagamenti sicuri tramite Stripe. Cancella quando vuoi.',
     compareLink: 'Confronta tutti i piani →',
     plans: [
-      { key: 'basic', tone: 'Semplice e chiaro', title: 'BASIC Start', price: '59 RON', period: '/ mese', action: 'Scegli BASIC' },
-      { key: 'premium', tone: 'Equilibrato e costante', title: 'PREMIUM Flow', price: '129 RON', period: '/ mese', action: 'Scegli PREMIUM' },
-      { key: 'vip', tone: 'Esclusivo e strategico', title: 'VIP Executive', price: '249 RON', period: '/ mese', action: 'Scegli VIP' },
+      { key: 'basic', tone: 'Semplice e chiaro', title: 'BASIC Start', price: '€12', period: '/ mese', action: 'Scegli BASIC' },
+      { key: 'premium', tone: 'Equilibrato e costante', title: 'PREMIUM Flow', price: '€25', period: '/ mese', action: 'Scegli PREMIUM' },
+      { key: 'vip', tone: 'Esclusivo e strategico', title: 'VIP Executive', price: '€49', period: '/ mese', action: 'Scegli VIP' },
     ],
   },
   es: {
@@ -136,9 +136,9 @@ const copy: Record<string, {
     footer: 'Pagos seguros a través de Stripe. Cancela cuando quieras.',
     compareLink: 'Comparar todos los planes →',
     plans: [
-      { key: 'basic', tone: 'Simple y claro', title: 'BASIC Start', price: '59 RON', period: '/ mes', action: 'Elegir BASIC' },
-      { key: 'premium', tone: 'Equilibrado y constante', title: 'PREMIUM Flow', price: '129 RON', period: '/ mes', action: 'Elegir PREMIUM' },
-      { key: 'vip', tone: 'Exclusivo y estratégico', title: 'VIP Executive', price: '249 RON', period: '/ mes', action: 'Elegir VIP' },
+      { key: 'basic', tone: 'Simple y claro', title: 'BASIC Start', price: '€12', period: '/ mes', action: 'Elegir BASIC' },
+      { key: 'premium', tone: 'Equilibrado y constante', title: 'PREMIUM Flow', price: '€25', period: '/ mes', action: 'Elegir PREMIUM' },
+      { key: 'vip', tone: 'Exclusivo y estratégico', title: 'VIP Executive', price: '€49', period: '/ mes', action: 'Elegir VIP' },
     ],
   },
   pl: {
@@ -148,9 +148,9 @@ const copy: Record<string, {
     footer: 'Bezpieczne płatności przez Stripe. Anuluj w dowolnym momencie.',
     compareLink: 'Porównaj wszystkie plany →',
     plans: [
-      { key: 'basic', tone: 'Prosty i przejrzysty', title: 'BASIC Start', price: '59 RON', period: '/ miesiąc', action: 'Wybierz BASIC' },
-      { key: 'premium', tone: 'Zrównoważony i stały', title: 'PREMIUM Flow', price: '129 RON', period: '/ miesiąc', action: 'Wybierz PREMIUM' },
-      { key: 'vip', tone: 'Ekskluzywny i strategiczny', title: 'VIP Executive', price: '249 RON', period: '/ miesiąc', action: 'Wybierz VIP' },
+      { key: 'basic', tone: 'Prosty i przejrzysty', title: 'BASIC Start', price: '€12', period: '/ miesiąc', action: 'Wybierz BASIC' },
+      { key: 'premium', tone: 'Zrównoważony i stały', title: 'PREMIUM Flow', price: '€25', period: '/ miesiąc', action: 'Wybierz PREMIUM' },
+      { key: 'vip', tone: 'Ekskluzywny i strategiczny', title: 'VIP Executive', price: '€49', period: '/ miesiąc', action: 'Wybierz VIP' },
     ],
   },
 }

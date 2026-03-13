@@ -147,19 +147,92 @@ const { locale } = useI18n()
 
 const text = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  if (code === 'ro') {
-    return {
-      pause: 'Pauză program',
-      resume: 'Reia programul',
-      pausedNotice: 'Programul este pus pe pauză. Îl poți relua când ești gata.',
-      reflectionTitle: 'Reflecție ziua curentă',
-      reflectionPlaceholder: 'Scrie aici ce ai observat azi, ce a mers bine și ce vrei să ajustezi.',
-      saveReflection: 'Salvează reflecția',
-      saved: 'Reflecție salvată',
-      feedbackTitle: 'Feedback AI',
-    }
-  }
   return {
+    ro: {
+      pause: 'Pauza program',
+      resume: 'Reia programul',
+      pausedNotice: 'Programul este pus pe pauza. Il poti relua cand esti gata.',
+      reflectionTitle: 'Reflectie ziua curenta',
+      reflectionPlaceholder: 'Scrie aici ce ai observat azi, ce a mers bine si ce vrei sa ajustezi.',
+      saveReflection: 'Salveaza reflectia',
+      saved: 'Reflectie salvata',
+      feedbackTitle: 'Feedback AI',
+      seoFallbackTitle: 'Program ghidat - Doisense',
+      seoFallbackDescription: 'Progres program ghidat.',
+    },
+    en: {
+      pause: 'Pause program',
+      resume: 'Resume program',
+      pausedNotice: 'This program is currently paused. Resume when you are ready.',
+      reflectionTitle: 'Current day reflection',
+      reflectionPlaceholder: 'Write what you noticed today, what worked, and what you want to adjust next.',
+      saveReflection: 'Save reflection',
+      saved: 'Reflection saved',
+      feedbackTitle: 'AI feedback',
+      seoFallbackTitle: 'Guided program - Doisense',
+      seoFallbackDescription: 'Guided program progress.',
+    },
+    de: {
+      pause: 'Programm pausieren',
+      resume: 'Programm fortsetzen',
+      pausedNotice: 'Dieses Programm ist pausiert. Setze es fort, wenn du bereit bist.',
+      reflectionTitle: 'Tagesreflexion',
+      reflectionPlaceholder: 'Schreibe, was du heute bemerkt hast, was gut lief und was du anpassen willst.',
+      saveReflection: 'Reflexion speichern',
+      saved: 'Reflexion gespeichert',
+      feedbackTitle: 'KI-Feedback',
+      seoFallbackTitle: 'Gefuehrtes Programm - Doisense',
+      seoFallbackDescription: 'Fortschritt im gefuehrten Programm.',
+    },
+    fr: {
+      pause: 'Mettre en pause',
+      resume: 'Reprendre le programme',
+      pausedNotice: 'Ce programme est en pause. Reprenez-le quand vous etes pret.',
+      reflectionTitle: 'Reflexion du jour',
+      reflectionPlaceholder: 'Ecrivez ce que vous avez remarque aujourd\'hui, ce qui a fonctionne et ce que vous voulez ajuster.',
+      saveReflection: 'Enregistrer la reflexion',
+      saved: 'Reflexion enregistree',
+      feedbackTitle: 'Feedback IA',
+      seoFallbackTitle: 'Programme guide - Doisense',
+      seoFallbackDescription: 'Progression du programme guide.',
+    },
+    it: {
+      pause: 'Metti in pausa il programma',
+      resume: 'Riprendi il programma',
+      pausedNotice: 'Questo programma e in pausa. Riprendilo quando sei pronto.',
+      reflectionTitle: 'Riflessione del giorno',
+      reflectionPlaceholder: 'Scrivi cosa hai notato oggi, cosa ha funzionato e cosa vuoi migliorare.',
+      saveReflection: 'Salva riflessione',
+      saved: 'Riflessione salvata',
+      feedbackTitle: 'Feedback AI',
+      seoFallbackTitle: 'Programma guidato - Doisense',
+      seoFallbackDescription: 'Progresso del programma guidato.',
+    },
+    es: {
+      pause: 'Pausar programa',
+      resume: 'Reanudar programa',
+      pausedNotice: 'Este programa esta en pausa. Reanudalo cuando estes listo.',
+      reflectionTitle: 'Reflexion del dia',
+      reflectionPlaceholder: 'Escribe que notaste hoy, que funciono y que quieres ajustar.',
+      saveReflection: 'Guardar reflexion',
+      saved: 'Reflexion guardada',
+      feedbackTitle: 'Feedback IA',
+      seoFallbackTitle: 'Programa guiado - Doisense',
+      seoFallbackDescription: 'Progreso del programa guiado.',
+    },
+    pl: {
+      pause: 'Wstrzymaj program',
+      resume: 'Wznow program',
+      pausedNotice: 'Ten program jest wstrzymany. Wznow go, gdy bedziesz gotowy.',
+      reflectionTitle: 'Refleksja dnia',
+      reflectionPlaceholder: 'Napisz, co dzisiaj zauwazyles, co zadzialalo i co chcesz poprawic.',
+      saveReflection: 'Zapisz refleksje',
+      saved: 'Refleksja zapisana',
+      feedbackTitle: 'Informacja zwrotna AI',
+      seoFallbackTitle: 'Program prowadzony - Doisense',
+      seoFallbackDescription: 'Postep w programie prowadzonym.',
+    },
+  }[code] || {
     pause: 'Pause program',
     resume: 'Resume program',
     pausedNotice: 'This program is currently paused. Resume when you are ready.',
@@ -168,12 +241,14 @@ const text = computed(() => {
     saveReflection: 'Save reflection',
     saved: 'Reflection saved',
     feedbackTitle: 'AI feedback',
+    seoFallbackTitle: 'Guided program - Doisense',
+    seoFallbackDescription: 'Guided program progress.',
   }
 })
 
 usePublicSeo({
-  title: computed(() => day.value ? `${day.value.title} - Doisense` : 'Program ghidat - Doisense'),
-  description: 'Progres program ghidat.',
+  title: computed(() => day.value ? `${day.value.title} - Doisense` : text.value.seoFallbackTitle),
+  description: computed(() => text.value.seoFallbackDescription),
   noindex: true,
 })
 

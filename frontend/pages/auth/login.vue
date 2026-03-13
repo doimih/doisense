@@ -7,7 +7,7 @@
         type="button"
         class="rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-700 hover:bg-stone-50"
         :disabled="socialLoading === 'google'"
-        aria-label="Continue with Google"
+        :aria-label="socialLabels.google"
         @click="loginWithGoogle"
       >
         <span v-if="socialLoading === 'google'">...</span>
@@ -20,7 +20,7 @@
         type="button"
         class="rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-700 hover:bg-stone-50"
         :disabled="socialLoading === 'apple'"
-        aria-label="Continue with Apple"
+        :aria-label="socialLabels.apple"
         @click="loginWithApple"
       >
         <span v-if="socialLoading === 'apple'">...</span>
@@ -84,6 +84,19 @@ const password = ref('')
 const error = ref('')
 const loading = ref(false)
 const socialLoading = ref<'' | 'google' | 'apple'>('')
+
+const socialLabels = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: { google: 'Continua cu Google', apple: 'Continua cu Apple' },
+    en: { google: 'Continue with Google', apple: 'Continue with Apple' },
+    de: { google: 'Mit Google fortfahren', apple: 'Mit Apple fortfahren' },
+    fr: { google: 'Continuer avec Google', apple: 'Continuer avec Apple' },
+    it: { google: 'Continua con Google', apple: 'Continua con Apple' },
+    es: { google: 'Continuar con Google', apple: 'Continuar con Apple' },
+    pl: { google: 'Kontynuuj z Google', apple: 'Kontynuuj z Apple' },
+  }[code] || { google: 'Continue with Google', apple: 'Continue with Apple' }
+})
 
 usePublicSeo({
   title: computed(() => `${t('auth.login')} - Doisense`),

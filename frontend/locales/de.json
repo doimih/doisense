@@ -57,7 +57,17 @@
     "save": "Speichern",
     "saving": "Wird gespeichert...",
     "saved": "Gespeichert.",
-    "noQuestions": "Keine Fragen verfügbar"
+    "noQuestions": "Keine Fragen verfügbar",
+    "categories": {
+      "emotions": "Gefühle",
+      "daily": "Tägliche Reflexionen",
+      "goals": "Ziele & Fortschritt",
+      "wellness": "Wohlbefinden",
+      "relationships": "Beziehungen",
+      "health": "Gesundheit",
+      "work": "Arbeit & Karriere",
+      "general": "Allgemein"
+    }
   },
   "programs": {
     "noDescription": "Keine Beschreibung.",

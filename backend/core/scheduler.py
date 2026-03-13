@@ -31,7 +31,22 @@ DEFAULT_SCHEDULER_TASKS = [
     SchedulerTaskDefinition("send_inactivity_reminders", "Send Inactivity Reminders", "send_inactivity_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 9),
     SchedulerTaskDefinition("send_reactivation_campaign", "Send Reactivation Campaign", "send_reactivation_campaign", PlatformScheduledJob.SCHEDULE_DAILY, 0, 11),
     SchedulerTaskDefinition("ai_update_profiles", "Refresh AI Profiles", "ai_update_profiles", PlatformScheduledJob.SCHEDULE_DAILY, 0, 2),
+    SchedulerTaskDefinition("verify_backup_flow", "Verify Backup Flow", "verify_backup_flow", PlatformScheduledJob.SCHEDULE_DAILY, 30, 3),
 ]
+
+
+def sync_default_scheduler_tasks() -> None:
+    for task in DEFAULT_SCHEDULER_TASKS:
+        defaults = {
+            "label": task.label,
+            "command_name": task.command_name,
+            "schedule_type": task.schedule_type,
+            "minute_of_hour": task.minute_of_hour,
+            "hour_of_day": task.hour_of_day,
+            "weekday": task.weekday,
+            "enabled": True,
+        }
+        PlatformScheduledJob.objects.update_or_create(code=task.code, defaults=defaults)
 
 
 def execute_scheduled_job(job: PlatformScheduledJob, *, now=None) -> tuple[bool, str]:

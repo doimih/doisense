@@ -11,7 +11,7 @@
     <!-- Page Header -->
     <div v-else class="mb-8">
       <h1 class="text-3xl font-bold text-slate-900 mb-2">{{ $t('nav.journal') }}</h1>
-      <p class="text-slate-600">{{ $t('journal.description') || 'Reflect on your daily experiences with guided questions.' }}</p>
+      <p class="text-slate-600">{{ $t('journal.description') }}</p>
     </div>
 
     <!-- Loading State -->
@@ -49,7 +49,7 @@
       <svg class="w-12 h-12 text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7 20H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-1.414 0l-2.414-2.414a1 1 0 00-.707-.293z" />
       </svg>
-      <p class="text-slate-600 text-lg">{{ $t('journal.noQuestions') || 'No questions available' }}</p>
+      <p class="text-slate-600 text-lg">{{ $t('journal.noQuestions') }}</p>
     </div>
   </div>
 </template>
@@ -96,7 +96,7 @@ const seoDescriptions: Record<string, string> = {
   fr: 'Réfléchissez à vos expériences quotidiennes avec des questions guidées.',
 }
 
-const currentLang = computed(() => locale.value || 'en')
+const currentLang = computed(() => (locale.value || 'en').slice(0, 2).toLowerCase())
 
 usePublicSeo({
   title: computed(() => seoTitles[currentLang.value]),
@@ -124,44 +124,74 @@ const groupedQuestions = computed(() => {
   return sorted as CategoryGroup[]
 })
 
-// Category label mapping (translatable)
-const categoryLabels: Record<string, string> = {
-  'emotions': 'Emotions',
-  'daily': 'Daily Reflections',
-  'goals': 'Goals & Progress',
-  'wellness': 'Wellness',
-  'relationships': 'Relationships',
-  'health': 'Health',
-  'work': 'Work & Career',
-  'general': 'General',
-  // Romanian
-  'emotii': 'Emoții',
-  'zilnic': 'Reflecții Zilnice',
-  'obiective': 'Obiective și Progres',
-  'binestare': 'Bine-ființă',
-  'relatii': 'Relații',
-  'sanatate': 'Sănătate',
-  'munca': 'Muncă și Carieră',
-  // German
-  'gefühle': 'Gefühle',
-  'täglich': 'Tägliche Überlegungen',
-  'ziele': 'Ziele & Fortschritt',
-  'wohlbefinden': 'Wohlbefinden',
-  'beziehungen': 'Beziehungen',
-  'gesundheit': 'Gesundheit',
-  'arbeit': 'Arbeit & Karriere',
-  // Italian
-  'emozioni': 'Emozioni',
-  'quotidiano': 'Riflessioni Quotidiane',
-  'obiettivi': 'Obiettivi e Progresso',
-  'benessere': 'Benessere',
-  'relazioni': 'Relazioni',
-  'salute': 'Salute',
-  'lavoro': 'Lavoro e Carriera',
+const categoryAliases: Record<string, string> = {
+  emotions: 'emotions',
+  emotii: 'emotions',
+  emoties: 'emotions',
+  gefuhle: 'emotions',
+  emozioni: 'emotions',
+  emociones: 'emotions',
+  emocje: 'emotions',
+  daily: 'daily',
+  zilnic: 'daily',
+  quotidien: 'daily',
+  taglich: 'daily',
+  quotidiano: 'daily',
+  diario: 'daily',
+  codzienne: 'daily',
+  goals: 'goals',
+  obiective: 'goals',
+  objectifs: 'goals',
+  ziele: 'goals',
+  obiettivi: 'goals',
+  objetivos: 'goals',
+  cele: 'goals',
+  wellness: 'wellness',
+  binestare: 'wellness',
+  bienetre: 'wellness',
+  wohlbefinden: 'wellness',
+  benessere: 'wellness',
+  bienestar: 'wellness',
+  dobrostan: 'wellness',
+  relationships: 'relationships',
+  relatii: 'relationships',
+  relations: 'relationships',
+  beziehungen: 'relationships',
+  relazioni: 'relationships',
+  relaciones: 'relationships',
+  health: 'health',
+  sanatate: 'health',
+  sante: 'health',
+  gesundheit: 'health',
+  salute: 'health',
+  salud: 'health',
+  zdrowie: 'health',
+  work: 'work',
+  munca: 'work',
+  travail: 'work',
+  arbeit: 'work',
+  lavoro: 'work',
+  trabajo: 'work',
+  praca: 'work',
+  general: 'general',
+}
+
+function normalizeCategoryKey(category: string): string {
+  const normalized = category
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '_')
+
+  const compact = normalized.replace(/_/g, '')
+  return categoryAliases[compact] || 'general'
 }
 
 function getCategoryLabel(category: string): string {
-  return categoryLabels[category.toLowerCase()] || category
+  const key = normalizeCategoryKey(category)
+  return t(`journal.categories.${key}`)
 }
 
 onMounted(async () => {

@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import environ
-from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
 
 env = environ.Env(DEBUG=(bool, False))
@@ -18,10 +17,7 @@ ADMIN_STATIC_URL = env("STATIC_URL", default="/doisense/ro/admin/static/")
 
 SECRET_KEY = env("SECRET_KEY", default="dev-secret-change-in-production")
 DEBUG = env("DEBUG", default=False)
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", "backend", "projects.doimih.net"])
-
-if not DEBUG and SECRET_KEY == "dev-secret-change-in-production":
-    raise ImproperlyConfigured("SECRET_KEY must be set in production.")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
 INSTALLED_APPS = [
     "unfold",
@@ -60,6 +56,7 @@ UNFOLD = {
     ],
     "SCRIPTS": [
         f"{ADMIN_STATIC_URL}admin/js/unfold_wysiwyg_toolbar.js",
+        f"{ADMIN_STATIC_URL}admin/js/unfold_sidebar_accordion.js",
     ],
     "DASHBOARD_CALLBACK": "core.admin_dashboard.dashboard_callback",
     "SIDEBAR": {
@@ -78,6 +75,7 @@ UNFOLD = {
             {
                 "title": "Users",
                 "separator": True,
+                "collapsible": True,
                 "items": [
                     {
                         "title": "Accounts",
@@ -128,9 +126,9 @@ UNFOLD = {
                         "permission": _perm("ai.view_conversationtemplate"),
                     },
                     {
-                        "title": "Email Settings (SMTP)",
+                        "title": "Setari email",
                         "icon": "mail",
-                        "link": lambda request: reverse("admin:core_systemconfig_changelist"),
+                        "link": lambda request: reverse("admin:core_systemconfig_email_settings"),
                         "permission": _perm("core.view_systemconfig"),
                     },
                     {
@@ -167,6 +165,7 @@ UNFOLD = {
             },
             {
                 "title": "Automation",
+                "collapsible": True,
                 "items": [
                     {
                         "title": "Task Scheduler",
@@ -183,7 +182,38 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Storage",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Setari",
+                        "icon": "settings",
+                        "link": lambda request: reverse("admin:core_systemconfig_storage_settings"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "Test",
+                        "icon": "cloud_done",
+                        "link": lambda request: reverse("admin:core_systemconfig_test_storage"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "Test flux backup",
+                        "icon": "published_with_changes",
+                        "link": lambda request: reverse("admin:core_systemconfig_test_backup_flow"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "Log backup",
+                        "icon": "receipt_long",
+                        "link": lambda request: reverse("admin:core_backupverificationlog_changelist"),
+                        "permission": _perm("core.view_backupverificationlog"),
+                    },
+                ],
+            },
+            {
                 "title": "Activity",
+                "collapsible": True,
                 "items": [
                     {
                         "title": "Journal Entries",
@@ -201,6 +231,7 @@ UNFOLD = {
             },
             {
                 "title": "Support",
+                "collapsible": True,
                 "items": [
                     {
                         "title": "Support Tickets",
@@ -213,6 +244,7 @@ UNFOLD = {
             {
                 "title": "LOG-uri",
                 "separator": True,
+                "collapsible": True,
                 "items": [
                     {
                         "title": "Analytics Events",
@@ -261,12 +293,6 @@ UNFOLD = {
                         "icon": "admin_panel_settings",
                         "link": lambda request: reverse("admin:core_adminauditlog_changelist"),
                         "permission": _perm("core.view_adminauditlog"),
-                    },
-                    {
-                        "title": "Backup Verification",
-                        "icon": "backup",
-                        "link": lambda request: reverse("admin:core_backupverificationlog_changelist"),
-                        "permission": _perm("core.view_backupverificationlog"),
                     },
                     {
                         "title": "Backup Restore Requests",
@@ -402,8 +428,6 @@ STATIC_URL = ADMIN_STATIC_URL
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = env("MEDIA_URL", default="/doisense/media/")
 MEDIA_ROOT = BASE_DIR / "media"
-DATA_UPLOAD_MAX_MEMORY_SIZE = env.int("DATA_UPLOAD_MAX_MEMORY_SIZE", default=2 * 1024 * 1024)
-FILE_UPLOAD_MAX_MEMORY_SIZE = env.int("FILE_UPLOAD_MAX_MEMORY_SIZE", default=8 * 1024 * 1024)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
 
@@ -414,21 +438,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
-        "rest_framework.throttling.ScopedRateThrottle",
-    ),
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "120/minute",
-        "user": "600/minute",
-        "public_read": "120/minute",
-        "health": "30/minute",
-        "search": "60/minute",
-        "geo": "120/minute",
-        "analytics_track": "60/minute",
-        "contact_submit": "10/minute",
-        "contact_config": "30/minute",
         "auth_register": "20/hour",
         "auth_activate": "60/hour",
         "auth_login": "30/hour",
@@ -454,38 +464,20 @@ CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     default=["https://projects.doimih.net", "http://localhost:3000"],
 )
-CORS_ALLOW_CREDENTIALS = False
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
     default=["https://projects.doimih.net", "http://localhost:3000"],
 )
-
-USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=not DEBUG)
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
-
-SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "Lax"
-
-CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = "Lax"
-
-SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000 if not DEBUG else 0)
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG)
-SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
-
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
-SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
-X_FRAME_OPTIONS = "DENY"
 
 FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default="https://projects.doimih.net/doisense")
 
 # Stripe
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_PRODUCT_ID_BASIC = env("STRIPE_PRODUCT_ID_BASIC", default="")
+STRIPE_PRODUCT_ID_PREMIUM = env("STRIPE_PRODUCT_ID_PREMIUM", default="")
+STRIPE_PRODUCT_ID_VIP = env("STRIPE_PRODUCT_ID_VIP", default="")
+# Deprecated: kept for backward compatibility
 STRIPE_PRICE_ID_PREMIUM = env("STRIPE_PRICE_ID_PREMIUM", default="")
 
 # AI

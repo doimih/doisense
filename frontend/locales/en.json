@@ -57,7 +57,17 @@
     "save": "Save",
     "saving": "Saving...",
     "saved": "Saved.",
-    "noQuestions": "No questions available"
+    "noQuestions": "No questions available",
+    "categories": {
+      "emotions": "Emotions",
+      "daily": "Daily Reflections",
+      "goals": "Goals & Progress",
+      "wellness": "Wellbeing",
+      "relationships": "Relationships",
+      "health": "Health",
+      "work": "Work & Career",
+      "general": "General"
+    }
   },
   "programs": {
     "noDescription": "No description.",

@@ -57,7 +57,17 @@
     "save": "Enregistrer",
     "saving": "Enregistrement en cours...",
     "saved": "Enregistré.",
-    "noQuestions": "Aucune question disponible"
+    "noQuestions": "Aucune question disponible",
+    "categories": {
+      "emotions": "Émotions",
+      "daily": "Réflexions quotidiennes",
+      "goals": "Objectifs et progrès",
+      "wellness": "Bien-être",
+      "relationships": "Relations",
+      "health": "Santé",
+      "work": "Travail et carrière",
+      "general": "Général"
+    }
   },
   "programs": {
     "noDescription": "Aucune description.",

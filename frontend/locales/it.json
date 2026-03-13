@@ -57,7 +57,17 @@
     "save": "Salva",
     "saving": "Salvataggio in corso...",
     "saved": "Salvato.",
-    "noQuestions": "Nessuna domanda disponibile"
+    "noQuestions": "Nessuna domanda disponibile",
+    "categories": {
+      "emotions": "Emozioni",
+      "daily": "Riflessioni quotidiane",
+      "goals": "Obiettivi e progresso",
+      "wellness": "Benessere",
+      "relationships": "Relazioni",
+      "health": "Salute",
+      "work": "Lavoro e carriera",
+      "general": "Generale"
+    }
   },
   "programs": {
     "noDescription": "Nessuna descrizione.",

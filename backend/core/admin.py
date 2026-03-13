@@ -1,8 +1,11 @@
 import imghdr
 import os
 import re
+import traceback
 import time
 
+import boto3
+from botocore.config import Config
 from django.conf import settings
 from django import forms
 from django.contrib import admin, messages
@@ -31,6 +34,7 @@ from .models import (
     PlatformScheduledJob,
     RecaptchaConfig,
     SupportTicket,
+    SupportTicketMessage,
     StripeConfig,
     SystemConfig,
     SystemErrorEvent,
@@ -59,6 +63,13 @@ class SystemConfigAdminForm(forms.ModelForm):
             "stripe_secret_key",
             "stripe_webhook_secret",
             "stripe_price_id_premium",
+            "stripe_price_id_basic",
+            "stripe_price_id_vip",
+            "stripe_product_id_basic",
+            "stripe_product_id_premium",
+            "stripe_product_id_vip",
+            "backup_access_key_id",
+            "backup_secret_access_key",
             "ai_openai_api_key",
             "ai_anthropic_api_key",
             "recaptcha_secret_key",
@@ -109,12 +120,40 @@ class SystemConfigAdmin(ModelAdmin):
                 )
             },
         ),
+        (
+            "Storage",
+            {
+                "fields": (
+                    "backup_enabled",
+                    "backup_s3_endpoint",
+                    "backup_s3_bucket",
+                    "backup_s3_path_prefix",
+                    "backup_access_key_id",
+                    "backup_secret_access_key",
+                    "backup_region",
+                    "backup_force_path_style",
+                    "backup_schedule_minutes",
+                    "backup_delta_max_steps",
+                    "backup_retention_full_count",
+                )
+            },
+        ),
 
     )
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
+            path(
+                "email-settings/",
+                self.admin_site.admin_view(self.email_settings_view),
+                name="core_systemconfig_email_settings",
+            ),
+            path(
+                "storage-settings/",
+                self.admin_site.admin_view(self.storage_settings_view),
+                name="core_systemconfig_storage_settings",
+            ),
             path(
                 "test-email/",
                 self.admin_site.admin_view(self.send_test_email),
@@ -125,8 +164,52 @@ class SystemConfigAdmin(ModelAdmin):
                 self.admin_site.admin_view(self.media_library_view),
                 name="core_media_library",
             ),
+            path(
+                "test-storage/",
+                self.admin_site.admin_view(self.test_storage),
+                name="core_systemconfig_test_storage",
+            ),
+            path(
+                "test-backup-flow/",
+                self.admin_site.admin_view(self.test_backup_flow),
+                name="core_systemconfig_test_backup_flow",
+            ),
         ]
         return custom_urls + urls
+
+    def email_settings_view(self, request):
+        url = reverse("admin:core_systemconfig_changelist")
+        return HttpResponseRedirect(f"{url}?tab=Contact%20%26%20Email&scope=email")
+
+    def storage_settings_view(self, request):
+        url = reverse("admin:core_systemconfig_changelist")
+        return HttpResponseRedirect(f"{url}?tab=Storage&scope=storage")
+
+    def _validate_backup_storage_config(self, config):
+        missing_fields = []
+        if not config.backup_s3_endpoint:
+            missing_fields.append("endpoint")
+        if not config.backup_s3_bucket:
+            missing_fields.append("bucket")
+        if not config.backup_access_key_id:
+            missing_fields.append("access key")
+        if not config.backup_secret_access_key:
+            missing_fields.append("secret key")
+        return missing_fields
+
+    def _build_backup_storage_client(self, config):
+        return boto3.client(
+            "s3",
+            endpoint_url=(config.backup_s3_endpoint or "").strip(),
+            aws_access_key_id=config.backup_access_key_id,
+            aws_secret_access_key=config.backup_secret_access_key,
+            region_name=config.backup_region or None,
+            config=Config(
+                s3={
+                    "addressing_style": "path" if config.backup_force_path_style else "auto"
+                }
+            ),
+        )
 
     def media_library_view(self, request):
         if not request.user.is_superuser:
@@ -254,7 +337,7 @@ class SystemConfigAdmin(ModelAdmin):
             from_email = (
                 config.contact_from_email
                 or config.email_host_user
-                or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.app")
+                or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.eu")
             )
             message = EmailMessage(
                 subject="Doisense SMTP test",
@@ -275,6 +358,131 @@ class SystemConfigAdmin(ModelAdmin):
                 f"Failed to send test email: {exc}",
                 level=messages.ERROR,
             )
+
+        return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+    def test_storage(self, request):
+        config = SystemConfig.get_solo()
+
+        if not config.backup_enabled:
+            self.message_user(
+                request,
+                "Storage test skipped: backup storage is disabled in the Storage tab.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+        missing_fields = self._validate_backup_storage_config(config)
+
+        if missing_fields:
+            self.message_user(
+                request,
+                f"Storage test failed: missing {', '.join(missing_fields)} in the Storage tab.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+        endpoint = (config.backup_s3_endpoint or "").strip()
+        if not re.match(r"^https?://", endpoint):
+            self.message_user(
+                request,
+                "Storage test failed: endpoint must start with http:// or https://.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+        if "your-objectstorage.com" in endpoint:
+            self.message_user(
+                request,
+                "Storage test warning: endpoint still contains placeholder host your-objectstorage.com.",
+                level=messages.WARNING,
+            )
+
+        try:
+            client = self._build_backup_storage_client(config)
+            client.head_bucket(Bucket=config.backup_s3_bucket)
+            client.list_objects_v2(Bucket=config.backup_s3_bucket, MaxKeys=1)
+            self.message_user(
+                request,
+                f"Storage test passed for bucket {config.backup_s3_bucket} via {endpoint}.",
+                level=messages.SUCCESS,
+            )
+        except Exception as exc:
+            self.message_user(
+                request,
+                f"Storage test failed: {exc}",
+                level=messages.ERROR,
+            )
+
+        return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+    def test_backup_flow(self, request):
+        config = SystemConfig.get_solo()
+
+        if not config.backup_enabled:
+            self.message_user(
+                request,
+                "Backup flow test skipped: backup storage is disabled in the Storage tab.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+        missing_fields = self._validate_backup_storage_config(config)
+        if missing_fields:
+            self.message_user(
+                request,
+                f"Backup flow test failed: missing {', '.join(missing_fields)} in the Storage tab.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+        endpoint = (config.backup_s3_endpoint or "").strip()
+        prefix = (config.backup_s3_path_prefix or "").strip().strip("/")
+
+        try:
+            client = self._build_backup_storage_client(config)
+            client.head_bucket(Bucket=config.backup_s3_bucket)
+            response = client.list_objects_v2(
+                Bucket=config.backup_s3_bucket,
+                Prefix=f"{prefix}/" if prefix else "",
+                MaxKeys=20,
+            )
+            contents = response.get("Contents", [])
+            if not contents:
+                notes = (
+                    f"Bucket reachable via {endpoint}, but no backup objects were found "
+                    f"under prefix '{prefix or '/'}'."
+                )
+                BackupVerificationLog.objects.create(
+                    status=BackupVerificationLog.STATUS_FAILED,
+                    source="admin_test_backup_flow",
+                    notes=notes,
+                )
+                self.message_user(request, notes, level=messages.ERROR)
+                return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
+
+            sample_keys = ", ".join(item.get("Key", "") for item in contents[:3])
+            notes = (
+                f"Backup flow test passed for bucket {config.backup_s3_bucket} "
+                f"with prefix '{prefix or '/'}'. Found {len(contents)} object(s). Sample: {sample_keys}"
+            )
+            BackupVerificationLog.objects.create(
+                status=BackupVerificationLog.STATUS_SUCCESS,
+                source="admin_test_backup_flow",
+                notes=notes,
+            )
+            self.message_user(request, notes, level=messages.SUCCESS)
+        except Exception as exc:
+            notes = (
+                f"Backup flow test failed for bucket {config.backup_s3_bucket}: {exc}\n\n"
+                f"{traceback.format_exc(limit=3)}"
+            )
+            BackupVerificationLog.objects.create(
+                status=BackupVerificationLog.STATUS_FAILED,
+                source="admin_test_backup_flow",
+                notes=notes,
+            )
+            self.message_user(request, f"Backup flow test failed: {exc}", level=messages.ERROR)
 
         return HttpResponseRedirect(reverse("admin:core_systemconfig_changelist"))
 
@@ -348,6 +556,16 @@ class SupportTicketAdmin(ModelAdmin):
                 after_data=after_data,
                 reason="Support ticket updated from admin",
             )
+
+
+class SupportTicketMessageInline(admin.TabularInline):
+    model = SupportTicketMessage
+    extra = 1
+    fields = ("sender_role", "author", "message", "is_internal", "created_at")
+    readonly_fields = ("created_at",)
+
+
+SupportTicketAdmin.inlines = (SupportTicketMessageInline,)
 
 
 @admin.register(BackupRestoreRequest)
@@ -591,12 +809,31 @@ class OAuthConfigAdmin(SingletonProxyConfigAdmin):
 class StripeConfigAdmin(SingletonProxyConfigAdmin):
     fieldsets = (
         (
-            "Stripe",
+            "API Keys",
             {
                 "fields": (
                     "stripe_secret_key",
                     "stripe_webhook_secret",
+                )
+            },
+        ),
+        (
+            "Price IDs (Legacy - for subscriptions)",
+            {
+                "fields": (
+                    "stripe_price_id_basic",
                     "stripe_price_id_premium",
+                    "stripe_price_id_vip",
+                )
+            },
+        ),
+        (
+            "Product IDs (Modern)",
+            {
+                "fields": (
+                    "stripe_product_id_basic",
+                    "stripe_product_id_premium",
+                    "stripe_product_id_vip",
                 )
             },
         ),

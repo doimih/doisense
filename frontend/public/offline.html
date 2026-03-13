@@ -77,17 +77,95 @@
   </head>
   <body>
     <main class="card">
-      <h1>You are offline</h1>
-      <p>
+      <h1 id="offline-title">You are offline</h1>
+      <p id="offline-description">
         Doisense cannot reach the network right now. You can retry when your connection is restored.
       </p>
       <div class="actions">
         <button id="retry-btn" type="button">Retry now</button>
-        <a href="/doisense/">Return to Doisense</a>
+        <a id="return-link" href="/doisense/">Return to Doisense</a>
       </div>
     </main>
 
     <script>
+      const SUPPORTED_LANGUAGES = ["ro", "en", "de", "fr", "it", "es", "pl"];
+      const COPY = {
+        ro: {
+          pageTitle: "Doisense - Offline",
+          title: "Esti offline",
+          description: "Doisense nu poate ajunge acum la retea. Poti reincerca imediat ce conexiunea revine.",
+          retry: "Incearca din nou",
+          returnHome: "Inapoi la Doisense",
+        },
+        en: {
+          pageTitle: "Doisense - Offline",
+          title: "You are offline",
+          description: "Doisense cannot reach the network right now. You can retry when your connection is restored.",
+          retry: "Retry now",
+          returnHome: "Return to Doisense",
+        },
+        de: {
+          pageTitle: "Doisense - Offline",
+          title: "Du bist offline",
+          description: "Doisense kann das Netzwerk gerade nicht erreichen. Du kannst es erneut versuchen, sobald die Verbindung wieder da ist.",
+          retry: "Erneut versuchen",
+          returnHome: "Zuruck zu Doisense",
+        },
+        fr: {
+          pageTitle: "Doisense - Hors ligne",
+          title: "Vous etes hors ligne",
+          description: "Doisense ne peut pas acceder au reseau pour le moment. Vous pouvez reessayer des que la connexion revient.",
+          retry: "Reessayer",
+          returnHome: "Retour a Doisense",
+        },
+        it: {
+          pageTitle: "Doisense - Offline",
+          title: "Sei offline",
+          description: "Doisense non riesce a raggiungere la rete in questo momento. Puoi riprovare quando la connessione torna disponibile.",
+          retry: "Riprova ora",
+          returnHome: "Torna a Doisense",
+        },
+        es: {
+          pageTitle: "Doisense - Sin conexion",
+          title: "Estas sin conexion",
+          description: "Doisense no puede conectarse a la red ahora mismo. Puedes volver a intentarlo cuando se restablezca la conexion.",
+          retry: "Reintentar",
+          returnHome: "Volver a Doisense",
+        },
+        pl: {
+          pageTitle: "Doisense - Offline",
+          title: "Jestes offline",
+          description: "Doisense nie moze teraz polaczyc sie z siecia. Sprobuj ponownie, gdy polaczenie zostanie przywrocone.",
+          retry: "Sprobuj ponownie",
+          returnHome: "Wroc do Doisense",
+        },
+      };
+
+      function normalizeLanguage(value) {
+        if (!value) return "en";
+        const candidate = String(value).trim().toLowerCase().replace("_", "-");
+        const code = candidate.split(",", 1)[0].split(";", 1)[0].split("-", 1)[0];
+        return SUPPORTED_LANGUAGES.includes(code) ? code : "en";
+      }
+
+      function detectLanguage() {
+        const cookieMatch = document.cookie.match(/(?:^|; )i18n_redirect=([^;]+)/);
+        if (cookieMatch?.[1]) return normalizeLanguage(decodeURIComponent(cookieMatch[1]));
+        if (navigator.languages?.length) return normalizeLanguage(navigator.languages[0]);
+        return normalizeLanguage(navigator.language);
+      }
+
+      function applyCopy() {
+        const language = detectLanguage();
+        const copy = COPY[language] || COPY.en;
+        document.documentElement.lang = language;
+        document.title = copy.pageTitle;
+        document.getElementById("offline-title").textContent = copy.title;
+        document.getElementById("offline-description").textContent = copy.description;
+        document.getElementById("retry-btn").textContent = copy.retry;
+        document.getElementById("return-link").textContent = copy.returnHome;
+      }
+
       async function clearSwAndCaches() {
         if ("serviceWorker" in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
@@ -110,6 +188,7 @@
         window.location.href = "/doisense/";
       }
 
+  applyCopy();
       document.getElementById("retry-btn")?.addEventListener("click", recover);
 
       // Auto-heal stale service worker situations when connectivity exists.

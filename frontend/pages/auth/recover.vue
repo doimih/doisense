@@ -60,7 +60,7 @@ import { useI18n, useLocalePath, useRoute, useRuntimeConfig } from '#imports'
 
 const localePath = useLocalePath()
 const route = useRoute()
-const { t } = useI18n()
+const { locale, t } = useI18n()
 
 const email = ref('')
 const newPassword = ref('')
@@ -76,10 +76,46 @@ const title = computed(() => (isResetMode.value ? t('auth.recoverSetTitle') : t(
 const actionLabel = computed(() => t('auth.recoverAction'))
 const resetLabel = computed(() => t('auth.recoverSetAction'))
 const backLabel = computed(() => t('auth.recoverBack'))
+const seoDescription = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: {
+      recover: 'Solicita un link pentru recuperarea contului Doisense.',
+      reset: 'Seteaza o parola noua pentru contul tau Doisense.',
+    },
+    en: {
+      recover: 'Request a recovery link for your Doisense account.',
+      reset: 'Set a new password for your Doisense account.',
+    },
+    de: {
+      recover: 'Fordere einen Wiederherstellungslink fuer dein Doisense-Konto an.',
+      reset: 'Lege ein neues Passwort fuer dein Doisense-Konto fest.',
+    },
+    fr: {
+      recover: 'Demande un lien de recuperation pour ton compte Doisense.',
+      reset: 'Definis un nouveau mot de passe pour ton compte Doisense.',
+    },
+    it: {
+      recover: 'Richiedi un link di recupero per il tuo account Doisense.',
+      reset: 'Imposta una nuova password per il tuo account Doisense.',
+    },
+    es: {
+      recover: 'Solicita un enlace de recuperacion para tu cuenta Doisense.',
+      reset: 'Define una nueva contrasena para tu cuenta Doisense.',
+    },
+    pl: {
+      recover: 'Popros o link odzyskiwania do konta Doisense.',
+      reset: 'Ustaw nowe haslo do swojego konta Doisense.',
+    },
+  }[code] || {
+    recover: 'Request a recovery link for your Doisense account.',
+    reset: 'Set a new password for your Doisense account.',
+  }
+})
 
 usePublicSeo({
-  title: 'Recover account - Doisense',
-  description: 'Account recovery and password reset for Doisense users.',
+  title: computed(() => `${title.value} - Doisense`),
+  description: computed(() => (isResetMode.value ? seoDescription.value.reset : seoDescription.value.recover)),
   noindex: true,
 })
 
@@ -90,13 +126,13 @@ async function requestRecovery() {
   try {
     const config = useRuntimeConfig()
     const base = config.public.apiBase as string
-    await $fetch(`${base}/auth/recover`, {
+    const res = await $fetch<{ detail?: string }>(`${base}/auth/recover`, {
       method: 'POST',
       body: { email: email.value },
     })
-    success.value = t('auth.recoverSent')
-  } catch {
-    error.value = t('auth.recoverError')
+    success.value = res.detail || t('auth.recoverSent')
+  } catch (err: unknown) {
+    error.value = (err as { data?: { detail?: string } })?.data?.detail || t('auth.recoverError')
   } finally {
     loading.value = false
   }
@@ -109,7 +145,7 @@ async function confirmReset() {
   try {
     const config = useRuntimeConfig()
     const base = config.public.apiBase as string
-    await $fetch(`${base}/auth/recover/confirm`, {
+    const res = await $fetch<{ detail?: string }>(`${base}/auth/recover/confirm`, {
       method: 'POST',
       body: {
         uid: uid.value,
@@ -117,9 +153,9 @@ async function confirmReset() {
         new_password: newPassword.value,
       },
     })
-    success.value = t('auth.recoverDone')
-  } catch {
-    error.value = t('auth.recoverInvalid')
+    success.value = res.detail || t('auth.recoverDone')
+  } catch (err: unknown) {
+    error.value = (err as { data?: { detail?: string } })?.data?.detail || t('auth.recoverInvalid')
   } finally {
     loading.value = false
   }

@@ -106,7 +106,7 @@ const privacyCopy: Record<string, {
       },
       {
         title: '9. Contact pentru confidențialitate',
-        body: 'Pentru cereri legate de confidențialitate, rectificare sau opoziție: privacy@doisense.app',
+        body: 'Pentru cereri legate de confidențialitate, rectificare sau opoziție: privacy@doisense.eu',
       },
     ],
     seoTitle: 'Politica de confidentialitate - Doisense',

@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.analytics import track_event
+from core.i18n import get_user_language, translate
 from core.models import InAppNotification, SupportTicket
 from .router import complete
 from payments.models import Payment
@@ -22,6 +23,136 @@ from payments.models import Payment
 
 _SUPPORT_RATE_LIMIT = 5  # requests per minute
 _TICKET_REUSE_WINDOW_MINUTES = 60 * 24
+
+LANGUAGE_NAMES = {
+    "ro": "Romanian",
+    "en": "English",
+    "de": "German",
+    "fr": "French",
+    "it": "Italian",
+    "es": "Spanish",
+    "pl": "Polish",
+}
+
+SUPPORT_COPY = {
+    "ro": {
+        "too_many": "Prea multe cereri de suport. Te rugam sa astepti un minut.",
+        "message_required": "Campul message este obligatoriu.",
+        "message_too_long": "Mesajul este prea lung (maxim 2000 de caractere).",
+        "ticket_received_title": "Cerere de suport primita",
+        "ticket_received_body": "Am deschis tichetul de suport #{ticket_id}. Echipa il poate prelua daca este nevoie.",
+        "ticket_created_note": "\n\nAm creat tichetul de suport #{ticket_id}. Echipa poate continua de aici daca este nevoie.",
+        "ticket_exists_note": "\n\nExista deja un tichet de suport deschis pentru aceasta situatie: #{ticket_id}.",
+        "support_unavailable": "Ne pare rau, serviciul de suport AI nu este disponibil momentan. Va rugam sa ne contactati prin pagina de Contact.",
+        "subject_account": "Suport cont",
+        "subject_billing": "Suport facturare",
+        "subject_gdpr": "Suport GDPR",
+        "subject_tech": "Suport tehnic",
+        "subject_general": "Suport general",
+        "subject_fallback": "Cerere suport",
+    },
+    "en": {
+        "too_many": "Too many support requests. Please wait a minute.",
+        "message_required": "message is required.",
+        "message_too_long": "Message too long (max 2000 chars).",
+        "ticket_received_title": "Support request received",
+        "ticket_received_body": "We opened support ticket #{ticket_id} and the team can review it if needed.",
+        "ticket_created_note": "\n\nWe created support ticket #{ticket_id}. The team can continue from there if needed.",
+        "ticket_exists_note": "\n\nThere is already an open support ticket for this issue: #{ticket_id}.",
+        "support_unavailable": "Sorry, the AI support service is temporarily unavailable. Please contact us through the Contact page.",
+        "subject_account": "Account support",
+        "subject_billing": "Billing support",
+        "subject_gdpr": "GDPR support",
+        "subject_tech": "Technical support",
+        "subject_general": "General support",
+        "subject_fallback": "Support request",
+    },
+    "de": {
+        "too_many": "Zu viele Support-Anfragen. Bitte warte eine Minute.",
+        "message_required": "Das Feld message ist erforderlich.",
+        "message_too_long": "Die Nachricht ist zu lang (maximal 2000 Zeichen).",
+        "ticket_received_title": "Support-Anfrage erhalten",
+        "ticket_received_body": "Wir haben Support-Ticket #{ticket_id} erstellt. Das Team kann es bei Bedarf uebernehmen.",
+        "ticket_created_note": "\n\nWir haben Support-Ticket #{ticket_id} erstellt. Das Team kann von dort weitermachen, falls noetig.",
+        "ticket_exists_note": "\n\nFuer dieses Problem gibt es bereits ein offenes Support-Ticket: #{ticket_id}.",
+        "support_unavailable": "Der KI-Support ist momentan nicht verfuegbar. Bitte kontaktiere uns ueber die Kontaktseite.",
+        "subject_account": "Kontosupport",
+        "subject_billing": "Abrechnungssupport",
+        "subject_gdpr": "DSGVO-Support",
+        "subject_tech": "Technischer Support",
+        "subject_general": "Allgemeiner Support",
+        "subject_fallback": "Support-Anfrage",
+    },
+    "fr": {
+        "too_many": "Trop de demandes de support. Veuillez attendre une minute.",
+        "message_required": "Le champ message est obligatoire.",
+        "message_too_long": "Le message est trop long (2000 caracteres maximum).",
+        "ticket_received_title": "Demande de support recue",
+        "ticket_received_body": "Nous avons ouvert le ticket de support #{ticket_id}. L'equipe peut le reprendre si necessaire.",
+        "ticket_created_note": "\n\nNous avons cree le ticket de support #{ticket_id}. L'equipe peut prendre le relais si necessaire.",
+        "ticket_exists_note": "\n\nUn ticket de support est deja ouvert pour ce sujet : #{ticket_id}.",
+        "support_unavailable": "Le service de support IA est momentanement indisponible. Merci de nous contacter via la page Contact.",
+        "subject_account": "Support compte",
+        "subject_billing": "Support facturation",
+        "subject_gdpr": "Support RGPD",
+        "subject_tech": "Support technique",
+        "subject_general": "Support general",
+        "subject_fallback": "Demande de support",
+    },
+    "it": {
+        "too_many": "Troppe richieste di supporto. Attendi un minuto.",
+        "message_required": "Il campo message e obbligatorio.",
+        "message_too_long": "Il messaggio e troppo lungo (massimo 2000 caratteri).",
+        "ticket_received_title": "Richiesta di supporto ricevuta",
+        "ticket_received_body": "Abbiamo aperto il ticket di supporto #{ticket_id}. Il team puo intervenire se necessario.",
+        "ticket_created_note": "\n\nAbbiamo creato il ticket di supporto #{ticket_id}. Il team puo proseguire da li se necessario.",
+        "ticket_exists_note": "\n\nEsiste gia un ticket di supporto aperto per questa situazione: #{ticket_id}.",
+        "support_unavailable": "Il servizio di supporto AI non e disponibile al momento. Contattaci tramite la pagina Contatti.",
+        "subject_account": "Supporto account",
+        "subject_billing": "Supporto fatturazione",
+        "subject_gdpr": "Supporto GDPR",
+        "subject_tech": "Supporto tecnico",
+        "subject_general": "Supporto generale",
+        "subject_fallback": "Richiesta di supporto",
+    },
+    "es": {
+        "too_many": "Demasiadas solicitudes de soporte. Espera un minuto.",
+        "message_required": "El campo message es obligatorio.",
+        "message_too_long": "El mensaje es demasiado largo (maximo 2000 caracteres).",
+        "ticket_received_title": "Solicitud de soporte recibida",
+        "ticket_received_body": "Hemos abierto el ticket de soporte #{ticket_id}. El equipo puede revisarlo si hace falta.",
+        "ticket_created_note": "\n\nHemos creado el ticket de soporte #{ticket_id}. El equipo puede continuar desde ahi si es necesario.",
+        "ticket_exists_note": "\n\nYa existe un ticket de soporte abierto para este caso: #{ticket_id}.",
+        "support_unavailable": "El servicio de soporte con IA no esta disponible en este momento. Contactanos mediante la pagina de Contacto.",
+        "subject_account": "Soporte de cuenta",
+        "subject_billing": "Soporte de facturacion",
+        "subject_gdpr": "Soporte GDPR",
+        "subject_tech": "Soporte tecnico",
+        "subject_general": "Soporte general",
+        "subject_fallback": "Solicitud de soporte",
+    },
+    "pl": {
+        "too_many": "Zbyt wiele zgloszen supportowych. Poczekaj minute.",
+        "message_required": "Pole message jest wymagane.",
+        "message_too_long": "Wiadomosc jest za dluga (maksymalnie 2000 znakow).",
+        "ticket_received_title": "Zgloszenie supportowe odebrane",
+        "ticket_received_body": "Otworzylismy ticket supportowy #{ticket_id}. Zespol moze go przejac, jesli bedzie to potrzebne.",
+        "ticket_created_note": "\n\nUtworzylismy ticket supportowy #{ticket_id}. Zespol moze przejac sprawe w razie potrzeby.",
+        "ticket_exists_note": "\n\nDla tej sytuacji istnieje juz otwarty ticket supportowy: #{ticket_id}.",
+        "support_unavailable": "Usluga wsparcia AI jest chwilowo niedostepna. Skontaktuj sie z nami przez strone Kontakt.",
+        "subject_account": "Wsparcie konta",
+        "subject_billing": "Wsparcie rozliczen",
+        "subject_gdpr": "Wsparcie GDPR",
+        "subject_tech": "Wsparcie techniczne",
+        "subject_general": "Wsparcie ogolne",
+        "subject_fallback": "Prosba o wsparcie",
+    },
+}
+
+
+def _support_text(language: str, key: str, **kwargs) -> str:
+    template = translate(SUPPORT_COPY, language)[key]
+    return template.format(**kwargs) if kwargs else template
 
 
 def _support_rate_key(user_id):
@@ -135,10 +266,10 @@ _INTENT_INSTRUCTIONS = {
 
 
 def _build_support_system_prompt(user, intent: str) -> str:
-    lang = (user.language or "en").lower()
+    lang = get_user_language(user)
     lang_instruction = (
         "Răspunde întotdeauna în română." if lang.startswith("ro")
-        else f"Always reply in {lang.upper()} language."
+        else f"Always reply in {LANGUAGE_NAMES.get(lang, 'English')}."
     )
 
     context = _build_support_context(user)
@@ -184,27 +315,23 @@ def _should_open_support_ticket(message: str, intent: str) -> bool:
         "urgent",
     )
     return intent in {"account", "billing", "gdpr"} and any(keyword in msg for keyword in escalation_keywords)
-
-
-def _build_ticket_subject(intent: str, message: str) -> str:
-    subject_prefix = {
-        "account": "Account support",
-        "billing": "Billing support",
-        "gdpr": "GDPR support",
-        "tech": "Technical support",
-        "general": "General support",
-    }.get(intent, "Support request")
-    snippet = " ".join((message or "").split())[:90]
-    if not snippet:
-        return subject_prefix
-    return f"{subject_prefix}: {snippet}"[:180]
-
-
 def _create_or_reuse_ticket(user, intent: str, message: str):
     if not _should_open_support_ticket(message, intent):
         return None, False
 
-    subject = _build_ticket_subject(intent, message)
+    language = get_user_language(user)
+    subject_prefix = _support_text(
+        language,
+        {
+            "account": "subject_account",
+            "billing": "subject_billing",
+            "gdpr": "subject_gdpr",
+            "tech": "subject_tech",
+            "general": "subject_general",
+        }.get(intent, "subject_fallback"),
+    )
+    snippet = " ".join((message or "").split())[:90]
+    subject = subject_prefix if not snippet else f"{subject_prefix}: {snippet}"[:180]
     cutoff = timezone.now() - timezone.timedelta(minutes=_TICKET_REUSE_WINDOW_MINUTES)
     ticket = SupportTicket.objects.filter(
         user=user,
@@ -230,25 +357,20 @@ def _create_or_reuse_ticket(user, intent: str, message: str):
     InAppNotification.objects.create(
         user=user,
         notification_type="support_ticket_created",
-        title="Support request received",
-        body=f"We opened support ticket #{ticket.id} and the team can review it if needed.",
+        title=_support_text(language, "ticket_received_title"),
+        body=_support_text(language, "ticket_received_body", ticket_id=ticket.id),
         context_key=str(ticket.id),
     )
     return ticket, True
-
+    return intent in {"account", "billing", "gdpr", "tech"} and any(keyword in msg for keyword in escalation_keywords)
 
 def _ticket_response_note(user, ticket, created: bool) -> str:
     if not ticket:
         return ""
 
-    if (user.language or "en").lower().startswith("ro"):
-        if created:
-            return f"\n\nAm creat tichetul de suport #{ticket.id}. Echipa poate continua de aici daca este nevoie."
-        return f"\n\nExista deja un tichet de suport deschis pentru aceasta situatie: #{ticket.id}."
-
-    if created:
-        return f"\n\nWe created support ticket #{ticket.id}. The team can continue from there if needed."
-    return f"\n\nThere is already an open support ticket for this issue: #{ticket.id}."
+    language = get_user_language(user)
+    key = "ticket_created_note" if created else "ticket_exists_note"
+    return _support_text(language, key, ticket_id=ticket.id)
 
 
 class SupportChatView(APIView):
@@ -262,17 +384,18 @@ class SupportChatView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        language = get_user_language(request.user)
         if not _check_support_rate(request.user.id):
             return Response(
-                {"detail": "Too many support requests. Please wait a minute."},
+                {"detail": _support_text(language, "too_many")},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
         message = (request.data.get("message") or "").strip()
         if not message:
-            return Response({"detail": "message is required."}, status=400)
+            return Response({"detail": _support_text(language, "message_required")}, status=400)
         if len(message) > 2000:
-            return Response({"detail": "Message too long (max 2000 chars)."}, status=400)
+            return Response({"detail": _support_text(language, "message_too_long")}, status=400)
 
         intent = _classify_intent(message)
         ticket, created_ticket = _create_or_reuse_ticket(request.user, intent, message)
@@ -286,10 +409,7 @@ class SupportChatView(APIView):
                 max_tokens=600,
             )
         except Exception:
-            reply = (
-                "Ne pare rău, serviciul de suport AI nu este disponibil momentan. "
-                "Vă rugăm să ne contactați prin pagina de Contact."
-            )
+            reply = _support_text(language, "support_unavailable")
 
         reply = f"{reply}{_ticket_response_note(request.user, ticket, created_ticket)}"
         payload = {"reply": reply, "intent": intent}

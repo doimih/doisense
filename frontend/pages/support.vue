@@ -56,7 +56,53 @@
           </span>
         </div>
         <p class="mt-2 text-sm text-stone-700 whitespace-pre-wrap">{{ ticket.message }}</p>
-        <p class="mt-2 text-xs text-stone-500">{{ formatDate(ticket.created_at) }}</p>
+        <div class="mt-3 flex items-center justify-between gap-2">
+          <p class="text-xs text-stone-500">{{ formatDate(ticket.created_at) }}</p>
+          <button
+            type="button"
+            class="rounded-full border border-stone-300 px-3 py-1 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+            @click="openConversation(ticket.id)"
+          >
+            {{ text.openConversation }}
+          </button>
+        </div>
+      </article>
+
+      <article v-if="activeTicket" class="rounded-xl border border-stone-200 bg-white p-4">
+        <h3 class="text-sm font-semibold text-stone-900">{{ text.conversationTitle }} · #{{ activeTicket.id }}</h3>
+        <div class="mt-3 space-y-2 max-h-72 overflow-auto rounded-xl border border-stone-200 bg-stone-50 p-3">
+          <div
+            v-for="row in activeTicket.messages || []"
+            :key="row.id"
+            class="rounded-lg border border-stone-200 bg-white p-3"
+          >
+            <div class="mb-1 flex items-center justify-between gap-2 text-[11px] text-stone-500">
+              <span class="font-semibold text-stone-700">{{ messageRoleLabel(row.sender_role) }}</span>
+              <span>{{ formatDate(row.created_at) }}</span>
+            </div>
+            <p class="whitespace-pre-wrap text-sm text-stone-800">{{ row.message }}</p>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="mb-1 block text-sm font-medium text-stone-700">{{ text.yourReply }}</label>
+          <textarea
+            v-model="replyMessage"
+            rows="4"
+            class="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-800 focus:border-stone-500 focus:outline-none"
+            :placeholder="text.yourReplyPlaceholder"
+          />
+        </div>
+        <p v-if="replyError" class="mt-2 text-sm text-red-700">{{ replyError }}</p>
+        <p v-if="replySuccess" class="mt-2 text-sm text-emerald-700">{{ text.replySent }}</p>
+        <button
+          type="button"
+          :disabled="replySending"
+          class="mt-3 rounded-full bg-stone-900 px-5 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+          @click="sendReply"
+        >
+          {{ replySending ? text.sendingReply : text.sendReply }}
+        </button>
       </article>
     </section>
   </div>
@@ -71,6 +117,16 @@ type Ticket = {
   message: string
   status: 'open' | 'in_progress' | 'resolved'
   created_at: string
+  updated_at?: string
+  messages?: TicketMessage[]
+}
+
+type TicketMessage = {
+  id: number
+  sender_role: 'user' | 'admin' | 'system'
+  message: string
+  is_internal: boolean
+  created_at: string
 }
 
 const { fetchApi } = useApi()
@@ -83,11 +139,16 @@ const success = ref(false)
 const sending = ref(false)
 const loading = ref(true)
 const tickets = ref<Ticket[]>([])
+const activeTicket = ref<Ticket | null>(null)
+const replyMessage = ref('')
+const replySending = ref(false)
+const replyError = ref('')
+const replySuccess = ref(false)
 
 const text = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  if (code === 'ro') {
-    return {
+  return {
+    ro: {
       title: 'Support tickets',
       subtitle: 'Deschide un ticket direct din contul tau pentru probleme tehnice sau comerciale.',
       subject: 'Subiect',
@@ -100,9 +161,183 @@ const text = computed(() => {
       history: 'Istoric ticket-uri',
       loading: 'Se incarca istoricul...',
       empty: 'Nu ai inca ticket-uri deschise.',
-    }
-  }
-  return {
+      requiredError: 'Subiectul si mesajul sunt obligatorii.',
+      createError: 'Nu am putut crea ticket-ul acum.',
+      openConversation: 'Deschide conversatia',
+      conversationTitle: 'Conversatie ticket',
+      yourReply: 'Mesajul tau',
+      yourReplyPlaceholder: 'Scrie un update pentru echipa de suport...',
+      sendReply: 'Trimite raspuns',
+      sendingReply: 'Se trimite raspunsul...',
+      replySent: 'Raspuns trimis.',
+      replyRequired: 'Mesajul este obligatoriu.',
+      replyError: 'Nu am putut trimite raspunsul.',
+      roleUser: 'Tu',
+      roleAdmin: 'Suport',
+    },
+    en: {
+      title: 'Support tickets',
+      subtitle: 'Open a ticket from your account for technical or billing issues.',
+      subject: 'Subject',
+      subjectPlaceholder: 'Example: I cannot complete checkout',
+      message: 'Message',
+      messagePlaceholder: 'Describe the issue, steps to reproduce, and what you already tried.',
+      submit: 'Submit ticket',
+      sending: 'Submitting...',
+      success: 'Ticket created successfully.',
+      history: 'Ticket history',
+      loading: 'Loading history...',
+      empty: 'You do not have support tickets yet.',
+      requiredError: 'Subject and message are required.',
+      createError: 'Unable to create ticket right now.',
+      openConversation: 'Open conversation',
+      conversationTitle: 'Ticket conversation',
+      yourReply: 'Your message',
+      yourReplyPlaceholder: 'Write an update for the support team...',
+      sendReply: 'Send reply',
+      sendingReply: 'Sending reply...',
+      replySent: 'Reply sent.',
+      replyRequired: 'Message is required.',
+      replyError: 'Unable to send reply right now.',
+      roleUser: 'You',
+      roleAdmin: 'Support',
+    },
+    de: {
+      title: 'Support-Tickets',
+      subtitle: 'Erstelle direkt in deinem Konto ein Ticket fuer technische oder Abrechnungsprobleme.',
+      subject: 'Betreff',
+      subjectPlaceholder: 'Beispiel: Ich kann den Checkout nicht abschliessen',
+      message: 'Nachricht',
+      messagePlaceholder: 'Beschreibe das Problem, die Schritte zur Reproduktion und was du bereits versucht hast.',
+      submit: 'Ticket senden',
+      sending: 'Wird gesendet...',
+      success: 'Ticket erfolgreich erstellt.',
+      history: 'Ticketverlauf',
+      loading: 'Verlauf wird geladen...',
+      empty: 'Noch keine Tickets vorhanden.',
+      requiredError: 'Betreff und Nachricht sind erforderlich.',
+      createError: 'Ticket konnte derzeit nicht erstellt werden.',
+      openConversation: 'Konversation oeffnen',
+      conversationTitle: 'Ticket-Konversation',
+      yourReply: 'Deine Nachricht',
+      yourReplyPlaceholder: 'Schreibe ein Update fuer das Support-Team...',
+      sendReply: 'Antwort senden',
+      sendingReply: 'Antwort wird gesendet...',
+      replySent: 'Antwort gesendet.',
+      replyRequired: 'Nachricht ist erforderlich.',
+      replyError: 'Antwort konnte nicht gesendet werden.',
+      roleUser: 'Du',
+      roleAdmin: 'Support',
+    },
+    fr: {
+      title: 'Tickets de support',
+      subtitle: 'Ouvrez un ticket depuis votre compte pour des problemes techniques ou de facturation.',
+      subject: 'Sujet',
+      subjectPlaceholder: 'Exemple : impossible de terminer le paiement',
+      message: 'Message',
+      messagePlaceholder: 'Decrivez le probleme, les etapes de reproduction et ce que vous avez deja essaye.',
+      submit: 'Envoyer le ticket',
+      sending: 'Envoi en cours...',
+      success: 'Ticket cree avec succes.',
+      history: 'Historique des tickets',
+      loading: 'Chargement de l\'historique...',
+      empty: 'Vous n\'avez pas encore de tickets.',
+      requiredError: 'Le sujet et le message sont obligatoires.',
+      createError: 'Impossible de creer un ticket pour le moment.',
+      openConversation: 'Ouvrir la conversation',
+      conversationTitle: 'Conversation du ticket',
+      yourReply: 'Votre message',
+      yourReplyPlaceholder: 'Ecrivez une mise a jour pour le support...',
+      sendReply: 'Envoyer la reponse',
+      sendingReply: 'Envoi de la reponse...',
+      replySent: 'Reponse envoyee.',
+      replyRequired: 'Le message est obligatoire.',
+      replyError: 'Impossible d envoyer la reponse.',
+      roleUser: 'Vous',
+      roleAdmin: 'Support',
+    },
+    it: {
+      title: 'Ticket di supporto',
+      subtitle: 'Apri un ticket dal tuo account per problemi tecnici o di pagamento.',
+      subject: 'Oggetto',
+      subjectPlaceholder: 'Esempio: non riesco a completare il checkout',
+      message: 'Messaggio',
+      messagePlaceholder: 'Descrivi il problema, i passaggi per riprodurlo e cosa hai gia provato.',
+      submit: 'Invia ticket',
+      sending: 'Invio in corso...',
+      success: 'Ticket creato con successo.',
+      history: 'Storico ticket',
+      loading: 'Caricamento storico...',
+      empty: 'Non hai ancora ticket di supporto.',
+      requiredError: 'Oggetto e messaggio sono obbligatori.',
+      createError: 'Impossibile creare il ticket in questo momento.',
+      openConversation: 'Apri conversazione',
+      conversationTitle: 'Conversazione ticket',
+      yourReply: 'Il tuo messaggio',
+      yourReplyPlaceholder: 'Scrivi un aggiornamento per il supporto...',
+      sendReply: 'Invia risposta',
+      sendingReply: 'Invio risposta...',
+      replySent: 'Risposta inviata.',
+      replyRequired: 'Il messaggio e obbligatorio.',
+      replyError: 'Impossibile inviare la risposta.',
+      roleUser: 'Tu',
+      roleAdmin: 'Supporto',
+    },
+    es: {
+      title: 'Tickets de soporte',
+      subtitle: 'Abre un ticket desde tu cuenta para problemas tecnicos o de facturacion.',
+      subject: 'Asunto',
+      subjectPlaceholder: 'Ejemplo: no puedo finalizar el checkout',
+      message: 'Mensaje',
+      messagePlaceholder: 'Describe el problema, los pasos para reproducirlo y lo que ya intentaste.',
+      submit: 'Enviar ticket',
+      sending: 'Enviando...',
+      success: 'Ticket creado correctamente.',
+      history: 'Historial de tickets',
+      loading: 'Cargando historial...',
+      empty: 'Aun no tienes tickets de soporte.',
+      requiredError: 'El asunto y el mensaje son obligatorios.',
+      createError: 'No se pudo crear el ticket ahora.',
+      openConversation: 'Abrir conversacion',
+      conversationTitle: 'Conversacion del ticket',
+      yourReply: 'Tu mensaje',
+      yourReplyPlaceholder: 'Escribe una actualizacion para soporte...',
+      sendReply: 'Enviar respuesta',
+      sendingReply: 'Enviando respuesta...',
+      replySent: 'Respuesta enviada.',
+      replyRequired: 'El mensaje es obligatorio.',
+      replyError: 'No se pudo enviar la respuesta.',
+      roleUser: 'Tu',
+      roleAdmin: 'Soporte',
+    },
+    pl: {
+      title: 'Zgloszenia wsparcia',
+      subtitle: 'Utworz zgloszenie z konta w sprawach technicznych lub rozliczeniowych.',
+      subject: 'Temat',
+      subjectPlaceholder: 'Przyklad: nie moge dokonczyc checkoutu',
+      message: 'Wiadomosc',
+      messagePlaceholder: 'Opisz problem, kroki odtworzenia i to, co juz zostalo sprawdzone.',
+      submit: 'Wyslij zgloszenie',
+      sending: 'Wysylanie...',
+      success: 'Zgloszenie utworzone pomyslnie.',
+      history: 'Historia zgloszen',
+      loading: 'Ladowanie historii...',
+      empty: 'Nie masz jeszcze zgloszen.',
+      requiredError: 'Temat i wiadomosc sa wymagane.',
+      createError: 'Nie mozna teraz utworzyc zgloszenia.',
+      openConversation: 'Otworz rozmowe',
+      conversationTitle: 'Rozmowa w zgloszeniu',
+      yourReply: 'Twoja wiadomosc',
+      yourReplyPlaceholder: 'Napisz aktualizacje dla zespolu wsparcia...',
+      sendReply: 'Wyslij odpowiedz',
+      sendingReply: 'Wysylanie odpowiedzi...',
+      replySent: 'Odpowiedz wyslana.',
+      replyRequired: 'Wiadomosc jest wymagana.',
+      replyError: 'Nie mozna wyslac odpowiedzi.',
+      roleUser: 'Ty',
+      roleAdmin: 'Wsparcie',
+    },
+  }[code] || {
     title: 'Support tickets',
     subtitle: 'Open a ticket from your account for technical or billing issues.',
     subject: 'Subject',
@@ -115,19 +350,39 @@ const text = computed(() => {
     history: 'Ticket history',
     loading: 'Loading history...',
     empty: 'You do not have support tickets yet.',
+    requiredError: 'Subject and message are required.',
+    createError: 'Unable to create ticket right now.',
+    openConversation: 'Open conversation',
+    conversationTitle: 'Ticket conversation',
+    yourReply: 'Your message',
+    yourReplyPlaceholder: 'Write an update for the support team...',
+    sendReply: 'Send reply',
+    sendingReply: 'Sending reply...',
+    replySent: 'Reply sent.',
+    replyRequired: 'Message is required.',
+    replyError: 'Unable to send reply right now.',
+    roleUser: 'You',
+    roleAdmin: 'Support',
   }
 })
 
 function formatDate(value: string) {
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(locale.value)
 }
 
 function statusLabel(status: Ticket['status']) {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  const ro = { open: 'deschis', in_progress: 'in lucru', resolved: 'rezolvat' }
-  const en = { open: 'open', in_progress: 'in progress', resolved: 'resolved' }
-  return (code === 'ro' ? ro : en)[status]
+  const byLanguage: Record<string, Record<Ticket['status'], string>> = {
+    ro: { open: 'deschis', in_progress: 'in lucru', resolved: 'rezolvat' },
+    en: { open: 'open', in_progress: 'in progress', resolved: 'resolved' },
+    de: { open: 'offen', in_progress: 'in bearbeitung', resolved: 'geloest' },
+    fr: { open: 'ouvert', in_progress: 'en cours', resolved: 'resolu' },
+    it: { open: 'aperto', in_progress: 'in lavorazione', resolved: 'risolto' },
+    es: { open: 'abierto', in_progress: 'en progreso', resolved: 'resuelto' },
+    pl: { open: 'otwarte', in_progress: 'w toku', resolved: 'rozwiazane' },
+  }
+  return (byLanguage[code] || byLanguage.en)[status]
 }
 
 async function loadTickets() {
@@ -140,11 +395,49 @@ async function loadTickets() {
   }
 }
 
+async function openConversation(ticketId: number) {
+  const data = await fetchApi<Ticket>(`/support/tickets/${ticketId}`)
+  activeTicket.value = data
+  replyError.value = ''
+  replySuccess.value = false
+}
+
+function messageRoleLabel(role: TicketMessage['sender_role']) {
+  return role === 'admin' ? text.value.roleAdmin : text.value.roleUser
+}
+
+async function sendReply() {
+  if (!activeTicket.value) return
+  replyError.value = ''
+  replySuccess.value = false
+
+  if (!replyMessage.value.trim()) {
+    replyError.value = text.value.replyRequired
+    return
+  }
+
+  replySending.value = true
+  try {
+    const response = await fetchApi<{ ticket: Ticket }>(`/support/tickets/${activeTicket.value.id}`, {
+      method: 'POST',
+      body: { message: replyMessage.value },
+    })
+    activeTicket.value = response.ticket
+    replyMessage.value = ''
+    replySuccess.value = true
+    await loadTickets()
+  } catch {
+    replyError.value = text.value.replyError
+  } finally {
+    replySending.value = false
+  }
+}
+
 async function createTicket() {
   error.value = ''
   success.value = false
   if (!subject.value.trim() || !message.value.trim()) {
-    error.value = 'Subject and message are required.'
+    error.value = text.value.requiredError
     return
   }
 
@@ -162,7 +455,7 @@ async function createTicket() {
     success.value = true
     await loadTickets()
   } catch {
-    error.value = 'Unable to create ticket right now.'
+    error.value = text.value.createError
   } finally {
     sending.value = false
   }
