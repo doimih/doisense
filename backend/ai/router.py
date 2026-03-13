@@ -57,15 +57,25 @@ def complete(prompt: str, system: str | None = None, user_id=None, max_tokens: i
         )
 
     if openai_key:
-        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens)
+        openai_result = _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens)
+        # In auto mode, fall back to Anthropic if OpenAI is configured but currently failing (e.g., quota/outage).
+        if not openai_result.startswith("[OpenAI error:"):
+            return openai_result
     if anthropic_key:
-        return _complete_anthropic(
+        anthropic_result = _complete_anthropic(
             prompt,
             system=system,
             user_id=user_id,
             api_key=anthropic_key,
             max_tokens=max_tokens,
         )
+        if not anthropic_result.startswith("[Anthropic error:"):
+            return anthropic_result
+        if openai_key:
+            return openai_result
+        return anthropic_result
+    if openai_key:
+        return openai_result
     return "[AI not configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY.]"
 
 

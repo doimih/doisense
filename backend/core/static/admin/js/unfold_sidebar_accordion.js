@@ -17,26 +17,6 @@
     }
   }
 
-  function openGroup(groupElement) {
-    var trigger = groupElement.querySelector("h2.cursor-pointer");
-    if (!trigger) {
-      return;
-    }
-    if (!isGroupOpen(groupElement)) {
-      trigger.click();
-    }
-  }
-
-  function openOnlyGroup(groups, targetGroup) {
-    groups.forEach(function (group) {
-      if (group === targetGroup) {
-        openGroup(group);
-      } else {
-        closeGroup(group);
-      }
-    });
-  }
-
   function initSidebarAccordion() {
     var container = document.getElementById("nav-sidebar-apps");
     if (!container) {
@@ -52,27 +32,6 @@
     if (!groups.length) {
       return;
     }
-
-    groups.forEach(function (group) {
-      var trigger = group.querySelector("h2.cursor-pointer");
-      if (!trigger) {
-        return;
-      }
-
-      trigger.addEventListener("click", function () {
-        window.requestAnimationFrame(function () {
-          if (!isGroupOpen(group)) {
-            return;
-          }
-          openOnlyGroup(groups, group);
-        });
-      });
-
-      // Keep navigation intuitive: opening a section on hover also collapses others.
-      trigger.addEventListener("mouseenter", function () {
-        openOnlyGroup(groups, group);
-      });
-    });
 
     var activeLink = container.querySelector("a.active");
     if (activeLink) {
