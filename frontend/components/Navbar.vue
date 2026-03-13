@@ -61,11 +61,8 @@
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" :class="navLinkClass">
           {{ $t('nav.notifications') }}
         </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" :class="navLinkClass">
-          {{ $t('nav.support') }}
-        </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/support-admin')" :class="navLinkClass">
-          {{ supportAdminLabel }}
+        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/tickets')" :class="navLinkClass">
+          {{ ticketsLabel }}
         </NuxtLink>
         <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" :class="navLinkClass">
           {{ $t('nav.admin') }}
@@ -129,8 +126,7 @@
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
       <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.notifications') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/support')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.support') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn && authStore.user?.is_superuser" :to="localePath('/support-admin')" class="block text-stone-700" @click="mobileOpen = false">{{ supportAdminLabel }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/tickets')" class="block text-stone-700" @click="mobileOpen = false">{{ ticketsLabel }}</NuxtLink>
       <div class="pt-2">
         <p class="mb-1 text-xs text-stone-500">{{ $t('auth.language') }}</p>
         <div class="relative inline-block">
@@ -352,17 +348,17 @@ const faqLabel = computed(() => {
   }[code] || 'FAQ'
 })
 
-const supportAdminLabel = computed(() => {
+const ticketsLabel = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
   return {
-    ro: 'Administrare suport',
-    en: 'Support Admin',
-    de: 'Support Admin',
-    fr: 'Support Admin',
-    it: 'Support Admin',
-    es: 'Support Admin',
-    pl: 'Support Admin',
-  }[code] || 'Support Admin'
+    ro: 'Ticket',
+    en: 'Ticket',
+    de: 'Ticket',
+    fr: 'Ticket',
+    it: 'Ticket',
+    es: 'Ticket',
+    pl: 'Ticket',
+  }[code] || 'Ticket'
 })
 
 const uiText = computed(() => {
