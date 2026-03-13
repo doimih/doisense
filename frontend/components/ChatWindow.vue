@@ -314,7 +314,14 @@ const planDays = ref(7)
 const moodHistory = ref<Array<{ at: string; mood: 'low' | 'ok' | 'good' | 'great' }>>([])
 const energyHistory = ref<Array<{ at: string; energy_level: number }>>([])
 const currentModuleId = ref<ChatModule['id']>('wellness')
-const messages = ref<ChatMessage[]>([])
+const moduleMessages = reactive<Record<ChatModule['id'], ChatMessage[]>>({
+  wellness: [],
+  coaching: [],
+  education: [],
+  support: [],
+})
+const messages = computed(() => moduleMessages[currentModuleId.value])
+const moduleHistory = ref<Record<string, ChatMessage[]>>({})
 const input = ref('')
 const loading = ref(false)
 const showCrisisBanner = ref(false)
@@ -375,6 +382,33 @@ async function loadWellbeingSummary() {
   }
 }
 
+function stripMessagePrefix(msg: string): string {
+  if (!msg.startsWith('[') || !msg.includes(']')) return msg
+  return msg.slice(msg.indexOf(']') + 1).trim()
+}
+
+async function loadChatHistory() {
+  try {
+    const data = await fetchApi<{
+      history: Record<string, Array<{ user_message: string; ai_response: string; created_at: string }>>
+      last_module: string | null
+    }>('/chat/history')
+    const result: Record<string, ChatMessage[]> = {}
+    for (const [mod, items] of Object.entries(data.history || {})) {
+      result[mod] = items.flatMap((item) => [
+        { message: stripMessagePrefix(item.user_message), isUser: true },
+        { message: item.ai_response, isUser: false },
+      ])
+    }
+    moduleHistory.value = result
+    if (data.last_module && ['wellness', 'coaching', 'education', 'support'].includes(data.last_module)) {
+      currentModuleId.value = data.last_module as ChatModule['id']
+    }
+  } catch {
+    // Keep defaults if history unavailable.
+  }
+}
+
 async function saveMood(mood: 'low' | 'ok' | 'good' | 'great') {
   selectedMood.value = mood
   try {
@@ -401,14 +435,21 @@ async function saveEnergy(level: number) {
   }
 }
 
-function resetConversation() {
-  showCrisisBanner.value = false
-  messages.value = [{ message: currentModule.value.welcome, isUser: false }]
+function resetConversation(moduleId?: ChatModule['id']) {
+  const id = moduleId ?? currentModuleId.value
+  const mod = modules.value.find((m) => m.id === id) || modules.value[0]
+  if (moduleId === undefined) showCrisisBanner.value = false
+  const hist = moduleHistory.value[id]
+  if (hist && hist.length > 0) {
+    moduleMessages[id] = [...hist]
+  } else {
+    moduleMessages[id] = [{ message: mod.welcome, isUser: false }]
+  }
 }
 
 function switchModule(id: ChatModule['id']) {
+  showCrisisBanner.value = false
   currentModuleId.value = id
-  resetConversation()
 }
 
 function detectCrisis(text: string): boolean {
@@ -425,23 +466,23 @@ async function send(quickPrompt?: string) {
   const text = (quickPrompt || input.value).trim()
   if (!text || loading.value) return
 
-  messages.value.push({ message: text, isUser: true })
+  moduleMessages[currentModuleId.value].push({ message: text, isUser: true })
   input.value = ''
   loading.value = true
   try {
     const res = await fetchApi<{ reply: string }>('/chat/send', {
       method: 'POST',
       body: {
-        message: `[${currentModule.value.name}|mood:${selectedMood.value}|energy:${energyLevel.value}] ${text}`,
+        message: `[${currentModule.value.id}|mood:${selectedMood.value}|energy:${energyLevel.value}] ${text}`,
       },
     })
-    messages.value.push({ message: res.reply, isUser: false })
+    moduleMessages[currentModuleId.value].push({ message: res.reply, isUser: false })
     if (detectCrisis(res.reply)) {
       showCrisisBanner.value = true
     }
   } catch (e) {
-    messages.value.push({
-      message: (e as Error).message || text.value.sendError,
+    moduleMessages[currentModuleId.value].push({
+      message: (e as Error).message || text.sendError,
       isUser: false,
     })
   } finally {
@@ -454,12 +495,27 @@ async function send(quickPrompt?: string) {
   }
 }
 
-onMounted(() => {
-  loadWellbeingSummary()
-  resetConversation()
+onMounted(async () => {
+  await loadWellbeingSummary()
+  await loadChatHistory()
+  const moduleIds: ChatModule['id'][] = ['wellness', 'coaching', 'education', 'support']
+  for (const id of moduleIds) {
+    resetConversation(id)
+  }
+  nextTick(() => {
+    if (messagesEl.value) {
+      messagesEl.value.scrollTop = messagesEl.value.scrollHeight
+    }
+  })
 })
 
 watch(localeCode, () => {
-  resetConversation()
+  const moduleIds: ChatModule['id'][] = ['wellness', 'coaching', 'education', 'support']
+  for (const id of moduleIds) {
+    if (moduleMessages[id].length === 1 && !moduleMessages[id][0].isUser) {
+      const mod = modules.value.find((m) => m.id === id) || modules.value[0]
+      moduleMessages[id] = [{ message: mod.welcome, isUser: false }]
+    }
+  }
 })
 </script>

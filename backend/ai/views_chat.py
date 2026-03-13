@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -130,3 +131,42 @@ class SendChatView(APIView):
             properties={"module": _extract_module(message) or "general"},
         )
         return Response({"reply": reply})
+
+
+HISTORY_DISPLAY_PER_MODULE = 5
+_CHAT_MODULE_IDS = ["wellness", "coaching", "education", "support"]
+
+
+class ChatHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        plan_tier = _get_effective_chat_tier(request.user)
+        if _get_history_window(plan_tier) <= 0:
+            return Response({"history": {}, "last_module": None})
+
+        history = {}
+        for mod in _CHAT_MODULE_IDS:
+            items = list(
+                Conversation.objects.filter(user=request.user, module=mod)
+                .order_by("-created_at")[:HISTORY_DISPLAY_PER_MODULE]
+            )
+            if items:
+                history[mod] = [
+                    {
+                        "user_message": item.user_message,
+                        "ai_response": item.ai_response,
+                        "created_at": item.created_at.isoformat(),
+                    }
+                    for item in reversed(items)
+                ]
+
+        last = (
+            Conversation.objects.filter(user=request.user, module__in=_CHAT_MODULE_IDS)
+            .order_by("-created_at")
+            .values("module")
+            .first()
+        )
+        last_module = last["module"] if last else None
+
+        return Response({"history": history, "last_module": last_module})
