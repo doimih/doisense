@@ -236,3 +236,110 @@ class ProgramReflectionView(APIView):
             properties={"program_id": program.id, "day_number": day_number},
         )
         return Response(ProgramReflectionSerializer(reflection).data, status=status.HTTP_201_CREATED)
+
+
+class ProgramStartView(APIView):
+    """
+    POST /programs/<id>/start
+    Starts (or idempotently re-confirms) a guided program for the authenticated user.
+
+    Behavior:
+    - If no progress record exists → creates one with current_day=1,
+      completed_days=[], status="in_progress" → 201 Created.
+    - If a record exists but the program is not yet completed → returns the
+      existing progress unchanged → 200 OK.
+    - If the program was already completed → 409 Conflict.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @require_feature("programs_access")
+    def post(self, request, program_id):
+        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
+
+        if program.is_premium and request.user.effective_plan_tier() not in ("premium", "vip"):
+            return Response(
+                {"detail": "This program requires a premium subscription."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        progress, created = UserProgramProgress.objects.get_or_create(
+            user=request.user,
+            program=program,
+            defaults={
+                "current_day": 1,
+                "completed_days": [],
+            },
+        )
+
+        if not created and progress.completed_at is not None:
+            return Response(
+                {
+                    "detail": "Program already completed.",
+                    "code": "already_completed",
+                    "progress": UserProgramProgressSerializer(progress).data,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        http_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+
+        if created:
+            track_event(
+                "program_started",
+                source="backend",
+                user=request.user,
+                properties={"program_id": program.id},
+            )
+
+        return Response(UserProgramProgressSerializer(progress).data, status=http_status)
+
+
+class ProgramCompleteView(APIView):
+    """
+    POST /programs/<id>/complete
+    Marks the entire guided program as completed for the authenticated user.
+
+    Sets completed_at to the current timestamp and status → "completed".
+    Returns 409 if the program was already marked as completed.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @require_feature("programs_access")
+    def post(self, request, program_id):
+        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
+        progress = UserProgramProgress.objects.filter(
+            user=request.user, program=program
+        ).first()
+
+        if progress is None:
+            return Response(
+                {"detail": "Program not started. Call /start first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if progress.completed_at is not None:
+            return Response(
+                {
+                    "detail": "Program already completed.",
+                    "code": "already_completed",
+                    "progress": UserProgramProgressSerializer(progress).data,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        progress.complete_program()
+
+        track_event(
+            "program_completed",
+            source="backend",
+            user=request.user,
+            properties={
+                "program_id": program.id,
+                "days_completed": len(progress.completed_days),
+                "current_day": progress.current_day,
+            },
+        )
+
+        return Response(UserProgramProgressSerializer(progress).data)

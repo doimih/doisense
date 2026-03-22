@@ -17,6 +17,7 @@ class GuidedProgramDaySerializer(serializers.ModelSerializer):
 
 class UserProgramProgressSerializer(serializers.ModelSerializer):
     total_days = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProgramProgress
@@ -28,13 +29,18 @@ class UserProgramProgressSerializer(serializers.ModelSerializer):
             "is_paused",
             "paused_at",
             "total_days",
+            "status",
             "started_at",
+            "completed_at",
             "last_active_at",
         )
         read_only_fields = fields
 
     def get_total_days(self, obj):
         return obj.program.days.count()
+
+    def get_status(self, obj):
+        return obj.status
 
 
 class ProgramReflectionSerializer(serializers.ModelSerializer):

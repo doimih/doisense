@@ -52,6 +52,7 @@ class UserProgramProgress(models.Model):
     is_paused = models.BooleanField(default=False)
     paused_at = models.DateTimeField(null=True, blank=True)
     dropout_marked_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(auto_now_add=True)
     last_active_at = models.DateTimeField(auto_now=True)
 
@@ -61,6 +62,16 @@ class UserProgramProgress(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.program.title} (day {self.current_day})"
+
+    @property
+    def status(self) -> str:
+        if self.completed_at is not None:
+            return "completed"
+        if self.dropout_marked_at is not None:
+            return "dropout"
+        if self.is_paused:
+            return "paused"
+        return "in_progress"
 
     def mark_day_complete(self, day_number: int) -> None:
         if day_number not in self.completed_days:
@@ -78,6 +89,15 @@ class UserProgramProgress(models.Model):
                 "last_active_at",
             ]
         )
+
+    def complete_program(self) -> None:
+        """Mark the entire program as finished."""
+        if self.completed_at is not None:
+            return
+        self.completed_at = timezone.now()
+        self.is_paused = False
+        self.paused_at = None
+        self.save(update_fields=["completed_at", "is_paused", "paused_at", "last_active_at"])
 
     def pause(self) -> None:
         if self.is_paused:
