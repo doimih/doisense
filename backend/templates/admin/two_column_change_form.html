@@ -1,0 +1,63 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static admin_modify unfold %}
+
+{% block extrahead %}{{ block.super }}
+<style>
+/* ── Shared two-column admin edit layout ─────────────────────────── */
+.two-col-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+@media (min-width: 1024px) {
+  .two-col-wrap {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.two-col-left {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .two-col-left {
+    width: 19rem;
+  }
+}
+
+.two-col-right {
+  flex: 1;
+  min-width: 0;
+}
+</style>
+{% block two_col_extrahead %}{% endblock %}
+{% endblock %}
+
+{% block field_sets %}
+<div class="two-col-wrap">
+
+  {# ── LEFT COLUMN: first fieldset (metadata / identifiers) ─────────── #}
+  <div class="two-col-left">
+    {% for fieldset in adminform %}
+      {% if forloop.first %}
+        {% include 'admin/includes/fieldset.html' %}
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {# ── RIGHT COLUMN: remaining fieldsets (main content) ────────────── #}
+  <div class="two-col-right">
+    {% for fieldset in adminform %}
+      {% if not forloop.first %}
+        {% include 'admin/includes/fieldset.html' %}
+      {% endif %}
+    {% endfor %}
+  </div>
+
+</div>
+{% block two_col_scripts %}{% endblock %}
+{% endblock %}

@@ -581,6 +581,7 @@ class BackupRestoreRequestAdmin(ModelAdmin):
 
 @admin.register(PlatformScheduledJob)
 class PlatformScheduledJobAdmin(ModelAdmin):
+    change_form_template = "admin/two_column_change_form.html"
     list_display = (
         "label",
         "command_name",

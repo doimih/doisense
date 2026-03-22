@@ -6,6 +6,7 @@ from .models import UserProfile
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
+    change_form_template = "admin/two_column_change_form.html"
     list_display = (
         "user",
         "preferred_tone",

@@ -1,0 +1,177 @@
+{% extends "admin/two_column_change_form.html" %}
+{% load i18n admin_urls static admin_modify unfold %}
+
+{% block two_col_extrahead %}
+<style>
+/* Make the CKEditor fill the available height */
+.two-col-right .ck-editor__editable {
+  min-height: 220px;
+}
+
+/* AI-prompt section dimmed when toggle is OFF */
+.gpd-ai-dimmed {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* Pill toggle */
+.gpd-toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.gpd-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.gpd-toggle-track {
+  display: inline-flex;
+  align-items: center;
+  width: 2.5rem;
+  height: 1.375rem;
+  border-radius: 9999px;
+  background: #d1d5db;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.gpd-toggle-input:checked + .gpd-toggle-track {
+  background: #6366f1;
+}
+
+.gpd-toggle-thumb {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  margin-left: 0.19rem;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.gpd-toggle-input:checked + .gpd-toggle-track .gpd-toggle-thumb {
+  transform: translateX(1.1rem);
+}
+
+.gpd-toggle-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.dark .gpd-toggle-text {
+  color: #9ca3af;
+}
+
+.gpd-ai-icon {
+  font-size: 1.05rem !important;
+  color: #6366f1;
+  vertical-align: middle;
+}
+</style>
+{% endblock %}
+
+{% block two_col_scripts %}
+<script>
+(function () {
+  function injectAiToggle() {
+    /* Find the ai_prompt field wrapper — Unfold adds a class of the field name */
+    var aiRow = document.querySelector('.field-ai_prompt');
+    if (!aiRow) return;
+
+    /* The label element inside the row */
+    var labelEl = aiRow.querySelector('label');
+    if (!labelEl) return;
+
+    /* Build the toggle */
+    var textarea = aiRow.querySelector('textarea');
+    var hasContent = textarea && textarea.value.trim() !== '';
+
+    var toggleId = 'gpd-ai-toggle-cb';
+
+    var toggleLabel = document.createElement('label');
+    toggleLabel.className = 'gpd-toggle-wrap';
+    toggleLabel.setAttribute('for', toggleId);
+    toggleLabel.title = 'Enable / disable the AI assistant for this day';
+
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = toggleId;
+    cb.className = 'gpd-toggle-input';
+    cb.checked = hasContent;
+
+    var track = document.createElement('span');
+    track.className = 'gpd-toggle-track';
+    var thumb = document.createElement('span');
+    thumb.className = 'gpd-toggle-thumb';
+    track.appendChild(thumb);
+
+    var textSpan = document.createElement('span');
+    textSpan.className = 'gpd-toggle-text';
+    textSpan.textContent = 'AI Assistant';
+
+    var iconSpan = document.createElement('span');
+    iconSpan.className = 'material-symbols-outlined gpd-ai-icon';
+    iconSpan.textContent = 'psychology';
+
+    toggleLabel.appendChild(cb);
+    toggleLabel.appendChild(track);
+    toggleLabel.appendChild(textSpan);
+    toggleLabel.appendChild(iconSpan);
+
+    /* Wrap the label + toggle in a flex row */
+    var labelParent = labelEl.parentNode;
+    var labelWrapper = document.createElement('div');
+    labelWrapper.style.cssText = 'display:flex;align-items:center;flex-wrap:wrap;gap:0.25rem;width:100%;';
+    labelParent.insertBefore(labelWrapper, labelEl);
+    labelWrapper.appendChild(labelEl);
+    labelWrapper.appendChild(toggleLabel);
+
+    /* Identify the textarea container to dim */
+    var fieldBody = textarea ? textarea.closest('div') : null;
+
+    function update() {
+      if (!textarea) return;
+      if (cb.checked) {
+        textarea.removeAttribute('disabled');
+        if (fieldBody) fieldBody.classList.remove('gpd-ai-dimmed');
+      } else {
+        textarea.setAttribute('disabled', 'disabled');
+        if (fieldBody) fieldBody.classList.add('gpd-ai-dimmed');
+      }
+    }
+
+    cb.addEventListener('change', function () {
+      if (!cb.checked && textarea) {
+        /* Ask for confirmation before clearing content */
+        if (textarea.value.trim() !== '') {
+          if (!window.confirm('Dezactivarea AI Assistant va păstra textul dar nu-l va trimite utilizatorului. Continui?')) {
+            cb.checked = true;
+            return;
+          }
+        }
+      }
+      update();
+    });
+
+    update();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectAiToggle);
+  } else {
+    injectAiToggle();
+  }
+})();
+</script>
+{% endblock %}
+

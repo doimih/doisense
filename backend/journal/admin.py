@@ -50,10 +50,32 @@ class JournalQuestionAdminForm(forms.ModelForm):
 @admin.register(JournalQuestion)
 class JournalQuestionAdmin(admin.ModelAdmin):
     form = JournalQuestionAdminForm
+    change_form_template = "admin/two_column_change_form.html"
     list_display = ("id", "text", "category", "language", "active", "delete_link")
     list_filter = ("language", "active")
     actions_on_top = True
     actions_on_bottom = False
+    fieldsets = (
+        (
+            "Configurare",
+            {
+                "fields": (
+                    "category",
+                    "language",
+                    "active",
+                )
+            },
+        ),
+        (
+            "Conținut",
+            {
+                "fields": (
+                    "text",
+                    "tags",
+                )
+            },
+        ),
+    )
 
     def delete_link(self, obj):
         url = reverse("admin:journal_journalquestion_delete", args=[obj.pk])
