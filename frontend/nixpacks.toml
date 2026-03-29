@@ -3,12 +3,11 @@ nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake"]
 
 [phases.install]
 cmds = [
-  "npm install -g pnpm@9.15.9",
-  "pnpm install --frozen-lockfile"
+  "npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile"
 ]
 
 [phases.build]
-cmds = ["pnpm run build"]
+cmds = ["npm exec --yes pnpm@9.15.9 -- run build"]
 
 [start]
-cmd = "pnpm run start"
+cmd = "npm exec --yes pnpm@9.15.9 -- run start"
