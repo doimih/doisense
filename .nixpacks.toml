@@ -1,0 +1,16 @@
+# Monorepo root config for deploying frontend from repository root.
+[phases.setup]
+nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake"]
+
+[phases.install]
+cmds = [
+	"cd frontend && npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --no-optional=false"
+]
+
+[phases.build]
+cmds = [
+	"cd frontend && npm exec --yes pnpm@9.15.9 -- run build"
+]
+
+[start]
+cmd = "cd frontend && npm exec --yes pnpm@9.15.9 -- run start"
