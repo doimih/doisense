@@ -2,6 +2,10 @@
   "name": "doisense-frontend",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -17,7 +21,6 @@
     "@nuxt/content": "^3.12.0",
     "@nuxtjs/i18n": "^10.2.3",
     "@pinia/nuxt": "^0.5.1",
-    "better-sqlite3": "^12.6.2",
     "nuxt": "3.21.1",
     "nuxt-studio": "1.4.0",
     "pinia": "^2.2.4",
@@ -36,10 +39,5 @@
     "prettier": "^3.3.3",
     "ts-jest": "^29.2.5",
     "typescript": "^5.6.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
   }
 }
