@@ -4,13 +4,13 @@ nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake", "curl", "xz"]
 
 [phases.install]
 cmds = [
-  "if [ -f frontend/package.json ]; then cd frontend; fi; mkdir -p /opt/node20 && curl -fsSL https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz -o /tmp/node20.tar.xz && tar -xJf /tmp/node20.tar.xz -C /opt/node20 --strip-components=1 && /opt/node20/bin/node -v && /opt/node20/bin/npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --prod=false --no-optional=false"
+  "if [ -f frontend/package.json ]; then cd frontend; fi; mkdir -p /opt/node20 && curl -fsSL https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz -o /tmp/node20.tar.xz && tar -xJf /tmp/node20.tar.xz -C /opt/node20 --strip-components=1 && /opt/node20/bin/node -v && /opt/node20/bin/node /opt/node20/lib/node_modules/npm/bin/npm-cli.js exec --yes pnpm@9.15.9 -- install --frozen-lockfile --prod=false --no-optional=false"
 ]
 
 [phases.build]
 cmds = [
-  "if [ -f frontend/package.json ]; then cd frontend; fi; /opt/node20/bin/npm exec --yes pnpm@9.15.9 -- run build"
+  "if [ -f frontend/package.json ]; then cd frontend; fi; /opt/node20/bin/node /opt/node20/lib/node_modules/npm/bin/npm-cli.js exec --yes pnpm@9.15.9 -- run build"
 ]
 
 [start]
-cmd = "if [ -f frontend/package.json ]; then cd frontend; fi; /opt/node20/bin/npm exec --yes pnpm@9.15.9 -- run start"
+cmd = "if [ -f frontend/package.json ]; then cd frontend; fi; /opt/node20/bin/node /opt/node20/lib/node_modules/npm/bin/npm-cli.js exec --yes pnpm@9.15.9 -- run start"
