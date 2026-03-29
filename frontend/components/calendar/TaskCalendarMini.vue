@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from '#imports'
 import TaskCreateModal from '~/components/calendar/TaskCreateModal.vue'
 import { useCalendarTasks } from '~/composables/calendar/useCalendarTasks'
 

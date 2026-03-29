@@ -346,6 +346,11 @@ const mobileLanguageMenuOpen = ref(false)
 const LANGUAGE_CODES = ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'] as const
 type LocaleCode = (typeof LANGUAGE_CODES)[number]
 
+function resolveLocaleCode(value: string | undefined): LocaleCode {
+  const code = (value || 'en').slice(0, 2).toLowerCase() as LocaleCode
+  return LANGUAGE_CODES.includes(code) ? code : 'en'
+}
+
 const languageOptions: Array<{ code: LocaleCode; label: string }> = [
   { code: 'ro', label: 'Romana' },
   { code: 'en', label: 'English' },
@@ -361,8 +366,8 @@ const activeLanguageLabel = computed(() => {
 })
 
 const faqLabel = computed(() => {
-  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return {
+  const code = resolveLocaleCode(locale.value)
+  const labels: Record<LocaleCode, string> = {
     ro: 'Intrebari frecvente',
     en: 'FAQ',
     de: 'FAQ',
@@ -370,12 +375,13 @@ const faqLabel = computed(() => {
     it: 'FAQ',
     es: 'FAQ',
     pl: 'FAQ',
-  }[code] || 'FAQ'
+  }
+  return labels[code]
 })
 
 const ticketsLabel = computed(() => {
-  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return {
+  const code = resolveLocaleCode(locale.value)
+  const labels: Record<LocaleCode, string> = {
     ro: 'Ticket',
     en: 'Ticket',
     de: 'Ticket',
@@ -383,7 +389,8 @@ const ticketsLabel = computed(() => {
     it: 'Ticket',
     es: 'Ticket',
     pl: 'Ticket',
-  }[code] || 'Ticket'
+  }
+  return labels[code]
 })
 
 const hasProgramsAccess = computed(() => {
@@ -396,8 +403,8 @@ const hasProgramsAccess = computed(() => {
 })
 
 const programsLockedLabel = computed(() => {
-  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return {
+  const code = resolveLocaleCode(locale.value)
+  const labels: Record<LocaleCode, string> = {
     ro: 'Disponibil doar pentru planuri platite',
     en: 'Available only on paid plans',
     de: 'Nur fuer kostenpflichtige Plaene verfuegbar',
@@ -405,12 +412,20 @@ const programsLockedLabel = computed(() => {
     it: 'Disponibile solo con piani a pagamento',
     es: 'Disponible solo para planes de pago',
     pl: 'Dostepne tylko dla planow platnych',
-  }[code] || 'Available only on paid plans'
+  }
+  return labels[code]
 })
 
 const uiText = computed(() => {
-  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return {
+  const code = resolveLocaleCode(locale.value)
+  const labels: Record<LocaleCode, {
+    toggleNavigation: string
+    openAuthentication: string
+    openLanguageMenu: string
+    close: string
+    continueGoogle: string
+    continueApple: string
+  }> = {
     ro: {
       toggleNavigation: 'Comuta navigarea',
       openAuthentication: 'Deschide autentificarea',
@@ -467,14 +482,8 @@ const uiText = computed(() => {
       continueGoogle: 'Kontynuuj z Google',
       continueApple: 'Kontynuuj z Apple',
     },
-  }[code] || {
-    toggleNavigation: 'Toggle navigation',
-    openAuthentication: 'Open authentication',
-    openLanguageMenu: 'Open language menu',
-    close: 'Close',
-    continueGoogle: 'Continue with Google',
-    continueApple: 'Continue with Apple',
   }
+  return labels[code]
 })
 
 const navClass = computed(() => {
@@ -711,8 +720,8 @@ function logout() {
 
 async function changeLanguage(code: LocaleCode) {
   try {
-    selectedLanguageCookie.value = code
-    selectedLanguageCookieLegacy.value = code
+    ;(selectedLanguageCookie as unknown as { value?: string | null }).value = code
+    ;(selectedLanguageCookieLegacy as unknown as { value?: string | null }).value = code
     await syncAuthenticatedLanguage(code)
     const targetPath = switchLocalePath(code)
     if (targetPath && targetPath !== route.fullPath) {
@@ -809,8 +818,8 @@ onMounted(() => {
 
 watch(
   () => locale.value,
-  (value) => {
-    const code = (value || 'en').slice(0, 2).toLowerCase() as LocaleCode
+  (value: string) => {
+    const code = resolveLocaleCode(value)
     if (LANGUAGE_CODES.includes(code)) {
       syncAuthenticatedLanguage(code)
     }

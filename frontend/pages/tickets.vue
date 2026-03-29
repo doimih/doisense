@@ -260,6 +260,14 @@ type AdminTicket = {
   messages?: TicketMessage[]
 }
 
+const LOCALE_CODES = ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'] as const
+type LocaleCode = (typeof LOCALE_CODES)[number]
+
+function resolveLocaleCode(value: string | undefined): LocaleCode {
+  const code = (value || 'en').slice(0, 2).toLowerCase() as LocaleCode
+  return LOCALE_CODES.includes(code) ? code : 'en'
+}
+
 // ── Composables ───────────────────────────────────────────────
 const { fetchApi } = useApi()
 const { locale } = useI18n()
@@ -289,8 +297,34 @@ const replyError = ref('')
 const replySuccess = ref(false)
 
 const text = computed(() => {
-  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return {
+  const code = resolveLocaleCode(locale.value)
+  const copy: Record<LocaleCode, {
+    title: string
+    subtitle: string
+    subject: string
+    subjectPlaceholder: string
+    message: string
+    messagePlaceholder: string
+    submit: string
+    sending: string
+    success: string
+    history: string
+    loading: string
+    empty: string
+    requiredError: string
+    createError: string
+    openConversation: string
+    conversationTitle: string
+    yourReply: string
+    yourReplyPlaceholder: string
+    sendReply: string
+    sendingReply: string
+    replySent: string
+    replyRequired: string
+    replyError: string
+    roleUser: string
+    roleAdmin: string
+  }> = {
     ro: {
       title: 'Support tickets',
       subtitle: 'Deschide un ticket direct din contul tau pentru probleme tehnice sau comerciale.',
@@ -480,33 +514,8 @@ const text = computed(() => {
       roleUser: 'Ty',
       roleAdmin: 'Wsparcie',
     },
-  }[code] || {
-    title: 'Support tickets',
-    subtitle: 'Open a ticket from your account for technical or billing issues.',
-    subject: 'Subject',
-    subjectPlaceholder: 'Example: I cannot complete checkout',
-    message: 'Message',
-    messagePlaceholder: 'Describe the issue, steps to reproduce, and what you already tried.',
-    submit: 'Submit ticket',
-    sending: 'Submitting...',
-    success: 'Ticket created successfully.',
-    history: 'Ticket history',
-    loading: 'Loading history...',
-    empty: 'You do not have support tickets yet.',
-    requiredError: 'Subject and message are required.',
-    createError: 'Unable to create ticket right now.',
-    openConversation: 'Open conversation',
-    conversationTitle: 'Ticket conversation',
-    yourReply: 'Your message',
-    yourReplyPlaceholder: 'Write an update for the support team...',
-    sendReply: 'Send reply',
-    sendingReply: 'Sending reply...',
-    replySent: 'Reply sent.',
-    replyRequired: 'Message is required.',
-    replyError: 'Unable to send reply right now.',
-    roleUser: 'You',
-    roleAdmin: 'Support',
   }
+  return copy[code]
 })
 
 function userStatusLabel(status: TicketStatus) {
@@ -605,8 +614,31 @@ const adminReplyError = ref('')
 const adminReplySuccess = ref(false)
 
 const adminText = computed(() => {
-  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
-  return {
+  const code = resolveLocaleCode(locale.value)
+  const copy: Record<'ro' | 'en', {
+    title: string
+    subtitle: string
+    ticketList: string
+    refresh: string
+    empty: string
+    loading: string
+    selectTicket: string
+    status: string
+    internalNote: string
+    reply: string
+    replyPlaceholder: string
+    replySent: string
+    sending: string
+    send: string
+    replyRequired: string
+    replyError: string
+    roleUser: string
+    roleAdmin: string
+    roleInternal: string
+    statusOpen: string
+    statusProgress: string
+    statusResolved: string
+  }> = {
     ro: {
       title: 'Administrare suport tickets',
       subtitle: 'Raspunde utilizatorilor direct din platforma.',
@@ -655,30 +687,8 @@ const adminText = computed(() => {
       statusProgress: 'in progress',
       statusResolved: 'resolved',
     },
-  }[code] || {
-    title: 'Support tickets administration',
-    subtitle: 'Reply to users directly from the platform.',
-    ticketList: 'Tickets',
-    refresh: 'Refresh',
-    empty: 'No tickets found.',
-    loading: 'Loading...',
-    selectTicket: 'Select a ticket to view the conversation.',
-    status: 'Status',
-    internalNote: 'Internal note (not visible to user)',
-    reply: 'Reply',
-    replyPlaceholder: 'Write a reply to the user...',
-    replySent: 'Reply sent.',
-    sending: 'Sending...',
-    send: 'Send reply',
-    replyRequired: 'Message is required.',
-    replyError: 'Could not send reply.',
-    roleUser: 'User',
-    roleAdmin: 'Admin',
-    roleInternal: 'Internal note',
-    statusOpen: 'open',
-    statusProgress: 'in progress',
-    statusResolved: 'resolved',
   }
+  return copy[code === 'ro' ? 'ro' : 'en']
 })
 
 function adminStatusLabel(status: TicketStatus) {

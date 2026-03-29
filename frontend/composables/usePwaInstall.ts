@@ -69,7 +69,7 @@ function setupTrackingWatch(showBanner: ComputedRef<boolean>, canNativeInstall: 
   }
   watchRegistered = true
 
-  watch(showBanner, async (visible) => {
+  watch(showBanner, async (visible: boolean) => {
     if (!visible) {
       return
     }

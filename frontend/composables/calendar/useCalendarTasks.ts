@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref } from '#imports'
 
 type PlanCode = 'basic' | 'premium' | 'vip'
 

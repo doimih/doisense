@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from '#imports'
 import { useCalendarTasks } from '~/composables/calendar/useCalendarTasks'
 
 const {

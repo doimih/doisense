@@ -28,8 +28,13 @@ export function useApi() {
 
   const base = normalizeBase(rawBase)
 
+  function getCookieLang(): string {
+    const cookieRef = selectedLanguageCookie as unknown as { value?: string | null }
+    return (cookieRef.value || '').slice(0, 2).toLowerCase()
+  }
+
   function resolveRequestLanguage(): string {
-    const cookieLang = (selectedLanguageCookie.value || '').slice(0, 2).toLowerCase()
+    const cookieLang = getCookieLang()
     if (cookieLang) return cookieLang
 
     const i18nLocale = (nuxtApp as { $i18n?: { locale?: string | { value?: string } } }).$i18n?.locale

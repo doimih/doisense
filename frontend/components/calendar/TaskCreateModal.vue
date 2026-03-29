@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from '#imports'
 import { useCalendarTasks } from '~/composables/calendar/useCalendarTasks'
 
 type Capabilities = {
@@ -144,7 +144,7 @@ const isVip = computed(() => props.capabilities.ai_habit_suggestions || props.ca
 
 watch(
   () => props.open,
-  (open) => {
+  (open: boolean) => {
     if (!open) return
     error.value = ''
     aiText.value = ''
