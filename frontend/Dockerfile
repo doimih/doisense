@@ -7,7 +7,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 ARG NUXT_PUBLIC_APP_BASE_URL=/doisense/
 ENV NUXT_PUBLIC_APP_BASE_URL=${NUXT_PUBLIC_APP_BASE_URL}
-RUN npm run build
+RUN pnpm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app

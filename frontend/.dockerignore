@@ -3,6 +3,5 @@ node_modules
 .output
 dist
 coverage
-pnpm-lock.yaml
 npm-debug.log*
 yarn-error.log*
