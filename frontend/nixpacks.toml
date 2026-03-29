@@ -1,13 +1,13 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake"]
+nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake", "curl", "xz"]
 
 [phases.install]
 cmds = [
-  "npm install -g n && n 20.19.0 && /usr/local/bin/node -v && /usr/local/bin/npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --prod=false --no-optional=false"
+  "mkdir -p /opt/node20 && curl -fsSL https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz -o /tmp/node20.tar.xz && tar -xJf /tmp/node20.tar.xz -C /opt/node20 --strip-components=1 && /opt/node20/bin/node -v && /opt/node20/bin/npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --prod=false --no-optional=false"
 ]
 
 [phases.build]
-cmds = ["/usr/local/bin/npm exec --yes pnpm@9.15.9 -- run build"]
+cmds = ["/opt/node20/bin/npm exec --yes pnpm@9.15.9 -- run build"]
 
 [start]
-cmd = "/usr/local/bin/npm exec --yes pnpm@9.15.9 -- run start"
+cmd = "/opt/node20/bin/npm exec --yes pnpm@9.15.9 -- run start"
