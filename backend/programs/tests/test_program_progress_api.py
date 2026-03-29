@@ -1,138 +1,211 @@
+import datetime
+
 import pytest
-from datetime import timedelta
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from calendar_tasks.models import Task, TaskProgress
 from programs.models import GuidedProgram, GuidedProgramDay, ProgramReflection, UserProgramProgress
+
+User = get_user_model()
+
+
+def _auth_client_for(user):
+    client = APIClient()
+    refresh = RefreshToken.for_user(user)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+    return client
 
 
 @pytest.fixture
-def guided_program(db):
-    program = GuidedProgram.objects.create(
-        title="Focus Reset",
-        description="Program test",
+def premium_user(db):
+    return User.objects.create_user(
+        email="premium@example.com",
+        password="testpass123",
         language="en",
+        plan_tier="premium",
+        is_premium=True,
+    )
+
+
+@pytest.fixture
+def premium_client(premium_user):
+    return _auth_client_for(premium_user)
+
+
+@pytest.fixture
+def vip_user(db):
+    return User.objects.create_user(
+        email="vip@example.com",
+        password="testpass123",
+        language="en",
+        plan_tier="vip",
+        is_premium=True,
+        vip_manual_override=True,
+    )
+
+
+@pytest.fixture
+def vip_client(vip_user):
+    return _auth_client_for(vip_user)
+
+
+@pytest.fixture
+def programs_catalog(db):
+    basic = GuidedProgram.objects.create(
+        title="Focus Reset",
+        description="Basic test program",
+        language="en",
+        category=GuidedProgram.CATEGORY_COACHING,
+        duration_days=2,
+        plan_access=GuidedProgram.PLAN_ACCESS_BASIC,
         active=True,
-        is_premium=False,
     )
-    GuidedProgramDay.objects.create(
-        program=program,
-        day_number=1,
-        title="Day 1",
-        content="Content 1",
-        question="Q1",
+    premium = GuidedProgram.objects.create(
+        title="Deep Work Sprint",
+        description="Premium execution program",
+        language="en",
+        category=GuidedProgram.CATEGORY_COACHING,
+        duration_days=3,
+        plan_access=GuidedProgram.PLAN_ACCESS_PREMIUM,
+        active=True,
     )
-    GuidedProgramDay.objects.create(
-        program=program,
-        day_number=2,
-        title="Day 2",
-        content="Content 2",
-        question="Q2",
+    vip = GuidedProgram.objects.create(
+        title="Executive Recovery",
+        description="VIP adaptive program",
+        language="en",
+        category=GuidedProgram.CATEGORY_WELLNESS,
+        duration_days=2,
+        plan_access=GuidedProgram.PLAN_ACCESS_VIP,
+        active=True,
     )
-    return program
+
+    for program in (basic, premium, vip):
+        for day_number in range(1, program.duration_days + 1):
+            GuidedProgramDay.objects.create(
+                program=program,
+                day_number=day_number,
+                title=f"Day {day_number}",
+                content=f"Content for day {day_number}",
+                task_type=GuidedProgramDay.TASK_TYPE_CHECKIN,
+                estimated_time_minutes=10,
+                question=f"Question {day_number}",
+                ai_prompt=f"Prompt {day_number}",
+            )
+
+    return {"basic": basic, "premium": premium, "vip": vip}
 
 
 @pytest.mark.django_db
-def test_program_progress_complete_day(paid_client, guided_program):
-    url = reverse("program-progress", args=[guided_program.id])
-    response = paid_client.post(url, {"day_number": 1}, format="json")
+def test_program_list_respects_basic_tier(paid_client, programs_catalog):
+    response = paid_client.get(reverse("programs-list"), {"language": "en"})
 
     assert response.status_code == status.HTTP_200_OK
-    assert 1 in response.data["completed_days"]
-    assert response.data["current_day"] == 2
+    titles = [item["title"] for item in response.data["items"]]
+    assert programs_catalog["basic"].title in titles
+    assert programs_catalog["premium"].title not in titles
+    assert programs_catalog["vip"].title not in titles
 
 
 @pytest.mark.django_db
-def test_program_progress_requires_auth(api_client, guided_program):
-    url = reverse("program-progress", args=[guided_program.id])
-    response = api_client.get(url)
+def test_program_detail_exposes_days_for_accessible_program(paid_client, programs_catalog):
+    response = paid_client.get(reverse("program-detail", args=[programs_catalog["basic"].id]))
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-
-@pytest.mark.django_db
-def test_program_pause_and_resume(paid_client, paid_user, guided_program):
-    pause_url = reverse("program-pause", args=[guided_program.id])
-    resume_url = reverse("program-resume", args=[guided_program.id])
-
-    pause_response = paid_client.post(pause_url, {}, format="json")
-    assert pause_response.status_code == status.HTTP_200_OK
-    assert pause_response.data["is_paused"] is True
-    assert pause_response.data["paused_at"] is not None
-
-    resume_response = paid_client.post(resume_url, {}, format="json")
-    assert resume_response.status_code == status.HTTP_200_OK
-    assert resume_response.data["is_paused"] is False
-    assert resume_response.data["paused_at"] is None
-
-    progress = UserProgramProgress.objects.get(user=paid_user, program=guided_program)
-    assert progress.is_paused is False
-    assert progress.paused_at is None
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["title"] == programs_catalog["basic"].title
+    assert len(response.data["daily_steps"]) == programs_catalog["basic"].duration_days
+    assert response.data["can_activate"] is False
 
 
 @pytest.mark.django_db
-def test_program_reflection_create(paid_client, paid_user, guided_program):
-    reflection_url = reverse("program-reflection", args=[guided_program.id])
-    response = paid_client.post(
-        reflection_url,
-        {"day_number": 1, "reflection_text": "I kept my routine today."},
-        format="json",
-    )
+def test_program_activate_generates_calendar_tasks(premium_client, premium_user, programs_catalog):
+    program = programs_catalog["premium"]
+
+    response = premium_client.post(reverse("program-activate", args=[program.id]), {}, format="json")
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert "ai_feedback" in response.data
-    assert "Great reflection for day 1" in response.data["ai_feedback"]
-
-    reflection = ProgramReflection.objects.get(user=paid_user, program=guided_program, day_number=1)
-    assert reflection.reflection_text == "I kept my routine today."
+    assert response.data["calendar_tasks_generated"] == program.duration_days
+    assert response.data["activation"]["status"] == "active"
+    assert Task.objects.filter(user=premium_user, guided_program=program, source=Task.SOURCE_PROGRAM).count() == program.duration_days
 
 
 @pytest.mark.django_db
-def test_program_reflection_get_by_day_number(paid_client, paid_user, guided_program):
-    ProgramReflection.objects.create(
-        user=paid_user,
-        program=guided_program,
-        day_number=1,
-        reflection_text="I noticed I start better with 10 minutes of planning.",
-        ai_feedback="Good focus.",
-    )
+def test_basic_user_cannot_activate_premium_program(paid_client, programs_catalog):
+    response = paid_client.post(reverse("program-activate", args=[programs_catalog["premium"].id]), {}, format="json")
 
-    url = reverse("program-reflection", args=[guided_program.id]) + "?day_number=1"
-    response = paid_client.get(url)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.data["required_plan"] == GuidedProgram.PLAN_ACCESS_PREMIUM
+
+
+@pytest.mark.django_db
+def test_program_active_returns_current_step_after_activation(premium_client, programs_catalog):
+    program = programs_catalog["premium"]
+    premium_client.post(reverse("program-activate", args=[program.id]), {}, format="json")
+
+    response = premium_client.get(reverse("program-active"))
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data["day_number"] == 1
-    assert response.data["reflection_text"].startswith("I noticed")
+    assert response.data["item"]["program"]["id"] == program.id
+    assert response.data["item"]["current_step"]["day_number"] == 1
 
 
 @pytest.mark.django_db
-def test_program_reflection_invalid_day_rejected(paid_client, guided_program):
-    url = reverse("program-reflection", args=[guided_program.id])
-    response = paid_client.post(
-        url,
-        {"day_number": 99, "reflection_text": "Out of range."},
+def test_complete_day_marks_task_progress_and_vip_message(vip_client, vip_user, programs_catalog):
+    program = programs_catalog["vip"]
+    vip_client.post(reverse("program-activate", args=[program.id]), {}, format="json")
+
+    response = vip_client.post(reverse("program-complete-day", args=[program.id]), {"day_number": 1}, format="json")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["completed_day"] == 1
+    assert response.data["daily_message"]
+    assert response.data["dynamic_recommendation"] is not None
+
+    activation = UserProgramProgress.objects.get(user=vip_user, program=program)
+    task = Task.objects.get(user=vip_user, guided_program=program, program_day=1, source=Task.SOURCE_PROGRAM)
+    scheduled_day = activation.start_date + datetime.timedelta(days=0)
+    progress_entry = TaskProgress.objects.get(task=task, progress_date=scheduled_day)
+    assert progress_entry.is_completed is True
+
+
+@pytest.mark.django_db
+def test_program_reflection_roundtrip(premium_client, premium_user, programs_catalog):
+    program = programs_catalog["premium"]
+
+    create_response = premium_client.post(
+        reverse("program-reflection", args=[program.id]),
+        {"day_number": 1, "reflection_text": "I worked with more clarity today."},
         format="json",
     )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "Program has only" in response.data["detail"]
+    assert create_response.status_code == status.HTTP_201_CREATED
+    assert "ziua 1" in create_response.data["ai_feedback"].lower()
+
+    fetch_response = premium_client.get(reverse("program-reflection", args=[program.id]), {"day_number": 1})
+
+    assert fetch_response.status_code == status.HTTP_200_OK
+    assert fetch_response.data["reflection_text"] == "I worked with more clarity today."
+    assert ProgramReflection.objects.filter(user=premium_user, program=program, day_number=1).exists()
 
 
 @pytest.mark.django_db
-def test_program_progress_marks_dropout_for_inactive_user(paid_client, paid_user, guided_program):
+def test_program_progress_endpoint_returns_activation_state(premium_client, premium_user, programs_catalog):
+    program = programs_catalog["premium"]
     progress = UserProgramProgress.objects.create(
-        user=paid_user,
-        program=guided_program,
-        current_day=1,
-        completed_days=[],
-        is_paused=False,
+        user=premium_user,
+        program=program,
+        current_day=2,
+        start_date=timezone.localdate() - datetime.timedelta(days=1),
+        completed_days=[1],
     )
-    old_ts = timezone.now() - timedelta(days=8)
-    UserProgramProgress.objects.filter(pk=progress.pk).update(last_active_at=old_ts)
 
-    response = paid_client.get(reverse("program-progress", args=[guided_program.id]))
+    response = premium_client.get(reverse("program-progress", args=[program.id]))
 
     assert response.status_code == status.HTTP_200_OK
-    progress.refresh_from_db()
-    assert progress.dropout_marked_at is not None
+    assert response.data["id"] == progress.id
+    assert response.data["progress_day"] == 2
+    assert response.data["completed_days"] == [1]

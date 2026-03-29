@@ -1,4 +1,5 @@
 {% extends "admin/change_form.html" %}
+{% load i18n %}
 
 {% block extrahead %}
 {{ block.super }}
@@ -48,17 +49,17 @@
 {% block object-tools-items %}
 {{ block.super }}
 {% if request.GET.scope != 'email' %}
-<li>
-  <a href="{% url 'admin:core_systemconfig_test_backup_flow' %}" class="historylink">Test backup flow</a>
-</li>
-<li>
-  <a href="{% url 'admin:core_systemconfig_test_storage' %}" class="historylink">Test storage</a>
-</li>
+{% trans 'Test backup flow' as title %}
+{% url 'admin:core_systemconfig_test_backup_flow' as link %}
+{% include "unfold/helpers/tab_action.html" with title=title link=link icon="sync" %}
+{% trans 'Test storage' as title %}
+{% url 'admin:core_systemconfig_test_storage' as link %}
+{% include "unfold/helpers/tab_action.html" with title=title link=link icon="inventory_2" %}
 {% endif %}
 {% if request.GET.scope != 'storage' %}
-<li>
-  <a href="{% url 'admin:core_systemconfig_test_email' %}" class="historylink">Send test email</a>
-</li>
+{% trans 'Send test email' as title %}
+{% url 'admin:core_systemconfig_test_email' as link %}
+{% include "unfold/helpers/tab_action.html" with title=title link=link icon="mail" %}
 {% endif %}
 {% endblock %}
 

@@ -1,240 +1,482 @@
 <template>
-  <div class="max-w-xl mx-auto space-y-4 rounded-2xl border border-sky-100 bg-gradient-to-br from-[#f7fbff] via-[#f5f9fc] to-[#eef4f8] p-4 md:p-5">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-bold text-slate-900">{{ $t('nav.profile') }}</h1>
-    </div>
+  <div class="profile-shell">
+    <aside class="profile-sidebar">
+      <div class="profile-logo">doisense</div>
+      <nav class="profile-nav">
+        <a class="profile-nav-item active" href="#profile-overview">Profil</a>
+        <a class="profile-nav-item" href="#profile-habits">Obiceiurile mele</a>
+        <a class="profile-nav-item" href="#profile-subscription">Abonament</a>
+        <a class="profile-nav-item" href="#profile-security">Securitate</a>
+        <a class="profile-nav-item" href="#profile-data">Date personale</a>
+      </nav>
+      <div class="profile-plan">{{ planTierLabel }}</div>
+    </aside>
 
-    <div v-if="authStore.user" class="space-y-4 rounded-xl border border-sky-200 bg-white/95 p-4 shadow-sm">
-      <div class="flex items-center justify-between">
-        <p><span class="font-medium">{{ $t('auth.email') }}:</span> {{ authStore.user.email }}</p>
-        <span
-          :class="[
-            'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium',
-            authStore.user.membership_tier === 'trial'
-              ? 'border-amber-300 bg-amber-50 text-amber-800'
-              : ['basic','premium','vip'].includes(authStore.user.membership_tier)
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                : 'border-stone-200 bg-stone-50 text-stone-600',
-          ]"
-        >
-          <span
-            :class="[
-              'h-2.5 w-2.5 rounded-full',
-              authStore.user.membership_tier === 'trial' ? 'bg-amber-400' : ['basic','premium','vip'].includes(authStore.user.membership_tier) ? 'bg-emerald-500' : 'bg-stone-400',
-            ]"
-          />
-          {{ planTierLabel }}
-        </span>
-      </div>
+    <main class="profile-main" v-if="authStore.user">
+      <header class="profile-header" id="profile-overview">
+        <h1>{{ $t('nav.profile') }}</h1>
+        <p>{{ text.manageNotificationsSupport }}</p>
+      </header>
 
-      <!-- Trial countdown banner -->
-      <div v-if="authStore.user.membership_tier === 'trial' && trialDaysLeft !== null" class="rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-sm">
-        <p class="font-medium text-amber-900">{{ text.trialActive }}</p>
-        <p class="mt-0.5 text-amber-700">{{ trialDaysLeft > 0 ? text.trialDaysLeft.replace('{n}', String(trialDaysLeft)) : text.trialLastDay }}</p>
-        <NuxtLink :to="localePath('/pricing')" class="mt-2 inline-block text-xs font-semibold text-sky-700 hover:underline">
-          {{ text.trialUpgradeNow }} →
-        </NuxtLink>
-      </div>
-
-      <!-- Free (expired trial / no subscription) upgrade prompt -->
-      <div v-if="authStore.user.membership_tier === 'free'" class="rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm">
-        <p class="font-medium text-stone-900">{{ text.freeNotice }}</p>
-        <NuxtLink :to="localePath('/pricing')" class="mt-2 inline-block text-xs font-semibold text-sky-700 hover:underline">
-          {{ text.choosePlan }} →
-        </NuxtLink>
-      </div>
-
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.firstName }}</label>
-          <input v-model="firstName" type="text" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100" />
+      <section class="profile-card profile-hero-card">
+        <div class="profile-avatar">
+          {{ (firstName || authStore.user.first_name || authStore.user.email || 'U').charAt(0).toUpperCase() }}
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.lastName }}</label>
-          <input v-model="lastName" type="text" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100" />
+          <h2 class="profile-name">{{ firstName || authStore.user.first_name || 'User' }} {{ lastName || authStore.user.last_name || '' }}</h2>
+          <p class="profile-email">{{ authStore.user.email }}</p>
         </div>
-      </div>
+      </section>
 
-      <div>
-        <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.phone }}</label>
-        <input
-          v-model="phoneContact"
-          type="tel"
-          placeholder="+40 712 345 678"
-          class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
-        />
-        <div class="mt-2 flex flex-wrap gap-2">
-          <button
-            v-for="dialCode in dialCodeOptions"
-            :key="dialCode.value"
-            type="button"
-            class="rounded-md border border-sky-200 bg-white px-2 py-1 text-xs text-slate-700 transition hover:bg-sky-50"
-            @click="setPhoneDialCode(dialCode.value)"
-          >
-            {{ dialCode.label }}
+      <HabitsDashboard />
+
+      <section class="profile-card">
+        <div class="profile-section-head">
+          <h3>Detalii cont</h3>
+          <button type="button" class="profile-btn profile-btn-primary" :disabled="saveLoading" @click="saveProfile">
+            {{ saveLoading ? $t('common.loading') : text.saveProfile }}
           </button>
         </div>
-      </div>
-
-      <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-3 text-sm text-slate-700">
-        <p class="font-medium text-slate-900">{{ text.savedCard }}</p>
-        <p v-if="cardLoading" class="mt-1">{{ $t('common.loading') }}</p>
-        <template v-else-if="savedCard?.has_saved_card && savedCard.card">
-          <p class="mt-1">{{ savedCard.card.brand?.toUpperCase() }} •••• {{ savedCard.card.last4 }}</p>
-          <p>{{ text.expires }}: {{ savedCard.card.exp_month }}/{{ savedCard.card.exp_year }}</p>
-          <button
-            type="button"
-            :disabled="billingPortalLoading"
-            class="mt-3 inline-flex rounded-md border border-sky-200 bg-white px-3 py-1.5 text-slate-700 transition hover:bg-sky-50 disabled:opacity-50"
-            @click="openBillingPortal"
-          >
-            {{ billingPortalLoading ? $t('common.loading') : text.manageCard }}
-          </button>
-        </template>
-        <p v-else class="mt-1">{{ text.noCard }}</p>
-      </div>
-
-      <p v-if="saveError" class="text-sm text-red-600">{{ saveError }}</p>
-      <p v-if="saveSuccess" class="text-sm text-emerald-700">{{ saveSuccess }}</p>
-
-      <button
-        type="button"
-        :disabled="saveLoading"
-        class="rounded-lg bg-sky-300 px-4 py-2 font-medium text-stone-900 transition hover:bg-sky-200 disabled:opacity-50"
-        @click="saveProfile"
-      >
-        {{ saveLoading ? $t('common.loading') : text.saveProfile }}
-      </button>
-
-      <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-4">
-        <p class="text-sm text-slate-700">
-          {{ text.featureTourPrompt }}
-        </p>
-        <button
-          type="button"
-          class="mt-3 rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
-          @click="restartOnboarding"
-        >
-          {{ text.restartOnboarding }}
-        </button>
-      </div>
-
-      <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-4">
-        <p class="text-sm text-slate-700">
-          {{ text.manageNotificationsSupport }}
-        </p>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <NuxtLink
-            :to="localePath('/notifications')"
-            class="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
-          >
-            {{ text.notificationsCta }}
-          </NuxtLink>
-          <NuxtLink
-            :to="localePath('/support')"
-            class="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-sky-100"
-          >
-            {{ text.supportTicketsCta }}
-          </NuxtLink>
-        </div>
-      </div>
-
-      <!-- Upgrade section: show for trial or free users -->
-      <div v-if="['trial', 'free'].includes(authStore.user.membership_tier)" class="space-y-2 rounded-lg border border-sky-200 bg-sky-50/60 p-4">
-        <p class="text-sm font-semibold text-slate-900">{{ text.upgradeTo }}</p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="plan in upgradePlans"
-            :key="plan.key"
-            type="button"
-            :disabled="checkoutLoading === plan.key"
-            class="rounded-full border border-sky-300 bg-white px-3 py-1.5 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50"
-            @click="createCheckout(plan.key)"
-          >
-            {{ checkoutLoading === plan.key ? $t('common.loading') : plan.label }}
-          </button>
-        </div>
-      </div>
-
-      <div class="space-y-3 rounded-lg border border-sky-200 bg-sky-50/70 p-4">
-        <h2 class="text-base font-semibold text-slate-900">{{ text.passwordChange }}</h2>
-
-        <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.currentPassword }}</label>
-          <input
-            v-model="currentPassword"
-            type="password"
-            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
-          />
-        </div>
-
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.newPassword }}</label>
-            <input
-              v-model="newPassword"
-              type="password"
-              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
-            />
+        <div class="profile-grid">
+          <div class="profile-field">
+            <label>{{ text.firstName }}</label>
+            <input v-model="firstName" type="text" />
           </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">{{ text.confirmNewPassword }}</label>
-            <input
-              v-model="newPasswordConfirm"
-              type="password"
-              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-100"
-            />
+          <div class="profile-field">
+            <label>{{ text.lastName }}</label>
+            <input v-model="lastName" type="text" />
+          </div>
+          <div class="profile-field profile-field-full">
+            <label>{{ text.phone }}</label>
+            <input v-model="phoneContact" type="tel" placeholder="+40 712 345 678" />
+            <div class="profile-tags">
+              <button v-for="dialCode in dialCodeOptions" :key="dialCode.value" type="button" class="profile-tag" @click="setPhoneDialCode(dialCode.value)">
+                {{ dialCode.label }}
+              </button>
+            </div>
           </div>
         </div>
+        <p v-if="saveError" class="profile-error">{{ saveError }}</p>
+        <p v-if="saveSuccess" class="profile-success">{{ saveSuccess }}</p>
+      </section>
 
-        <p v-if="passwordError" class="text-sm text-red-600">{{ passwordError }}</p>
-        <p v-if="passwordSuccess" class="text-sm text-emerald-700">{{ passwordSuccess }}</p>
+      <section class="profile-card" id="profile-subscription">
+        <div class="profile-section-head">
+          <h3>Abonament</h3>
+        </div>
 
-        <button
-          type="button"
-          :disabled="passwordLoading"
-          class="rounded-lg bg-sky-300 px-4 py-2 font-medium text-stone-900 transition hover:bg-sky-200 disabled:opacity-50"
-          @click="changePassword"
-        >
+        <div v-if="authStore.user.membership_tier === 'trial' && trialDaysLeft !== null" class="profile-banner profile-banner-warn">
+          <p class="profile-banner-title">{{ text.trialActive }}</p>
+          <p>{{ trialDaysLeft > 0 ? text.trialDaysLeft.replace('{n}', String(trialDaysLeft)) : text.trialLastDay }}</p>
+          <NuxtLink :to="localePath('/pricing')" class="profile-link">{{ text.trialUpgradeNow }} →</NuxtLink>
+        </div>
+
+        <div v-if="authStore.user.membership_tier === 'free'" class="profile-banner">
+          <p class="profile-banner-title">{{ text.freeNotice }}</p>
+          <NuxtLink :to="localePath('/pricing')" class="profile-link">{{ text.choosePlan }} →</NuxtLink>
+        </div>
+
+        <div class="profile-banner">
+          <p class="profile-banner-title">{{ text.savedCard }}</p>
+          <p v-if="cardLoading">{{ $t('common.loading') }}</p>
+          <template v-else-if="savedCard?.has_saved_card && savedCard.card">
+            <p>{{ savedCard.card.brand?.toUpperCase() }} •••• {{ savedCard.card.last4 }}</p>
+            <p>{{ text.expires }}: {{ savedCard.card.exp_month }}/{{ savedCard.card.exp_year }}</p>
+            <button type="button" class="profile-btn" :disabled="billingPortalLoading" @click="openBillingPortal">
+              {{ billingPortalLoading ? $t('common.loading') : text.manageCard }}
+            </button>
+          </template>
+          <p v-else>{{ text.noCard }}</p>
+        </div>
+
+        <div v-if="['trial', 'free'].includes(authStore.user.membership_tier)" class="profile-upgrade">
+          <p>{{ text.upgradeTo }}</p>
+          <div class="profile-tags">
+            <button
+              v-for="plan in upgradePlans"
+              :key="plan.key"
+              type="button"
+              class="profile-tag"
+              :disabled="checkoutLoading === plan.key"
+              @click="createCheckout(plan.key)"
+            >
+              {{ checkoutLoading === plan.key ? $t('common.loading') : plan.label }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile-card" id="profile-security">
+        <div class="profile-section-head">
+          <h3>{{ text.passwordChange }}</h3>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-field profile-field-full">
+            <label>{{ text.currentPassword }}</label>
+            <input v-model="currentPassword" type="password" />
+          </div>
+          <div class="profile-field">
+            <label>{{ text.newPassword }}</label>
+            <input v-model="newPassword" type="password" />
+          </div>
+          <div class="profile-field">
+            <label>{{ text.confirmNewPassword }}</label>
+            <input v-model="newPasswordConfirm" type="password" />
+          </div>
+        </div>
+        <p v-if="passwordError" class="profile-error">{{ passwordError }}</p>
+        <p v-if="passwordSuccess" class="profile-success">{{ passwordSuccess }}</p>
+        <button type="button" class="profile-btn profile-btn-primary" :disabled="passwordLoading" @click="changePassword">
           {{ passwordLoading ? $t('common.loading') : text.changePassword }}
         </button>
-      </div>
+      </section>
 
-      <div class="space-y-3 rounded-lg border border-red-300 bg-red-50/80 p-4">
-        <h2 class="text-base font-semibold text-slate-900">{{ dataRightsText.title }}</h2>
-        <p class="text-sm text-slate-700">{{ dataRightsText.body }}</p>
-        <p v-if="exportSuccess" class="text-sm text-emerald-700">{{ exportSuccess }}</p>
-        <p v-if="exportError" class="text-sm text-red-700">{{ exportError }}</p>
-        <button
-          type="button"
-          :disabled="exportLoading"
-          class="rounded-lg border border-sky-300 bg-white px-4 py-2 font-medium text-slate-900 transition hover:bg-sky-50 disabled:opacity-60"
-          @click="exportPersonalData"
-        >
+      <section class="profile-card" id="profile-data">
+        <div class="profile-section-head">
+          <h3>{{ dataRightsText.title }}</h3>
+        </div>
+        <p class="profile-copy">{{ dataRightsText.body }}</p>
+        <p v-if="exportSuccess" class="profile-success">{{ exportSuccess }}</p>
+        <p v-if="exportError" class="profile-error">{{ exportError }}</p>
+        <button type="button" class="profile-btn" :disabled="exportLoading" @click="exportPersonalData">
           {{ exportLoading ? dataRightsText.exportLoading : dataRightsText.exportAction }}
         </button>
-      </div>
+      </section>
 
-      <div class="space-y-3 rounded-lg border border-red-300 bg-red-50/80 p-4">
-        <h2 class="text-base font-semibold text-red-800">{{ text.deleteTitle }}</h2>
-        <p class="text-sm text-red-700">{{ text.deleteBody }}</p>
-        <p class="text-xs font-semibold uppercase tracking-wide text-red-700">{{ text.deleteWarning }}</p>
-        <p v-if="deleteError" class="text-sm text-red-700">{{ deleteError }}</p>
-
-        <button
-          type="button"
-          :disabled="deleteLoading"
-          class="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
-          @click="deleteAccount"
-        >
+      <section class="profile-card profile-card-danger">
+        <div class="profile-section-head">
+          <h3>{{ text.deleteTitle }}</h3>
+        </div>
+        <p class="profile-copy">{{ text.deleteBody }}</p>
+        <p class="profile-warning">{{ text.deleteWarning }}</p>
+        <p v-if="deleteError" class="profile-error">{{ deleteError }}</p>
+        <button type="button" class="profile-btn profile-btn-danger" :disabled="deleteLoading" @click="deleteAccount">
           {{ deleteLoading ? $t('common.loading') : text.deleteAction }}
         </button>
-      </div>
-    </div>
+      </section>
+
+      <section class="profile-card">
+        <div class="profile-section-head">
+          <h3>Acces rapid</h3>
+        </div>
+        <p class="profile-copy">{{ text.featureTourPrompt }}</p>
+        <div class="profile-tags">
+          <button type="button" class="profile-btn" @click="restartOnboarding">{{ text.restartOnboarding }}</button>
+          <NuxtLink :to="localePath('/notifications')" class="profile-btn">{{ text.notificationsCta }}</NuxtLink>
+          <NuxtLink :to="localePath('/tickets')" class="profile-btn">{{ text.supportTicketsCta }}</NuxtLink>
+        </div>
+      </section>
+    </main>
   </div>
 </template>
 
+<style scoped>
+.profile-shell {
+  --bg: #fafbfa;
+  --surface: #fafbfa;
+  --border: #d4e4e0;
+  --text: #2c3e35;
+  --muted: #8a9b94;
+  --accent: #7bb8a0;
+  --accent-soft: #e8f1ed;
+  --danger: #c05848;
+  --danger-soft: #fdf0ee;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 860px);
+  gap: 28px;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.profile-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  position: sticky;
+  top: 86px;
+}
+
+.profile-logo {
+  padding: 0 22px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.profile-nav {
+  padding: 14px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-nav-item {
+  padding: 10px 22px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.profile-nav-item.active,
+.profile-nav-item:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.profile-plan {
+  margin: auto 22px 0;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 2px;
+  text-align: center;
+  font-size: 10px;
+  padding: 6px 10px;
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.profile-header h1 {
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.profile-header p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+}
+
+.profile-card-danger {
+  border-color: #ebc5c5;
+  background: #fff6f6;
+}
+
+.profile-hero-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 28px 32px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a8d5ba, #7bb8a0);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.profile-name {
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.profile-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.profile-section-head h3 {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-field-full {
+  grid-column: 1 / -1;
+}
+
+.profile-field label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.profile-field input {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+}
+
+.profile-field input:focus {
+  border-bottom-color: var(--accent);
+  outline: none;
+  box-shadow: none;
+}
+
+.profile-banner {
+  border: 1px solid var(--border);
+  background: #f0f4f1;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.profile-banner-warn {
+  border-color: #eadcb7;
+  background: #f6f2e8;
+}
+
+.profile-banner-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.profile-upgrade > p {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.profile-link {
+  color: var(--accent);
+  display: inline-block;
+  margin-top: 6px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.profile-link:hover {
+  text-decoration: underline;
+}
+
+.profile-tags {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-tag,
+.profile-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 3px;
+  color: var(--muted);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 400;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-btn-primary {
+  background: var(--text);
+  color: #fafbfa;
+  border-color: var(--text);
+}
+
+.profile-btn-danger {
+  background: var(--danger-soft, #fdf0ee);
+  border-color: #f0c8c0;
+  color: var(--danger);
+}
+
+.profile-copy {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.profile-warning {
+  margin-top: 10px;
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.profile-error {
+  color: #ba4a4a;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.profile-success {
+  color: #1f8b63;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+@media (max-width: 980px) {
+  .profile-shell {
+    grid-template-columns: 1fr;
+    padding-top: 10px;
+  }
+
+  .profile-sidebar {
+    display: none;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 <script setup lang="ts">
+import HabitsDashboard from '~/components/profile/HabitsDashboard.vue'
+
 definePageMeta({ middleware: 'auth' })
 
 const authStore = useAuthStore()

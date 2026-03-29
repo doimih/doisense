@@ -5,10 +5,10 @@
       centered ? 'items-center text-center' : 'items-start',
       sizeClasses.wrapper,
     ]"
-    aria-label="doisense"
+    aria-label="doi sense"
   >
     <span class="brand-word inline-flex items-baseline" :class="sizeClasses.word">
-      <span :class="isDark ? 'text-white' : 'text-stone-900'">doi</span>
+      <span :class="isDark ? 'text-white' : 'text-stone-900'">doi </span>
       <span style="color: #c4a882;">sense</span>
     </span>
     <span
@@ -72,7 +72,7 @@ const sizeClasses = computed(() => {
 
 .brand-word span:last-child {
   font-style: italic;
-  margin-left: 0.22em;
+  margin-left: 0.02em;
 }
 
 .brand-tagline {

@@ -31,6 +31,10 @@ EVENT_SCHEMA = {
     "reactivation_campaign_sent": ["segment", "days_inactive"],
     "feature_access_checked": ["feature_key", "granted"],
     "quota_exceeded": ["metric_key"],
+    "pwa_install_prompted": ["platform", "trigger"],
+    "pwa_install_accepted": ["platform", "method"],
+    "pwa_install_dismissed": ["platform", "never_again"],
+    "pwa_running_standalone": ["platform"],
 }
 
 

@@ -256,9 +256,22 @@ async function register() {
     )
     success.value = res.detail || t('auth.registerSuccess')
   } catch (e: unknown) {
-    error.value = (e as { data?: { detail?: string }; message?: string })?.data?.detail
-      || (e as { message?: string })?.message
-      || t('auth.registerFailed')
+    const apiError = e as {
+      data?: Record<string, unknown>
+      message?: string
+    }
+    const detail = apiError?.data?.detail
+    if (typeof detail === 'string' && detail.trim()) {
+      error.value = detail
+    } else {
+      const data = apiError?.data || {}
+      const firstFieldError = Object.values(data)
+        .flatMap((value) => Array.isArray(value) ? value : [value])
+        .find((value) => typeof value === 'string' && value.trim())
+      error.value = (firstFieldError as string | undefined)
+        || apiError?.message
+        || t('auth.registerFailed')
+    }
   } finally {
     loading.value = false
   }

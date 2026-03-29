@@ -1,31 +1,31 @@
 <template>
-  <section class="rounded-3xl bg-sky-100/70 px-5 py-10 md:px-10 md:py-14">
+  <section class="rounded-3xl border border-[#d4e4e0] bg-[#f0f4f1] px-5 py-10 md:px-10 md:py-14">
     <div class="mx-auto max-w-5xl space-y-10">
       <header class="space-y-4 text-center">
-        <p class="inline-flex items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-xs font-semibold text-stone-700">
+        <p class="inline-flex items-center rounded-full border border-[#c6d9d2] bg-[#fafbfa] px-4 py-2 text-xs font-semibold text-[#42524b]">
           {{ text.badge }}
         </p>
-        <h1 class="text-4xl md:text-6xl font-bold text-stone-900">{{ text.title }}</h1>
-        <p class="mx-auto max-w-3xl text-lg leading-8 text-stone-600">{{ text.subtitle }}</p>
+        <h1 class="text-4xl md:text-6xl font-bold text-[#2c3e35]">{{ text.title }}</h1>
+        <p class="mx-auto max-w-3xl text-lg leading-8 text-[#5a6b63]">{{ text.subtitle }}</p>
       </header>
 
       <section class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         <article
           v-for="item in text.items"
           :key="item.title"
-          class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+          class="rounded-2xl border border-[#d4e4e0] bg-[#fafbfa] p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_12px_32px_-18px_rgba(44,62,53,0.35)]"
         >
-          <div class="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-stone-50 text-xl">
+          <div class="flex h-12 w-12 items-center justify-center rounded-full border border-[#d4e4e0] bg-[#f4f8f6] text-xl">
             {{ item.icon }}
           </div>
-          <h2 class="mt-4 text-3xl font-semibold leading-tight text-stone-900">{{ item.title }}</h2>
-          <p class="mt-3 text-xl leading-8 text-stone-600">{{ item.description }}</p>
+          <h2 class="mt-4 text-3xl font-semibold leading-tight text-[#2c3e35]">{{ item.title }}</h2>
+          <p class="mt-3 text-xl leading-8 text-[#5a6b63]">{{ item.description }}</p>
           <NuxtLink
             :to="localePath(item.to)"
-            class="mt-6 inline-flex items-center gap-2 text-xl font-semibold text-stone-900"
+            class="mt-6 inline-flex items-center gap-2 text-xl font-semibold text-[#2c3e35]"
           >
             {{ item.action }}
-            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-stone-800">→</span>
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#e8f1ed] text-[#42524b]">→</span>
           </NuxtLink>
         </article>
       </section>

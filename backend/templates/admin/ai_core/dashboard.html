@@ -1,0 +1,232 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .ai-health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .ai-health-card {
+    background: var(--body-bg, #fff);
+    border: 1px solid var(--hairline-color, #ddd);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .ai-health-card h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+  }
+  .ai-health-metric {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 2px 0 0;
+  }
+  .ai-health-meta {
+    color: var(--body-quiet-color, #666);
+    font-size: 12px;
+  }
+  .ai-health-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ai-health-badge.healthy { background: #dcfce7; color: #14532d; }
+  .ai-health-badge.warning { background: #fef3c7; color: #78350f; }
+  .ai-health-badge.critical { background: #fee2e2; color: #7f1d1d; }
+  .ai-health-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  .ai-health-table th,
+  .ai-health-table td {
+    border-bottom: 1px solid var(--hairline-color, #ddd);
+    text-align: left;
+    padding: 8px;
+    font-size: 13px;
+    vertical-align: top;
+  }
+  .ai-health-empty {
+    color: var(--body-quiet-color, #666);
+    font-size: 13px;
+    margin: 0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1>AI Health Dashboard</h1>
+  <p class="ai-health-meta">Health window: last {{ dashboard_window_hours }} hours</p>
+
+  <div class="ai-health-card" style="margin-bottom: 14px;">
+    <strong>System status:</strong>
+    <span class="ai-health-badge {{ system_status }}">{{ system_status }}</span>
+  </div>
+
+  <div class="ai-health-grid">
+    <section class="ai-health-card">
+      <h3>Response Latency</h3>
+      <div class="ai-health-metric">{{ metrics.avg_latency_ms }} ms</div>
+      <p class="ai-health-meta">Average latency</p>
+      <table class="ai-health-table">
+        <tr><th>Max latency</th><td>{{ metrics.max_latency_ms }} ms</td></tr>
+        <tr><th>P95 latency</th><td>{{ metrics.p95_latency_ms }} ms</td></tr>
+        <tr><th>Total requests</th><td>{{ metrics.total_requests }}</td></tr>
+      </table>
+    </section>
+
+    <section class="ai-health-card">
+      <h3>Error Health</h3>
+      <div class="ai-health-metric">{{ metrics.error_rate }}%</div>
+      <p class="ai-health-meta">Error rate</p>
+      <table class="ai-health-table">
+        <tr><th>Error count</th><td>{{ metrics.error_count }}</td></tr>
+        <tr><th>Timeouts</th><td>{{ metrics.timeout_count }}</td></tr>
+      </table>
+    </section>
+
+    <section class="ai-health-card">
+      <h3>Orchestrator Health</h3>
+      <table class="ai-health-table">
+        <tr><th>Status</th><td>{{ orchestrator.status }}</td></tr>
+        <tr><th>Cache version</th><td>{{ orchestrator.cache_version|default:"not initialized" }}</td></tr>
+        <tr><th>Cache TTL</th><td>{{ orchestrator.cache_ttl_seconds }} sec</td></tr>
+        <tr><th>History turns</th><td>{{ orchestrator.max_history_turns }}</td></tr>
+        <tr><th>Context limit</th><td>{{ orchestrator.max_context_chars }} chars</td></tr>
+      </table>
+    </section>
+
+    <section class="ai-health-card">
+      <h3>Cache Status</h3>
+      <table class="ai-health-table">
+        <tr><th>Backend</th><td>{{ cache_status.backend }}</td></tr>
+        <tr><th>Cached events</th><td>{{ cache_status.events_cached }}</td></tr>
+      </table>
+    </section>
+  </div>
+
+  <div class="ai-health-grid">
+    <section class="ai-health-card">
+      <h3>Prompt Anomalies</h3>
+      {% if anomalies %}
+      <table class="ai-health-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Severity</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for anomaly in anomalies %}
+          <tr>
+            <td>{{ anomaly.occurred_at|date:"Y-m-d H:i:s" }}</td>
+            <td>
+              <span class="ai-health-badge {{ anomaly.severity }}">{{ anomaly.severity }}</span>
+            </td>
+            <td>{{ anomaly.message }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ai-health-empty">No anomalies detected.</p>
+      {% endif %}
+    </section>
+
+    <section class="ai-health-card">
+      <h3>AI Error Logs</h3>
+      {% if error_logs %}
+      <table class="ai-health-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Type</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in error_logs %}
+          <tr>
+            <td>{{ item.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ item.error_type }}</td>
+            <td>{{ item.message }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ai-health-empty">No AI errors recorded recently.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="ai-health-grid">
+    <section class="ai-health-card">
+      <h3>Recent Prompt Audits</h3>
+      {% if recent_audits %}
+      <table class="ai-health-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Action</th>
+            <th>Actor</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for audit in recent_audits %}
+          <tr>
+            <td>{{ audit.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ audit.action }}</td>
+            <td>{{ audit.actor|default:"system" }}</td>
+            <td>{{ audit.reason|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ai-health-empty">No prompt audit activity yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="ai-health-card">
+      <h3>Recent Prompt Modifications</h3>
+      {% if recent_prompt_edits %}
+      <table class="ai-health-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Prompt</th>
+            <th>Version</th>
+            <th>Updated by</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for version in recent_prompt_edits %}
+          <tr>
+            <td>{{ version.updated_at|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ version.prompt.name }}</td>
+            <td>v{{ version.version_number }}</td>
+            <td>{{ version.updated_by|default:"system" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ai-health-empty">No prompt versions available yet.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

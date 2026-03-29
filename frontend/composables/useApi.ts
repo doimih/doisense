@@ -1,6 +1,8 @@
 export function useApi() {
   const config = useRuntimeConfig()
   const authStore = useAuthStore()
+  const nuxtApp = useNuxtApp()
+  const selectedLanguageCookie = useCookie<string | null>('i18n_redirect', { default: () => null })
   const rawBase = config.public.apiBase as string
   const appBase = (config.public.appBaseUrl as string) || '/'
 
@@ -25,6 +27,19 @@ export function useApi() {
   }
 
   const base = normalizeBase(rawBase)
+
+  function resolveRequestLanguage(): string {
+    const cookieLang = (selectedLanguageCookie.value || '').slice(0, 2).toLowerCase()
+    if (cookieLang) return cookieLang
+
+    const i18nLocale = (nuxtApp as { $i18n?: { locale?: string | { value?: string } } }).$i18n?.locale
+    const localeValue = typeof i18nLocale === 'string'
+      ? i18nLocale
+      : (i18nLocale as { value?: string } | undefined)?.value
+
+    const localeLang = (localeValue || 'en').slice(0, 2).toLowerCase()
+    return localeLang || 'en'
+  }
 
   function isUnauthorized(error: unknown): boolean {
     const status = (error as { statusCode?: number; response?: { status?: number } })?.statusCode
@@ -57,8 +72,11 @@ export function useApi() {
         }
         return res.access
       }
-    } catch {
-      authStore.logout()
+    } catch (error) {
+      // Keep local auth state on transient errors; logout only on explicit unauthorized refresh.
+      if (isUnauthorized(error)) {
+        authStore.logout()
+      }
     }
 
     return null
@@ -78,14 +96,19 @@ export function useApi() {
       if (!isFormData) {
         headers['Content-Type'] = 'application/json'
       }
+      headers['X-Language'] = resolveRequestLanguage()
       if (token) headers.Authorization = `Bearer ${token}`
 
-      const res = await $fetch(path, {
+      const requestConfig = {
         baseURL: base,
-        ...options,
+        ...(options as Record<string, unknown>),
         headers: { ...headers, ...options.headers },
-        body: isFormData ? options.body : (options.body ? JSON.stringify(options.body) : options.body),
-      })
+        body: isFormData
+          ? (options.body as BodyInit)
+          : (options.body ? (JSON.stringify(options.body) as BodyInit) : undefined),
+      }
+
+      const res = await $fetch(path, requestConfig as Parameters<typeof $fetch>[1])
       return res as T
     }
 

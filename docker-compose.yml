@@ -10,6 +10,7 @@ services:
     build:
       context: ./docker/db
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       POSTGRES_USER: doisense
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-db-password}
@@ -26,9 +27,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     expose:
       - "6379"
     networks:
@@ -38,11 +41,13 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 10s
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    restart: unless-stopped
     volumes:
       - doisense_media:/app/media
     expose:
@@ -50,23 +55,29 @@ services:
     networks:
       - app_internal
       - traefik
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     environment:
       DATABASE_URL: postgres://doisense:${POSTGRES_PASSWORD:-change-me-db-password}@db:5432/doisense
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production-with-at-least-32-characters}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,backend,projects.doimih.net}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://projects.doimih.net}
       CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://projects.doimih.net}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      STRIPE_PRODUCT_ID_BASIC: ${STRIPE_PRODUCT_ID_BASIC}
-      STRIPE_PRODUCT_ID_PREMIUM: ${STRIPE_PRODUCT_ID_PREMIUM}
-      STRIPE_PRODUCT_ID_VIP: ${STRIPE_PRODUCT_ID_VIP}
-      STRIPE_PRICE_ID_PREMIUM: ${STRIPE_PRICE_ID_PREMIUM}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRODUCT_ID_BASIC: ${STRIPE_PRODUCT_ID_BASIC:-}
+      STRIPE_PRODUCT_ID_PREMIUM: ${STRIPE_PRODUCT_ID_PREMIUM:-}
+      STRIPE_PRODUCT_ID_VIP: ${STRIPE_PRODUCT_ID_VIP:-}
+      STRIPE_PRICE_ID_PREMIUM: ${STRIPE_PRICE_ID_PREMIUM:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -100,17 +111,24 @@ services:
       dockerfile: Dockerfile
       args:
         NUXT_PUBLIC_APP_BASE_URL: /doisense/
+    restart: unless-stopped
     expose:
       - "3000"
     networks:
       - app_internal
       - traefik
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/doisense/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     environment:
       NUXT_PUBLIC_APP_BASE_URL: /doisense/
       NUXT_PUBLIC_API_BASE: https://projects.doimih.net/doisense/api
-      NUXT_PUBLIC_GOOGLE_CLIENT_ID: ${NUXT_PUBLIC_GOOGLE_CLIENT_ID}
-      NUXT_PUBLIC_APPLE_CLIENT_ID: ${NUXT_PUBLIC_APPLE_CLIENT_ID}
-      NUXT_PUBLIC_APPLE_REDIRECT_URI: ${NUXT_PUBLIC_APPLE_REDIRECT_URI}
+      NUXT_PUBLIC_GOOGLE_CLIENT_ID: ${NUXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+      NUXT_PUBLIC_APPLE_CLIENT_ID: ${NUXT_PUBLIC_APPLE_CLIENT_ID:-}
+      NUXT_PUBLIC_APPLE_REDIRECT_URI: ${NUXT_PUBLIC_APPLE_REDIRECT_URI:-}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"

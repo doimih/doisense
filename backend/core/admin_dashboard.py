@@ -257,6 +257,41 @@ def dashboard_callback(request, context):
         first_received_at__gte=start_30d,
         last_status=StripeWebhookEvent.STATUS_IGNORED,
     ).count()
+    chunk_recovery_triggered_24h = AnalyticsEvent.objects.filter(
+        event_name="frontend_chunk_recovery_triggered",
+        created_at__gte=now - timedelta(hours=24),
+    ).count()
+    chunk_recovery_failed_24h = AnalyticsEvent.objects.filter(
+        event_name="frontend_chunk_recovery_failed",
+        created_at__gte=now - timedelta(hours=24),
+    ).count()
+    pwa_prompted_period = AnalyticsEvent.objects.filter(
+        event_name="pwa_install_prompted",
+        created_at__gte=start_period,
+    ).count()
+    pwa_accepted_period = AnalyticsEvent.objects.filter(
+        event_name="pwa_install_accepted",
+        created_at__gte=start_period,
+    ).count()
+    pwa_dismissed_period = AnalyticsEvent.objects.filter(
+        event_name="pwa_install_dismissed",
+        created_at__gte=start_period,
+    ).count()
+    pwa_standalone_period = AnalyticsEvent.objects.filter(
+        event_name="pwa_running_standalone",
+        created_at__gte=start_period,
+    ).count()
+    pwa_accepted_android = AnalyticsEvent.objects.filter(
+        event_name="pwa_install_accepted",
+        created_at__gte=start_period,
+        properties__platform="android",
+    ).count()
+    pwa_accepted_ios = AnalyticsEvent.objects.filter(
+        event_name="pwa_install_accepted",
+        created_at__gte=start_period,
+        properties__platform="ios",
+    ).count()
+    pwa_install_rate = round((pwa_accepted_period / pwa_prompted_period) * 100, 1) if pwa_prompted_period else 0
     system_errors_24h = SystemErrorEvent.objects.filter(created_at__gte=now - timedelta(hours=24)).count()
     system_errors_7d = SystemErrorEvent.objects.filter(created_at__gte=start_7d).count()
     critical_errors_7d = SystemErrorEvent.objects.filter(
@@ -504,6 +539,15 @@ def dashboard_callback(request, context):
                 "webhook_events_30d": webhook_events_30d,
                 "webhook_failed_30d": webhook_failed_30d,
                 "webhook_ignored_30d": webhook_ignored_30d,
+                "chunk_recovery_triggered_24h": chunk_recovery_triggered_24h,
+                "chunk_recovery_failed_24h": chunk_recovery_failed_24h,
+                "pwa_prompted_period": pwa_prompted_period,
+                "pwa_accepted_period": pwa_accepted_period,
+                "pwa_dismissed_period": pwa_dismissed_period,
+                "pwa_standalone_period": pwa_standalone_period,
+                "pwa_accepted_android": pwa_accepted_android,
+                "pwa_accepted_ios": pwa_accepted_ios,
+                "pwa_install_rate": pwa_install_rate,
                 "system_errors_24h": system_errors_24h,
                 "system_errors_7d": system_errors_7d,
                 "critical_errors_7d": critical_errors_7d,

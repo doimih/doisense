@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -456,6 +457,31 @@ class RefreshView(APIView):
             )
 
 
+class SessionBridgeLoginView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        language = get_request_language(request, user=user, default="en")
+
+        if not user.is_active:
+            return Response(
+                {"detail": _auth_text(language, "user_disabled")},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "user": UserSerializer(user).data,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -465,6 +491,17 @@ class MeView(APIView):
     def patch(self, request):
         allowed_fields = {"first_name", "last_name", "phone_contact", "language", "tax_region", "onboarding_completed"}
         payload = {key: value for key, value in request.data.items() if key in allowed_fields}
+        onboarding_completed = payload.pop("onboarding_completed", None)
+
+        # UserSerializer keeps onboarding_completed read-only by default, so apply
+        # this transition explicitly for the onboarding completion flow.
+        if onboarding_completed is not None:
+            normalized = onboarding_completed
+            if isinstance(onboarding_completed, str):
+                normalized = onboarding_completed.strip().lower() in {"1", "true", "yes", "on"}
+            request.user.onboarding_completed = bool(normalized)
+            request.user.save(update_fields=["onboarding_completed"])
+
         serializer = UserSerializer(request.user, data=payload, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()

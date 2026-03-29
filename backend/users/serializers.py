@@ -9,6 +9,7 @@ User = get_user_model()
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
     language = serializers.CharField(max_length=2, default="en", required=False)
     accepted_terms = serializers.BooleanField(write_only=True)
@@ -33,10 +34,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "phone_contact",
             "tax_region",
         )
+        extra_kwargs = {
+            "email": {"validators": []},
+        }
 
     def validate_email(self, value):
         if User.objects.filter(email=value.lower()).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError(
+                "Exista deja un cont cu acest email. Foloseste autentificarea sau recuperarea parolei."
+            )
         return value.lower()
 
     def validate_language(self, value):
@@ -151,6 +157,7 @@ class UserSerializer(serializers.ModelSerializer):
             "onboarding_completed",
             "membership_tier",
             "has_saved_card",
+            "is_staff",
             "is_superuser",
             "created_at",
         )
@@ -164,6 +171,7 @@ class UserSerializer(serializers.ModelSerializer):
             "onboarding_completed",
             "membership_tier",
             "has_saved_card",
+            "is_staff",
             "is_superuser",
             "created_at",
         )

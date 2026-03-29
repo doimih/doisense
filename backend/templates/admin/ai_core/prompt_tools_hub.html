@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .hub-card {
+    background: var(--body-bg, #fff);
+    border: 1px solid var(--hairline-color, #ddd);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+  }
+  .hub-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .hub-table th,
+  .hub-table td {
+    border-bottom: 1px solid var(--hairline-color, #ddd);
+    text-align: left;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  .hub-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .hub-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .hub-btn.primary {
+    background: #0f766e;
+    color: #fff;
+  }
+  .hub-btn.secondary {
+    background: #eef2ff;
+    color: #1e3a8a;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1>{{ title }}</h1>
+  <p>Select a prompt and run the action directly.</p>
+
+  <div class="hub-card">
+    {% if rows %}
+    <table class="hub-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Language</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ row.type }}</td>
+          <td>{{ row.language }}</td>
+          <td>
+            <div class="hub-actions">
+              <a class="hub-btn primary" href="{{ row.action_url }}">{{ action_label }}</a>
+              <a class="hub-btn secondary" href="{{ row.edit_url }}">Open Prompt</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No prompts available.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

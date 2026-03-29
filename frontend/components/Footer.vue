@@ -1,5 +1,5 @@
 <template>
-  <footer class="mt-auto bg-slate-900 text-slate-300 border-t border-slate-800">
+  <footer class="mt-auto border-t border-[#d4e4e0] bg-[#2c3e35] text-[#dbe8e2]">
     <!-- Main Footer Content -->
     <div class="container mx-auto px-4 py-16">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
@@ -8,29 +8,29 @@
           <NuxtLink :to="localePath('/')" class="mb-5 block">
             <BrandLogo size="md" :is-dark="true" show-tagline />
           </NuxtLink>
-          <p class="text-sm leading-6 text-slate-400 mb-6 max-w-xs">
+          <p class="mb-6 max-w-xs text-sm leading-6 text-[#bdd2c8]">
             {{ $t('footer.brandDescription') }}
           </p>
 
           <!-- Contact Info -->
           <div class="space-y-3 text-sm">
             <div v-if="$t('footer.whatsapp')" class="flex flex-col">
-              <span class="text-slate-500 text-xs uppercase tracking-wide">{{ footerText.whatsapp }}</span>
-              <a href="tel:+40749000000" class="text-white hover:text-slate-200">+40 749 000 000</a>
+              <span class="text-xs uppercase tracking-wide text-[#9cb8ab]">{{ footerText.whatsapp }}</span>
+              <a href="tel:+40749000000" class="text-[#f6faf8] hover:text-white">+40 749 000 000</a>
             </div>
             <div v-if="$t('footer.email')" class="flex flex-col">
-              <span class="text-slate-500 text-xs uppercase tracking-wide">{{ footerText.email }}</span>
-              <a href="mailto:hello@doisense.com" class="text-white hover:text-slate-200">hello@doisense.com</a>
+              <span class="text-xs uppercase tracking-wide text-[#9cb8ab]">{{ footerText.email }}</span>
+              <a href="mailto:hello@doisense.com" class="text-[#f6faf8] hover:text-white">hello@doisense.com</a>
             </div>
           </div>
         </div>
 
         <!-- About Us -->
         <div>
-          <h3 class="mb-4 text-sm font-semibold text-white uppercase tracking-wide">{{ $t('footer.aboutUs') || 'About Us' }}</h3>
+          <h3 class="mb-4 text-sm font-semibold uppercase tracking-wide text-[#f6faf8]">{{ $t('footer.aboutUs') || 'About Us' }}</h3>
           <ul class="space-y-2 text-sm">
-            <li><NuxtLink :to="localePath('/about')" class="text-slate-400 hover:text-white transition">{{ $t('nav.about') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/features')" class="text-slate-400 hover:text-white transition">{{ $t('nav.features') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/about')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('nav.about') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/features')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('nav.features') }}</NuxtLink></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.team') || 'Team' }}</a></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.mission') || 'Mission & Values' }}</a></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.careers') || 'Careers' }}</a></li>
@@ -39,11 +39,11 @@
 
         <!-- Services -->
         <div>
-          <h3 class="mb-4 text-sm font-semibold text-white uppercase tracking-wide">{{ $t('footer.services') || 'Services' }}</h3>
+          <h3 class="mb-4 text-sm font-semibold uppercase tracking-wide text-[#f6faf8]">{{ $t('footer.services') || 'Services' }}</h3>
           <ul class="space-y-2 text-sm">
-            <li><NuxtLink :to="localePath('/chat')" class="text-slate-400 hover:text-white transition">{{ $t('nav.chat') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/journal')" class="text-slate-400 hover:text-white transition">{{ $t('nav.journal') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/programs')" class="text-slate-400 hover:text-white transition">{{ $t('nav.programs') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/chat')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('nav.chat') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/journal')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('nav.journal') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/programs')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('nav.programs') }}</NuxtLink></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.coaching') || 'Coaching' }}</a></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.wellness') || 'Wellness Programs' }}</a></li>
           </ul>
@@ -51,10 +51,10 @@
 
         <!-- Resources -->
         <div>
-          <h3 class="mb-4 text-sm font-semibold text-white uppercase tracking-wide">{{ $t('footer.resources') || 'Resources' }}</h3>
+          <h3 class="mb-4 text-sm font-semibold uppercase tracking-wide text-[#f6faf8]">{{ $t('footer.resources') || 'Resources' }}</h3>
           <ul class="space-y-2 text-sm">
-            <li><NuxtLink :to="localePath('/contact')" class="text-slate-400 hover:text-white transition">{{ $t('footer.helpCenter') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/faq')" class="text-slate-400 hover:text-white transition">{{ footerText.faq }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/contact')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('footer.helpCenter') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/faq')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ footerText.faq }}</NuxtLink></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.blog') || 'Blog' }}</a></li>
             <li v-if="false"><a href="#" class="text-slate-400 hover:text-white transition">{{ $t('footer.documentation') || 'Documentation' }}</a></li>
           </ul>
@@ -62,15 +62,15 @@
 
         <!-- Company -->
         <div>
-          <h3 class="mb-4 text-sm font-semibold text-white uppercase tracking-wide">{{ $t('footer.company') || 'Company' }}</h3>
+          <h3 class="mb-4 text-sm font-semibold uppercase tracking-wide text-[#f6faf8]">{{ $t('footer.company') || 'Company' }}</h3>
           <ul class="space-y-2 text-sm">
-            <li><NuxtLink :to="localePath('/legal/privacy')" class="text-slate-400 hover:text-white transition">{{ $t('footer.privacy') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/legal/terms')" class="text-slate-400 hover:text-white transition">{{ $t('footer.terms') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/legal/cookies')" class="text-slate-400 hover:text-white transition">{{ $t('footer.cookies') }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/legal/ai-consent')" class="text-slate-400 hover:text-white transition">{{ aiConsentLabel }}</NuxtLink></li>
-            <li><NuxtLink :to="localePath('/legal/payments-subscriptions')" class="text-slate-400 hover:text-white transition">{{ paymentsPolicyLabel }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal/privacy')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('footer.privacy') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal/terms')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('footer.terms') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal/cookies')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ $t('footer.cookies') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal/ai-consent')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ aiConsentLabel }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal/payments-subscriptions')" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]">{{ paymentsPolicyLabel }}</NuxtLink></li>
             <li>
-              <button type="button" class="text-slate-400 hover:text-white transition" @click="openModal">
+              <button type="button" class="text-[#bdd2c8] transition hover:text-[#a8d5ba]" @click="openModal">
                 {{ $t('footer.gdpr') }}
               </button>
             </li>
@@ -79,12 +79,12 @@
       </div>
 
       <!-- Bottom Footer -->
-      <div class="border-t border-slate-800 pt-8">
-        <p class="mb-6 rounded-lg border border-slate-800 bg-slate-950/50 px-4 py-3 text-sm leading-6 text-slate-300 text-center">
+      <div class="border-t border-[#42524b] pt-8">
+        <p class="mb-6 rounded-lg border border-[#4a6057] bg-[#23342d] px-4 py-3 text-center text-sm leading-6 text-[#dbe8e2]">
           {{ footerText.disclaimer }}
         </p>
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p class="text-sm text-slate-500">
+          <p class="text-sm text-[#9cb8ab]">
             {{ $t('footer.copyright') || 'Mental Health & Wellness Platform' }} · © 2026 Doisense
           </p>
 
@@ -94,7 +94,7 @@
               href="https://discord.com"
               target="_blank"
               rel="noopener noreferrer"
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-[#23342d] text-[#bdd2c8] transition hover:bg-[#2f463c] hover:text-[#f6faf8]"
               aria-label="Discord"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -105,7 +105,7 @@
               href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-[#23342d] text-[#bdd2c8] transition hover:bg-[#2f463c] hover:text-[#f6faf8]"
               aria-label="X"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,7 @@
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-[#23342d] text-[#bdd2c8] transition hover:bg-[#2f463c] hover:text-[#f6faf8]"
               aria-label="GitHub"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-[#23342d] text-[#bdd2c8] transition hover:bg-[#2f463c] hover:text-[#f6faf8]"
               aria-label="Instagram"
             >
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

@@ -126,5 +126,19 @@
     "impactTitle": "Zobacz zasięg, rezultaty i rozwój, które wspieramy",
     "seoTitle": "Doisense - Cyfrowy wellbeing z AI i dziennikiem",
     "seoDesc": "Doisense zapewnia dziennik prowadzony, chat AI, programy strukturalne i kompletne strony prawne."
+  },
+  "pwaInstall": {
+    "title": "Dodaj Doisense do ekranu głównego",
+    "subtitle": "Otwieraj szybciej, jak aplikację.",
+    "notNow": "Nie teraz",
+    "neverShow": "Nie pokazuj ponownie",
+    "iAdded": "Dodałem",
+    "iosStep1": "W Safari stuknij przycisk Udostępnij.",
+    "iosStep2": "Wybierz Dodaj do ekranu początkowego.",
+    "iosStep3": "Potwierdź przyciskiem Dodaj.",
+    "androidPromptReady": "Twoja przeglądarka może zainstalować Doisense bezpośrednio.",
+    "androidInstall": "Dodaj do ekranu głównego",
+    "androidStep1": "Otwórz menu przeglądarki (trzy kropki).",
+    "androidStep2": "Wybierz Dodaj do ekranu głównego."
   }
 }

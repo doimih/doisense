@@ -1,31 +1,31 @@
 <template>
   <div class="-mt-6 pb-8">
-    <section class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-stone-100 text-stone-900">
-      <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,#f8fafc_0%,#f1f5f9_42%,#e0f2fe_100%)]" />
-      <div class="pointer-events-none absolute -right-20 -top-16 h-52 w-52 rounded-full bg-sky-200/50 blur-3xl" />
-      <div class="pointer-events-none absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-amber-100/60 blur-3xl" />
+    <section class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-[#fafbfa] text-[#2c3e35]">
+      <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,#fafbfa_0%,#f4f8f6_45%,#eef4f1_100%)]" />
+      <div class="pointer-events-none absolute -right-20 -top-16 h-52 w-52 rounded-full bg-[#a8d5ba]/40 blur-3xl" />
+      <div class="pointer-events-none absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-[#d4e4e0]/50 blur-3xl" />
       <div class="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
-        <div class="w-full space-y-6 rounded-[2rem] border border-stone-200 bg-white/86 p-6 shadow-[0_30px_90px_-40px_rgba(12,74,110,0.35)] backdrop-blur-[1px] md:p-9">
-          <p class="inline-flex items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-900">
+        <div class="w-full space-y-6 rounded-[2rem] border border-[#d4e4e0] bg-[#fafbfa]/90 p-6 shadow-[0_30px_90px_-40px_rgba(44,62,53,0.28)] backdrop-blur-[1px] md:p-9">
+          <p class="inline-flex items-center rounded-full border border-[#c6d9d2] bg-[#f4f8f6] px-4 py-2 text-sm font-semibold text-[#42524b]">
             {{ text.badge }}
           </p>
-          <h1 class="text-4xl font-bold leading-[1.05] tracking-tight text-stone-900 md:text-6xl lg:text-7xl">{{ text.title }}</h1>
-          <p class="max-w-2xl text-base leading-8 text-stone-800 md:text-lg">{{ text.subtitle }}</p>
+          <h1 class="text-4xl font-bold leading-[1.05] tracking-tight text-[#2c3e35] md:text-6xl lg:text-7xl">{{ text.title }}</h1>
+          <p class="max-w-2xl text-base leading-8 text-[#5a6b63] md:text-lg">{{ text.subtitle }}</p>
         </div>
       </div>
     </section>
 
     <section class="max-w-5xl mx-auto py-8 md:py-12">
-      <div class="rounded-3xl border border-stone-300 bg-stone-100/70 p-6 md:p-10 lg:p-14 space-y-8">
+      <div class="rounded-3xl border border-[#d4e4e0] bg-[#f0f4f1] p-6 md:p-10 lg:p-14 space-y-8">
 
         <form class="space-y-6" @submit.prevent="submitForm">
         <div class="grid gap-5 md:grid-cols-2">
           <label class="space-y-2">
-            <span class="text-base font-semibold text-stone-900">{{ text.fullNameLabel }}</span>
+            <span class="text-base font-semibold text-[#2c3e35]">{{ text.fullNameLabel }}</span>
             <input
               v-model="form.fullName"
               type="text"
-              class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+              class="w-full rounded-xl border border-[#c6d9d2] bg-[#fafbfa] px-4 py-4 text-[#2c3e35] outline-none transition focus:border-[#7bb8a0]"
               :placeholder="text.fullNamePlaceholder"
               autocomplete="name"
               required
@@ -33,11 +33,11 @@
           </label>
 
           <label class="space-y-2">
-            <span class="text-base font-semibold text-stone-900">{{ text.emailLabel }}</span>
+            <span class="text-base font-semibold text-[#2c3e35]">{{ text.emailLabel }}</span>
             <input
               v-model="form.email"
               type="email"
-              class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+              class="w-full rounded-xl border border-[#c6d9d2] bg-[#fafbfa] px-4 py-4 text-[#2c3e35] outline-none transition focus:border-[#7bb8a0]"
               :placeholder="text.emailPlaceholder"
               autocomplete="email"
               required
@@ -46,22 +46,22 @@
         </div>
 
         <label class="space-y-2 block">
-          <span class="text-base font-semibold text-stone-900">{{ text.subjectLabel }}</span>
+          <span class="text-base font-semibold text-[#2c3e35]">{{ text.subjectLabel }}</span>
           <input
             v-model="form.subject"
             type="text"
-            class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+            class="w-full rounded-xl border border-[#c6d9d2] bg-[#fafbfa] px-4 py-4 text-[#2c3e35] outline-none transition focus:border-[#7bb8a0]"
             :placeholder="text.subjectPlaceholder"
             required
           >
         </label>
 
         <label class="space-y-2 block">
-          <span class="text-base font-semibold text-stone-900">{{ text.messageLabel }}</span>
+          <span class="text-base font-semibold text-[#2c3e35]">{{ text.messageLabel }}</span>
           <textarea
             v-model="form.message"
             rows="5"
-            class="w-full rounded-xl border border-stone-300 bg-white px-4 py-4 text-stone-900 outline-none transition focus:border-stone-500"
+            class="w-full rounded-xl border border-[#c6d9d2] bg-[#fafbfa] px-4 py-4 text-[#2c3e35] outline-none transition focus:border-[#7bb8a0]"
             :placeholder="text.messagePlaceholder"
             required
           />
@@ -77,7 +77,7 @@
         <button
           type="submit"
           :disabled="submitting"
-          class="inline-flex min-w-[220px] items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex min-w-[220px] items-center justify-center rounded-xl bg-[#2c3e35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1f2d26] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {{ submitting ? text.sendingAction : text.sendAction }}
         </button>
@@ -85,20 +85,20 @@
 
         <div class="grid gap-4 md:grid-cols-3 pt-2">
         <article class="rounded-xl border border-stone-300 bg-white px-4 py-4">
-          <h2 class="text-sm font-semibold text-stone-900">{{ text.supportTitle }}</h2>
-          <p class="text-sm text-stone-700 mt-1">{{ text.supportText }}</p>
+          <h2 class="text-sm font-semibold text-[#2c3e35]">{{ text.supportTitle }}</h2>
+          <p class="text-sm text-[#5a6b63] mt-1">{{ text.supportText }}</p>
         </article>
-        <article class="rounded-xl border border-stone-300 bg-white px-4 py-4">
-          <h2 class="text-sm font-semibold text-stone-900">{{ text.gdprTitle }}</h2>
-          <p class="text-sm text-stone-700 mt-1">{{ text.gdprText }}</p>
+        <article class="rounded-xl border border-[#d4e4e0] bg-[#fafbfa] px-4 py-4">
+          <h2 class="text-sm font-semibold text-[#2c3e35]">{{ text.gdprTitle }}</h2>
+          <p class="text-sm text-[#5a6b63] mt-1">{{ text.gdprText }}</p>
         </article>
-        <article class="rounded-xl border border-stone-300 bg-white px-4 py-4">
-          <h2 class="text-sm font-semibold text-stone-900">{{ text.responseTitle }}</h2>
-          <p class="text-sm text-stone-700 mt-1">{{ text.responseText }}</p>
+        <article class="rounded-xl border border-[#d4e4e0] bg-[#fafbfa] px-4 py-4">
+          <h2 class="text-sm font-semibold text-[#2c3e35]">{{ text.responseTitle }}</h2>
+          <p class="text-sm text-[#5a6b63] mt-1">{{ text.responseText }}</p>
         </article>
         </div>
 
-        <p class="text-xs text-stone-500">
+        <p class="text-xs text-[#8a9b94]">
           {{ text.note }}
           <NuxtLink :to="localePath('/legal/gdpr')" class="underline">{{ text.gdprLink }}</NuxtLink>
         </p>

@@ -2,6 +2,10 @@
   <div class="max-w-md mx-auto py-12">
     <h1 class="text-2xl font-bold text-stone-800 mb-6">{{ $t('auth.login') }}</h1>
 
+    <div v-if="authNotice" class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      {{ authNotice }}
+    </div>
+
     <div class="mb-5 grid grid-cols-2 gap-2">
       <button
         type="button"
@@ -75,6 +79,7 @@
 const localePath = useLocalePath()
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const { locale, t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const { getPostAuthPath } = useOnboarding()
@@ -84,6 +89,30 @@ const password = ref('')
 const error = ref('')
 const loading = ref(false)
 const socialLoading = ref<'' | 'google' | 'apple'>('')
+
+const authNotice = computed(() => {
+  const reason = String(route.query.reason || '')
+  if (!reason) return ''
+
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  const messages = {
+    ro: 'Sesiunea ta a expirat sau necesita autentificare. Te rugam sa te conectezi din nou.',
+    en: 'Your session expired or requires authentication. Please sign in again.',
+    de: 'Deine Sitzung ist abgelaufen oder erfordert eine Anmeldung. Bitte melde dich erneut an.',
+    fr: 'Votre session a expire ou necessite une authentification. Veuillez vous reconnecter.',
+    it: 'La tua sessione e scaduta o richiede autenticazione. Effettua nuovamente il login.',
+    es: 'Tu sesion expiro o requiere autenticacion. Inicia sesion nuevamente.',
+    pl: 'Twoja sesja wygasla lub wymaga uwierzytelnienia. Zaloguj sie ponownie.',
+  } as const
+
+  return messages[code as keyof typeof messages] || messages.en
+})
+
+const nextAfterLogin = computed(() => {
+  const raw = String(route.query.next || '').trim()
+  if (!raw.startsWith('/')) return ''
+  return raw
+})
 
 const socialLabels = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
@@ -156,7 +185,7 @@ async function loginWithGoogle() {
     })
 
     await authStore.loginWithSocial('google', credential, preferredLanguage())
-    await router.push(getPostAuthPath())
+    await router.push(nextAfterLogin.value || getPostAuthPath())
   } catch {
     error.value = t('auth.googleLoginFailed')
   } finally {
@@ -196,7 +225,7 @@ async function loginWithApple() {
     if (!credential) throw new Error('Missing Apple credential')
 
     await authStore.loginWithSocial('apple', credential, preferredLanguage())
-    await router.push(getPostAuthPath())
+    await router.push(nextAfterLogin.value || getPostAuthPath())
   } catch {
     error.value = t('auth.appleLoginFailed')
   } finally {
@@ -209,7 +238,7 @@ async function login() {
   loading.value = true
   try {
     await authStore.login(email.value, password.value)
-    await router.push(getPostAuthPath())
+    await router.push(nextAfterLogin.value || getPostAuthPath())
   } catch (e: unknown) {
     error.value = (e as { data?: { detail?: string } })?.data?.detail || t('auth.loginFailed')
   } finally {

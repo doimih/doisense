@@ -1,0 +1,108 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% if ai_brain_action_result %}
+<div style="margin:24px 4px 32px; padding:20px 24px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px;">
+    <h2 style="margin:0 0 16px; font-size:1.1rem; font-weight:700; color:#111827;">
+        {{ ai_brain_action_result.title }}
+    </h2>
+
+    {% if ai_brain_action_result.kind == "audit" %}
+
+    <div style="margin-bottom:14px;">
+        <strong style="display:block; margin-bottom:4px; color:#374151;">Summary</strong>
+        <p style="margin:0; color:#4b5563;">{{ ai_brain_action_result.report.summary }}</p>
+    </div>
+
+    {% if ai_brain_action_result.report.issues %}
+    <div style="margin-bottom:14px;">
+        <strong style="display:block; margin-bottom:4px; color:#374151;">Issues</strong>
+        <ul style="margin:0; padding-left:20px; color:#4b5563;">
+            {% for item in ai_brain_action_result.report.issues %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if ai_brain_action_result.report.recommendations %}
+    <div style="margin-bottom:14px;">
+        <strong style="display:block; margin-bottom:4px; color:#374151;">Recommendations</strong>
+        <ul style="margin:0; padding-left:20px; color:#4b5563;">
+            {% for item in ai_brain_action_result.report.recommendations %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if ai_brain_action_result.report.suggested_improvement %}
+    <div style="margin-bottom:14px;">
+        <strong style="display:block; margin-bottom:4px; color:#374151;">Suggested Improvement</strong>
+        <p style="margin:0; color:#4b5563;">{{ ai_brain_action_result.report.suggested_improvement }}</p>
+    </div>
+    {% endif %}
+
+    {% if ai_brain_action_result.report.notes %}
+    <div style="margin-bottom:4px;">
+        <strong style="display:block; margin-bottom:4px; color:#374151;">Notes</strong>
+        <ul style="margin:0; padding-left:20px; color:#4b5563;">
+            {% for item in ai_brain_action_result.report.notes %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% elif ai_brain_action_result.kind == "improvement" %}
+
+    <div style="margin-bottom:14px;">
+        <strong style="display:block; margin-bottom:6px; color:#374151;">Improved Prompt</strong>
+        <pre style="margin:0; padding:12px 14px; background:#fff; border:1px solid #d1d5db; border-radius:6px; white-space:pre-wrap; font-family:monospace; font-size:13px; color:#111827; overflow-x:auto;">{{ ai_brain_action_result.improvement.improved_prompt }}</pre>
+    </div>
+
+    {% if ai_brain_action_result.improvement.explanation %}
+    <div style="margin-bottom:14px;">
+        <strong style="display:block; margin-bottom:4px; color:#374151;">Explanation</strong>
+        <ul style="margin:0; padding-left:20px; color:#4b5563;">
+            {% for item in ai_brain_action_result.improvement.explanation %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if ai_brain_action_result.improvement.risks_if_not_updated %}
+    <div style="margin-bottom:16px;">
+        <strong style="display:block; margin-bottom:4px; color:#374151;">Risks If Not Updated</strong>
+        <ul style="margin:0; padding-left:20px; color:#4b5563;">
+            {% for item in ai_brain_action_result.improvement.risks_if_not_updated %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <form method="post" action="{{ ai_brain_action_result.improve_url }}">
+            {% csrf_token %}
+            <button type="submit" name="_apply_improvement" value="1"
+                style="padding:10px 20px; background:#059669; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
+                Apply Improved Prompt
+            </button>
+        </form>
+        <form method="post" action="{{ ai_brain_action_result.improve_url }}">
+            {% csrf_token %}
+            <button type="submit" name="_discard_improvement" value="1"
+                style="padding:10px 20px; background:#6b7280; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
+                Discard Suggestion
+            </button>
+        </form>
+    </div>
+
+    {% elif ai_brain_action_result.kind == "preview" %}
+
+    <div style="margin-bottom:14px;">
+        <strong style="display:block; margin-bottom:6px; color:#374151;">Generated Orchestrator Prompt</strong>
+        <pre style="margin:0; padding:12px 14px; background:#fff; border:1px solid #d1d5db; border-radius:6px; white-space:pre-wrap; font-family:monospace; font-size:13px; color:#111827; overflow-x:auto;">{{ ai_brain_action_result.preview }}</pre>
+    </div>
+
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,9 +1,10 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-COPY package*.json ./
+COPY pnpm-lock.yaml package.json ./
+RUN npm install -g pnpm@9
 COPY . .
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN pnpm install --frozen-lockfile
 ARG NUXT_PUBLIC_APP_BASE_URL=/doisense/
 ENV NUXT_PUBLIC_APP_BASE_URL=${NUXT_PUBLIC_APP_BASE_URL}
 RUN npm run build

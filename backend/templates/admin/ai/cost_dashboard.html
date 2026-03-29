@@ -1,0 +1,152 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div style="display:grid;gap:16px;max-width:1200px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <h1 style="margin:0;">AI Cost Dashboard</h1>
+    <div style="display:flex;gap:8px;">
+      <a href="{{ credits_admin_add_url }}" class="button">Add budget credit</a>
+      <a href="{{ monthly_targets_add_url }}" class="button">Add monthly target</a>
+      <a href="{{ credits_admin_changelist_url }}" class="button">View credits list</a>
+      <a href="{{ monthly_targets_changelist_url }}" class="button">View targets list</a>
+      <a href="{{ monthly_csv_export_url }}" class="button">Export monthly CSV</a>
+    </div>
+  </div>
+
+  {% if low_remaining_alerts %}
+    <div style="border:1px solid #f1c40f;border-radius:8px;padding:12px;background:#fff8e1;">
+      <h3 style="margin:0 0 8px 0;">Low budget alerts</h3>
+      {% for alert in low_remaining_alerts %}
+        <p style="margin:6px 0;">
+          <strong>{{ alert.provider }}</strong> remaining is <strong>${{ alert.remaining }}</strong>,
+          below threshold <strong>${{ alert.threshold }}</strong>.
+        </p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <p style="margin:0;color:#555;">
+    Remaining budget is computed as total credited amounts minus total estimated usage costs logged by the AI router.
+    Unused amounts carry over automatically.
+  </p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
+    {% for item in provider_cards %}
+      <div style="border:1px solid #ddd;border-radius:8px;padding:14px;">
+        <h3 style="margin-top:0;">{{ item.display_name }}</h3>
+        <p style="margin:6px 0;">Credits: <strong>${{ item.credits }}</strong></p>
+        <p style="margin:6px 0;">Spent: <strong>${{ item.spent }}</strong></p>
+        <p style="margin:6px 0;">Remaining: <strong>${{ item.remaining }}</strong></p>
+        {% if item.monthly_progress and item.monthly_progress.target %}
+          <p style="margin:6px 0;">Month target: <strong>${{ item.monthly_progress.target }}</strong></p>
+          <p style="margin:6px 0;">Month spent: <strong>${{ item.monthly_progress.spent }}</strong></p>
+          <p style="margin:6px 0;">Progress: <strong>{{ item.monthly_progress.progress_pct|floatformat:2 }}%</strong></p>
+          {% if item.monthly_progress.is_over_target %}
+            <p style="margin:6px 0;color:#b42318;"><strong>Over monthly target</strong></p>
+          {% endif %}
+        {% else %}
+          <p style="margin:6px 0;color:#666;">No monthly target configured.</p>
+        {% endif %}
+      </div>
+    {% empty %}
+      <div style="border:1px solid #ddd;border-radius:8px;padding:14px;">
+        <h3 style="margin-top:0;">No AI provider data yet</h3>
+        <p style="margin:6px 0;color:#666;">Add a budget credit or run at least one AI request to populate the dashboard.</p>
+      </div>
+    {% endfor %}
+
+    <div style="border:1px solid #ddd;border-radius:8px;padding:14px;background:#fafafa;">
+      <h3 style="margin-top:0;">Total</h3>
+      <p style="margin:6px 0;">Credits: <strong>${{ totals.credits }}</strong></p>
+      <p style="margin:6px 0;">Spent: <strong>${{ totals.spent }}</strong></p>
+      <p style="margin:6px 0;">Remaining: <strong>${{ totals.remaining }}</strong></p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div style="border:1px solid #ddd;border-radius:8px;padding:12px;overflow:auto;">
+      <h3 style="margin-top:0;">Recent usage cost events</h3>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">When</th>
+            <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">Provider</th>
+            <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">Model</th>
+            <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e5e5;">Input</th>
+            <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e5e5;">Output</th>
+            <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e5e5;">Cost USD</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recent_cost_events %}
+            <tr>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.created_at|date:"Y-m-d H:i" }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.provider }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.model }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;text-align:right;">{{ item.input_tokens|default:"-" }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;text-align:right;">{{ item.output_tokens|default:"-" }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;text-align:right;">${{ item.estimated_cost_usd|default:"0" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" style="padding:8px;">No cost events yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="border:1px solid #ddd;border-radius:8px;padding:12px;overflow:auto;">
+      <h3 style="margin-top:0;">Recent budget credits</h3>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">When</th>
+            <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">Provider</th>
+            <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e5e5;">Amount USD</th>
+            <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recent_credits %}
+            <tr>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.credited_at|date:"Y-m-d" }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.provider }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;text-align:right;">${{ item.amount_usd }}</td>
+              <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.source_reference|default:"-" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" style="padding:8px;">No credits added yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="border:1px solid #ddd;border-radius:8px;padding:12px;overflow:auto;">
+    <h3 style="margin-top:0;">Monthly credit/spend summary</h3>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">Month</th>
+          <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e5e5;">Provider</th>
+          <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e5e5;">Credits USD</th>
+          <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e5e5;">Spent USD</th>
+          <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e5e5;">Remaining USD</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in monthly_summary %}
+          <tr>
+            <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.month|date:"Y-m" }}</td>
+            <td style="padding:6px;border-bottom:1px solid #f0f0f0;">{{ item.provider }}</td>
+            <td style="padding:6px;border-bottom:1px solid #f0f0f0;text-align:right;">${{ item.credits }}</td>
+            <td style="padding:6px;border-bottom:1px solid #f0f0f0;text-align:right;">${{ item.spent }}</td>
+            <td style="padding:6px;border-bottom:1px solid #f0f0f0;text-align:right;">${{ item.remaining }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" style="padding:8px;">No monthly data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

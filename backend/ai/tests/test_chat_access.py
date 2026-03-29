@@ -73,3 +73,76 @@ def test_chat_keeps_trial_tier_distinct(authenticated_client, user, monkeypatch)
     assert captured["max_tokens"] == 640
     assert "User tier: TRIAL." in captured["system"]
     assert "Iti sunt alaturi cu suport emotional" in captured["system"]
+
+
+@pytest.mark.django_db
+def test_translate_draft_returns_translated_text(authenticated_client, user, monkeypatch):
+    user.plan_tier = User.PLAN_PREMIUM
+    user.is_premium = True
+    user.save(update_fields=["plan_tier", "is_premium"])
+
+    def fake_complete(prompt, system=None, user_id=None, max_tokens=None):
+        assert "language code 'en'" in prompt
+        return "I feel stressed today"
+
+    monkeypatch.setattr("ai.views_chat.complete", fake_complete)
+
+    response = authenticated_client.post(
+        reverse("chat-translate-draft"),
+        {"text": "Ma simt stresat azi", "source_language": "ro", "target_language": "en"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["translated_text"] == "I feel stressed today"
+    assert response.data["status"] == "translated"
+
+
+@pytest.mark.django_db
+def test_translate_draft_falls_back_to_original_text_on_provider_error(authenticated_client, user, monkeypatch):
+    user.plan_tier = User.PLAN_PREMIUM
+    user.is_premium = True
+    user.save(update_fields=["plan_tier", "is_premium"])
+
+    monkeypatch.setattr("ai.views_chat.complete", lambda *args, **kwargs: "[AI not configured]")
+
+    response = authenticated_client.post(
+        reverse("chat-translate-draft"),
+        {"text": "Ma simt stresat azi", "source_language": "ro", "target_language": "en"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["translated_text"] == "Ma simt stresat azi"
+    assert response.data["status"] == "fallback"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("target_language", ["ro", "en", "de", "fr", "it", "es", "pl"])
+def test_translate_draft_supports_all_site_languages(authenticated_client, user, monkeypatch, target_language):
+    user.plan_tier = User.PLAN_PREMIUM
+    user.is_premium = True
+    user.save(update_fields=["plan_tier", "is_premium"])
+
+    def fake_complete(prompt, system=None, user_id=None, max_tokens=None):
+        assert f"language code '{target_language}'" in prompt
+        return f"translated-{target_language}"
+
+    monkeypatch.setattr("ai.views_chat.complete", fake_complete)
+
+    source_language = "ro" if target_language == "en" else "en"
+    source_text = "Ma simt stresat azi" if source_language == "ro" else "I feel stressed today"
+
+    response = authenticated_client.post(
+        reverse("chat-translate-draft"),
+        {
+            "text": source_text,
+            "source_language": source_language,
+            "target_language": target_language,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["translated_text"] == f"translated-{target_language}"
+    assert response.data["status"] == "translated"

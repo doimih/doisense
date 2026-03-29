@@ -1,32 +1,34 @@
-from django.conf import settings
+from __future__ import annotations
+
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
-from datetime import timedelta
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.analytics import track_event
 from core.feature_access import require_feature
-from core.quota import check_and_consume
 
-from .models import GuidedProgram, GuidedProgramDay, ProgramReflection, UserProgramProgress
-from .serializers import (
-    GuidedProgramSerializer,
-    GuidedProgramDaySerializer,
-    ProgramReflectionSerializer,
-    UserProgramProgressSerializer,
+from .models import GuidedProgram, ProgramReflection, UserProgramProgress
+from .serializers import ProgramReflectionSerializer
+from .services import (
+    activate_program_for_user,
+    available_programs_for_user,
+    can_activate_program,
+    can_view_program,
+    complete_program_day_for_user,
+    get_active_program_for_user,
+    serialize_activation,
+    serialize_day,
+    serialize_program,
 )
 
 
-def _build_reflection_feedback(reflection_text: str, day_number: int) -> str:
-    snippet = reflection_text.strip().replace("\n", " ")[:220]
-    return (
-        f"Great reflection for day {day_number}. I noticed this key focus: '{snippet}'. "
-        "Keep this momentum by choosing one concrete action for the next 24h and "
-        "write down when you will do it."
-    )
+def _program_or_404(program_id: int) -> GuidedProgram:
+    return get_object_or_404(GuidedProgram.objects.prefetch_related("days"), id=program_id, active=True)
+
+
+def _activation_or_404(user, program: GuidedProgram) -> UserProgramProgress:
+    return get_object_or_404(UserProgramProgress.objects.select_related("program"), user=user, program=program)
 
 
 class ProgramListView(APIView):
@@ -34,312 +36,186 @@ class ProgramListView(APIView):
 
     @require_feature("programs_access")
     def get(self, request):
-        language = request.query_params.get("language") or request.user.language or "en"
-        qs = GuidedProgram.objects.filter(active=True, language=language)
-        serializer = GuidedProgramSerializer(qs, many=True)
-        return Response(serializer.data)
+        category = (request.query_params.get("category") or "").strip() or None
+        language = (request.query_params.get("language") or request.user.language or "ro").strip()
+        programs = available_programs_for_user(request.user, category=category, language=language)
+        return Response(
+            {
+                "items": [serialize_program(program, request.user, include_days=False) for program in programs],
+                "filters": {"category": category, "language": language},
+            }
+        )
 
 
-class ProgramDayView(APIView):
+class ProgramDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     @require_feature("programs_access")
-    def get(self, request, program_id, day_number):
-        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
-        if program.is_premium and request.user.effective_plan_tier() not in ("premium", "vip"):
+    def get(self, request, program_id: int):
+        program = _program_or_404(program_id)
+        if not can_view_program(request.user, program):
             return Response(
-                {"detail": "This program requires a premium subscription."},
-                status=403,
-            )
-        day = get_object_or_404(
-            GuidedProgramDay, program=program, day_number=day_number
-        )
-        serializer = GuidedProgramDaySerializer(day)
-        return Response(serializer.data)
-
-
-class ProgramProgressView(APIView):
-    """GET: fetch progress for a program. POST: mark current day complete."""
-
-    permission_classes = [IsAuthenticated]
-
-    def _get_program(self, program_id):
-        return get_object_or_404(GuidedProgram, id=program_id, active=True)
-
-    @require_feature("programs_access")
-    def get(self, request, program_id):
-        program = self._get_program(program_id)
-        progress, _ = UserProgramProgress.objects.get_or_create(
-            user=request.user, program=program
-        )
-
-        total_days = program.days.count()
-        is_completed = len(progress.completed_days) >= total_days and total_days > 0
-        if (
-            not is_completed
-            and not progress.is_paused
-            and progress.last_active_at <= timezone.now() - timedelta(days=7)
-            and progress.dropout_marked_at is None
-        ):
-            progress.dropout_marked_at = timezone.now()
-            progress.save(update_fields=["dropout_marked_at"])
-            track_event(
-                "program_dropout_detected",
-                source="backend",
-                user=request.user,
-                properties={"program_id": program.id, "day_number": progress.current_day},
+                {
+                    "detail": "Programul nu este disponibil pentru planul tau.",
+                    "required_plan": program.plan_access,
+                },
+                status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = UserProgramProgressSerializer(progress)
-        return Response(serializer.data)
-
-    @require_feature("programs_access")
-    def post(self, request, program_id):
-        program = self._get_program(program_id)
-        day_number = request.data.get("day_number")
-        if not isinstance(day_number, int) or day_number < 1:
-            return Response({"detail": "day_number must be a positive integer."}, status=400)
-
-        total_days = program.days.count()
-        if day_number > total_days:
-            return Response({"detail": f"Program has only {total_days} days."}, status=400)
-
-        progress, _ = UserProgramProgress.objects.get_or_create(
-            user=request.user, program=program
-        )
-        if day_number not in progress.completed_days:
-            allowed, remaining, limit = check_and_consume(
-                request.user, "program_days_completed", amount=1
-            )
-            if not allowed:
-                base_url = getattr(
-                    settings,
-                    "FRONTEND_BASE_URL",
-                    "https://projects.doimih.net/doisense",
-                )
-                language = request.user.language or "en"
-                return Response(
-                    {
-                        "detail": "Monthly program progress quota exceeded for your tier.",
-                        "code": "quota_exceeded",
-                        "metric": "program_days_completed",
-                        "limit": limit,
-                        "remaining": remaining,
-                        "cta_url": f"{base_url}/{language}/pricing",
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-        progress.mark_day_complete(day_number)
-        if day_number >= total_days:
-            track_event(
-                "program_completed",
-                source="backend",
-                user=request.user,
-                properties={"program_id": program.id, "day_number": day_number},
-            )
-        serializer = UserProgramProgressSerializer(progress)
-        track_event(
-            "program_day_completed",
-            source="backend",
-            user=request.user,
-            properties={"program_id": program.id, "day_number": day_number},
-        )
-        return Response(serializer.data)
+        activation = UserProgramProgress.objects.filter(user=request.user, program=program).first()
+        return Response(serialize_program(program, request.user, include_days=True, activation=activation))
 
 
-class ProgramPauseView(APIView):
+class ProgramActivateView(APIView):
     permission_classes = [IsAuthenticated]
 
     @require_feature("programs_access")
-    def post(self, request, program_id):
-        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
-        progress, _ = UserProgramProgress.objects.get_or_create(user=request.user, program=program)
-        progress.pause()
-        track_event(
-            "program_paused",
-            source="backend",
-            user=request.user,
-            properties={"program_id": program.id, "day_number": progress.current_day},
+    def post(self, request, program_id: int):
+        program = _program_or_404(program_id)
+        if not can_activate_program(request.user, program):
+            return Response(
+                {
+                    "detail": "Activarea automata a programului este disponibila din PREMIUM Flow in sus.",
+                    "required_plan": max(program.plan_access, GuidedProgram.PLAN_ACCESS_PREMIUM),
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        activation, tasks = activate_program_for_user(request.user, program)
+        return Response(
+            {
+                "program": serialize_program(program, request.user, include_days=True, activation=activation),
+                "activation": serialize_activation(activation),
+                "calendar_tasks_generated": len(tasks),
+            },
+            status=status.HTTP_201_CREATED,
         )
-        return Response(UserProgramProgressSerializer(progress).data)
 
 
-class ProgramResumeView(APIView):
+class ProgramActiveView(APIView):
     permission_classes = [IsAuthenticated]
 
     @require_feature("programs_access")
-    def post(self, request, program_id):
-        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
-        progress, _ = UserProgramProgress.objects.get_or_create(user=request.user, program=program)
-        progress.resume()
-        track_event(
-            "program_resumed",
-            source="backend",
-            user=request.user,
-            properties={"program_id": program.id, "day_number": progress.current_day},
+    def get(self, request):
+        activation = get_active_program_for_user(request.user)
+        if not activation:
+            return Response({"item": None})
+
+        program = activation.program
+        current_step = program.days.filter(day_number=activation.progress_day).first()
+        return Response(
+            {
+                "item": {
+                    "program": serialize_program(program, request.user, include_days=False, activation=activation),
+                    "activation": serialize_activation(activation),
+                    "current_step": serialize_day(current_step) if current_step else None,
+                }
+            }
         )
-        return Response(UserProgramProgressSerializer(progress).data)
+
+
+class ProgramCompleteDayView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @require_feature("programs_access")
+    def post(self, request, program_id: int):
+        program = _program_or_404(program_id)
+        activation = _activation_or_404(request.user, program)
+        day_number_raw = request.data.get("day_number")
+        try:
+            day_number = int(day_number_raw) if day_number_raw not in (None, "") else activation.progress_day
+        except (TypeError, ValueError):
+            return Response({"detail": "day_number trebuie sa fie un numar valid."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(complete_program_day_for_user(request.user, program, day_number=day_number))
 
 
 class ProgramReflectionView(APIView):
     permission_classes = [IsAuthenticated]
 
     @require_feature("programs_access")
-    def get(self, request, program_id):
-        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
-        day_number = request.query_params.get("day_number")
+    def get(self, request, program_id: int):
+        program = _program_or_404(program_id)
+        day_number_raw = request.query_params.get("day_number")
+        if not day_number_raw:
+            return Response({"detail": "Parametrul day_number este obligatoriu."}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            day_number_int = int(day_number)
+            day_number = int(day_number_raw)
         except (TypeError, ValueError):
-            return Response({"detail": "day_number query param is required."}, status=400)
-
-        reflection = ProgramReflection.objects.filter(
-            user=request.user,
-            program=program,
-            day_number=day_number_int,
-        ).first()
+            return Response({"detail": "day_number trebuie sa fie un numar valid."}, status=status.HTTP_400_BAD_REQUEST)
+        reflection = ProgramReflection.objects.filter(user=request.user, program=program, day_number=day_number).first()
         if not reflection:
-            return Response({"detail": "Not found."}, status=404)
+            return Response({"detail": "Nu exista reflectie pentru ziua ceruta."}, status=status.HTTP_404_NOT_FOUND)
         return Response(ProgramReflectionSerializer(reflection).data)
 
     @require_feature("programs_access")
-    def post(self, request, program_id):
-        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
-        day_number = request.data.get("day_number")
+    def post(self, request, program_id: int):
+        program = _program_or_404(program_id)
+        try:
+            day_number = int(request.data.get("day_number") or 0)
+        except (TypeError, ValueError):
+            return Response({"detail": "day_number trebuie sa fie un numar valid."}, status=status.HTTP_400_BAD_REQUEST)
         reflection_text = str(request.data.get("reflection_text") or "").strip()
+        if day_number < 1 or not reflection_text:
+            return Response({"detail": "day_number si reflection_text sunt obligatorii."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not isinstance(day_number, int) or day_number < 1:
-            return Response({"detail": "day_number must be a positive integer."}, status=400)
-        if not reflection_text:
-            return Response({"detail": "reflection_text is required."}, status=400)
-
-        total_days = program.days.count()
-        if day_number > total_days:
-            return Response({"detail": f"Program has only {total_days} days."}, status=400)
-
-        feedback = _build_reflection_feedback(reflection_text, day_number)
         reflection, _ = ProgramReflection.objects.update_or_create(
             user=request.user,
             program=program,
             day_number=day_number,
             defaults={
                 "reflection_text": reflection_text,
-                "ai_feedback": feedback,
+                "ai_feedback": (
+                    f"Ai surprins clar ziua {day_number}. Pastreaza ideea centrala si transforma-o intr-o actiune mica pentru maine."
+                ),
             },
-        )
-
-        track_event(
-            "program_reflection_submitted",
-            source="backend",
-            user=request.user,
-            properties={"program_id": program.id, "day_number": day_number},
         )
         return Response(ProgramReflectionSerializer(reflection).data, status=status.HTTP_201_CREATED)
 
 
-class ProgramStartView(APIView):
-    """
-    POST /programs/<id>/start
-    Starts (or idempotently re-confirms) a guided program for the authenticated user.
-
-    Behavior:
-    - If no progress record exists → creates one with current_day=1,
-      completed_days=[], status="in_progress" → 201 Created.
-    - If a record exists but the program is not yet completed → returns the
-      existing progress unchanged → 200 OK.
-    - If the program was already completed → 409 Conflict.
-    """
-
+class ProgramProgressView(APIView):
     permission_classes = [IsAuthenticated]
 
     @require_feature("programs_access")
-    def post(self, request, program_id):
-        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
-
-        if program.is_premium and request.user.effective_plan_tier() not in ("premium", "vip"):
-            return Response(
-                {"detail": "This program requires a premium subscription."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        progress, created = UserProgramProgress.objects.get_or_create(
-            user=request.user,
-            program=program,
-            defaults={
-                "current_day": 1,
-                "completed_days": [],
-            },
-        )
-
-        if not created and progress.completed_at is not None:
-            return Response(
-                {
-                    "detail": "Program already completed.",
-                    "code": "already_completed",
-                    "progress": UserProgramProgressSerializer(progress).data,
-                },
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        http_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
-
-        if created:
-            track_event(
-                "program_started",
-                source="backend",
-                user=request.user,
-                properties={"program_id": program.id},
-            )
-
-        return Response(UserProgramProgressSerializer(progress).data, status=http_status)
+    def get(self, request, program_id: int):
+        activation = _activation_or_404(request.user, _program_or_404(program_id))
+        return Response(serialize_activation(activation))
 
 
-class ProgramCompleteView(APIView):
-    """
-    POST /programs/<id>/complete
-    Marks the entire guided program as completed for the authenticated user.
-
-    Sets completed_at to the current timestamp and status → "completed".
-    Returns 409 if the program was already marked as completed.
-    """
-
+class ProgramPauseView(APIView):
     permission_classes = [IsAuthenticated]
 
     @require_feature("programs_access")
-    def post(self, request, program_id):
-        program = get_object_or_404(GuidedProgram, id=program_id, active=True)
-        progress = UserProgramProgress.objects.filter(
-            user=request.user, program=program
-        ).first()
+    def post(self, request, program_id: int):
+        activation = _activation_or_404(request.user, _program_or_404(program_id))
+        activation.pause()
+        return Response(serialize_activation(activation))
 
-        if progress is None:
-            return Response(
-                {"detail": "Program not started. Call /start first."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        if progress.completed_at is not None:
-            return Response(
-                {
-                    "detail": "Program already completed.",
-                    "code": "already_completed",
-                    "progress": UserProgramProgressSerializer(progress).data,
-                },
-                status=status.HTTP_409_CONFLICT,
-            )
+class ProgramResumeView(APIView):
+    permission_classes = [IsAuthenticated]
 
-        progress.complete_program()
+    @require_feature("programs_access")
+    def post(self, request, program_id: int):
+        activation = _activation_or_404(request.user, _program_or_404(program_id))
+        activation.resume()
+        return Response(serialize_activation(activation))
 
-        track_event(
-            "program_completed",
-            source="backend",
-            user=request.user,
-            properties={
-                "program_id": program.id,
-                "days_completed": len(progress.completed_days),
-                "current_day": progress.current_day,
-            },
-        )
 
-        return Response(UserProgramProgressSerializer(progress).data)
+class ProgramStartView(ProgramActivateView):
+    pass
+
+
+class ProgramCompleteView(ProgramCompleteDayView):
+    pass
+
+
+class ProgramDayView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @require_feature("programs_access")
+    def get(self, request, program_id: int, day_number: int):
+        program = _program_or_404(program_id)
+        if not can_view_program(request.user, program):
+            return Response({"detail": "Program indisponibil pentru planul tau."}, status=status.HTTP_403_FORBIDDEN)
+        day = get_object_or_404(program.days, day_number=day_number)
+        return Response(serialize_day(day))

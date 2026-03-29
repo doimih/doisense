@@ -765,11 +765,36 @@ class BackupConfigAdmin(ModelAdmin):
 
 
 class SingletonProxyConfigAdmin(ModelAdmin):
-    form = SystemConfigAdminForm
-    change_form_template = "admin/core/systemconfig/change_form.html"
+    change_form_template = "admin/change_form.html"
+
+    _masked_fields = (
+        "google_client_id",
+        "apple_client_id",
+        "stripe_secret_key",
+        "stripe_webhook_secret",
+        "stripe_price_id_premium",
+        "stripe_price_id_basic",
+        "stripe_price_id_vip",
+        "stripe_product_id_basic",
+        "stripe_product_id_premium",
+        "stripe_product_id_vip",
+        "ai_openai_api_key",
+        "ai_anthropic_api_key",
+        "recaptcha_secret_key",
+    )
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form_class = super().get_form(request, obj=obj, change=change, **kwargs)
+        for field_name in self._masked_fields:
+            if field_name in form_class.base_fields:
+                form_class.base_fields[field_name].widget = forms.PasswordInput(
+                    render_value=True,
+                    attrs={"autocomplete": "new-password"},
+                )
+        return form_class
 
     def changelist_view(self, request, extra_context=None):
-        config = SystemConfig.get_solo()
+        config = self.model.get_solo()
         meta = self.model._meta
         url = reverse(f"admin:{meta.app_label}_{meta.model_name}_change", args=[config.pk])
         return HttpResponseRedirect(url)

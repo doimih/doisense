@@ -15,6 +15,31 @@ jobs:
     name: Backend Lint + Tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: doisense
+          POSTGRES_PASSWORD: ci-db-password
+          POSTGRES_DB: doisense_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
     defaults:
       run:
         working-directory: backend
@@ -23,15 +48,15 @@ jobs:
       DJANGO_SETTINGS_MODULE: config.settings
       SECRET_KEY: ci-secret-key
       DEBUG: "false"
-      DATABASE_URL: sqlite:////tmp/doisense_ci.sqlite3
+      DATABASE_URL: postgres://doisense:ci-db-password@localhost:5432/doisense_test
       REDIS_URL: redis://localhost:6379/0
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.11"
           cache: pip
@@ -48,8 +73,15 @@ jobs:
       - name: Black check
         run: black --check .
 
-      - name: Pytest
-        run: pytest
+      - name: Pytest with Coverage
+        run: pytest --cov --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3.1.5
+        with:
+          files: ./backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: true
 
   frontend:
     name: Frontend Lint + Tests + Build
@@ -65,15 +97,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v2.4.0
         with:
           version: 9
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.0.2
         with:
           node-version: "20"
           cache: pnpm
@@ -85,8 +117,15 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      - name: Test
-        run: pnpm run test -- --runInBand
+      - name: Test with Coverage
+        run: pnpm run test -- --runInBand --coverage --coverageReporters=cobertura
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3.1.5
+        with:
+          files: ./frontend/coverage/cobertura-coverage.xml
+          flags: frontend
+          fail_ci_if_error: false
 
       - name: Build
         run: pnpm run build

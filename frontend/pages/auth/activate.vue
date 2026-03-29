@@ -98,6 +98,12 @@ const copy: Record<string, {
 
 const text = computed(() => copy[localeCode.value] || copy.en)
 
+function normalizeApiBase(base: string): string {
+  const cleaned = (base || '').trim().replace(/^['\"]+|['\"]+$/g, '')
+  if (!cleaned) return '/api'
+  return cleaned.replace(/\/+$/, '')
+}
+
 onMounted(async () => {
   const uid = (route.query.uid as string) || ''
   const token = (route.query.token as string) || ''
@@ -109,7 +115,7 @@ onMounted(async () => {
   }
 
   try {
-    const base = config.public.apiBase as string
+    const base = normalizeApiBase(config.public.apiBase as string)
     const res = await $fetch<{ detail: string }>(`${base}/auth/activate`, {
       method: 'POST',
       body: { uid, token },

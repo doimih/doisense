@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia'
 import type { User } from './User'
 
+function normalizeApiBase(base: string): string {
+  const cleaned = (base || '').trim().replace(/^['\"]+|['\"]+$/g, '')
+  if (!cleaned) return '/api'
+  return cleaned.replace(/\/+$/, '')
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
@@ -16,7 +22,7 @@ export const useAuthStore = defineStore('auth', {
     async trackFrontendEvent(eventName: string, properties: Record<string, unknown> = {}) {
       try {
         const config = useRuntimeConfig()
-        const base = config.public.apiBase as string
+        const base = normalizeApiBase(config.public.apiBase as string)
         await $fetch(`${base}/analytics/track`, {
           method: 'POST',
           body: {
@@ -53,7 +59,7 @@ export const useAuthStore = defineStore('auth', {
       legalConsent = { acceptedTerms: true, acceptedPrivacy: true, acceptedAiUsage: true },
     ) {
       const config = useRuntimeConfig()
-      const base = config.public.apiBase as string
+      const base = normalizeApiBase(config.public.apiBase as string)
       return $fetch<{ detail: string }>(`${base}/auth/register`, {
         method: 'POST',
         body: {
@@ -74,7 +80,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async login(email: string, password: string) {
       const config = useRuntimeConfig()
-      const base = config.public.apiBase as string
+      const base = normalizeApiBase(config.public.apiBase as string)
       const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/login`, {
         method: 'POST',
         body: { email, password },
@@ -90,7 +96,7 @@ export const useAuthStore = defineStore('auth', {
       legalConsent = { acceptedTerms: false, acceptedPrivacy: false, acceptedAiUsage: false },
     ) {
       const config = useRuntimeConfig()
-      const base = config.public.apiBase as string
+      const base = normalizeApiBase(config.public.apiBase as string)
       const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/social`, {
         method: 'POST',
         body: {
@@ -121,13 +127,17 @@ export const useAuthStore = defineStore('auth', {
         const access = localStorage.getItem('doisense_access')
         const refresh = localStorage.getItem('doisense_refresh')
         const userStr = localStorage.getItem('doisense_user')
-        if (access && refresh && userStr) {
+        if (access && refresh) {
           this.accessToken = access
           this.refreshToken = refresh
-          try {
-            this.user = JSON.parse(userStr) as User
-          } catch {
-            this.logout()
+          if (userStr) {
+            try {
+              this.user = JSON.parse(userStr) as User
+            } catch {
+              // Keep tokens so user can be rehydrated from /me via refresh flow.
+              this.user = null
+              localStorage.removeItem('doisense_user')
+            }
           }
         }
       }

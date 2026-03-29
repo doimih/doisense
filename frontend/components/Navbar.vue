@@ -7,8 +7,8 @@
       >
         <span class="inline-flex flex-col leading-none" style="font-family: 'Cormorant Garamond', serif;">
           <span class="inline-flex items-baseline" style="letter-spacing: 0.2em; line-height: 0.92; text-transform: lowercase;">
-            <span :style="{ color: isOverDarkZone ? 'rgb(255 255 255)' : 'rgb(41 37 36)', fontSize: '2.55rem' }">doi</span>
-            <span style="color: #c4a882; font-size: 2.55rem; font-style: italic; margin-left: 0.22em;">sense</span>
+            <span :style="{ color: isOverDarkZone ? 'rgb(255 255 255)' : 'rgb(41 37 36)', fontSize: '2.55rem' }">doi </span>
+            <span style="color: #c4a882; font-size: 2.55rem; font-style: italic; margin-left: 0.02em;">sense</span>
           </span>
           <span
             class="mt-1 uppercase"
@@ -29,7 +29,7 @@
         <span v-else>✕</span>
       </button>
 
-      <div class="hidden lg:flex items-center gap-3 flex-wrap justify-end text-sm">
+      <div v-if="isHydrated" class="hidden lg:flex items-center gap-3 flex-wrap justify-end text-sm">
         <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/features')" :class="navLinkClass">
           {{ $t('nav.features') }}
         </NuxtLink>
@@ -52,9 +52,17 @@
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" :class="navLinkClass">
           {{ $t('nav.journal') }}
         </NuxtLink>
-        <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" :class="navLinkClass">
+        <NuxtLink v-if="authStore.isLoggedIn && hasProgramsAccess" :to="localePath('/programs')" :class="navLinkClass">
           {{ $t('nav.programs') }}
         </NuxtLink>
+        <span
+          v-else-if="authStore.isLoggedIn"
+          :class="programsDisabledClass"
+          :title="programsLockedLabel"
+          aria-disabled="true"
+        >
+          {{ $t('nav.programs') }}
+        </span>
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" :class="navLinkClass">
           {{ $t('nav.profile') }}
         </NuxtLink>
@@ -90,13 +98,13 @@
           </button>
           <div
             v-if="desktopLanguageMenuOpen"
-            class="absolute right-0 z-20 mt-2 w-36 rounded-lg border border-stone-200 bg-white p-1 shadow-lg"
+            class="absolute right-0 z-20 mt-2 w-36 rounded-lg border border-[#d4e4e0] bg-[#fafbfa] p-1 shadow-lg"
           >
             <button
               v-for="lang in languageOptions"
               :key="lang.code"
               type="button"
-              class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-100"
+              class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-[#42524b] hover:bg-[#e8f1ed]"
               @click="changeLanguage(lang.code)"
             >
               <span>{{ lang.label }}</span>
@@ -115,24 +123,39 @@
       </div>
     </div>
 
-    <div v-if="mobileOpen" class="container mx-auto mt-3 space-y-2 border-t border-stone-200 pt-3 text-sm lg:hidden">
-      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/features')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.features') }}</NuxtLink>
-      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.pricing') }}</NuxtLink>
-      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.about') }}</NuxtLink>
-      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.contact') }}</NuxtLink>
-      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/faq')" class="block text-stone-700" @click="mobileOpen = false">{{ faqLabel }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.chat') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/programs')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.programs') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" class="block text-stone-700" @click="mobileOpen = false">{{ $t('nav.notifications') }}</NuxtLink>
-      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/tickets')" class="block text-stone-700" @click="mobileOpen = false">{{ ticketsLabel }}</NuxtLink>
+    <div v-if="isHydrated && mobileOpen" class="container mx-auto mt-3 space-y-2 border-t border-[#d4e4e0] pt-3 text-sm lg:hidden">
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/features')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.features') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/pricing')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.pricing') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/about')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.about') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/contact')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.contact') }}</NuxtLink>
+      <NuxtLink v-if="!authStore.isLoggedIn" :to="localePath('/faq')" class="block text-[#42524b]" @click="mobileOpen = false">{{ faqLabel }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/chat')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.chat') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/journal')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.journal') }}</NuxtLink>
+      <NuxtLink
+        v-if="authStore.isLoggedIn && hasProgramsAccess"
+        :to="localePath('/programs')"
+        class="block text-[#42524b]"
+        @click="mobileOpen = false"
+      >
+        {{ $t('nav.programs') }}
+      </NuxtLink>
+      <span
+        v-else-if="authStore.isLoggedIn"
+        class="block cursor-not-allowed text-[#9aa8a2]"
+        :title="programsLockedLabel"
+        aria-disabled="true"
+      >
+        {{ $t('nav.programs') }}
+      </span>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/profile')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.profile') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/notifications')" class="block text-[#42524b]" @click="mobileOpen = false">{{ $t('nav.notifications') }}</NuxtLink>
+      <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/tickets')" class="block text-[#42524b]" @click="mobileOpen = false">{{ ticketsLabel }}</NuxtLink>
       <div class="pt-2">
-        <p class="mb-1 text-xs text-stone-500">{{ $t('auth.language') }}</p>
+        <p class="mb-1 text-xs text-[#6e7d76]">{{ $t('auth.language') }}</p>
         <div class="relative inline-block">
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-700"
+            class="inline-flex items-center gap-2 rounded-full border border-[#c6d9d2] bg-[#fafbfa] px-3 py-1.5 text-xs font-medium text-[#42524b]"
             :aria-label="uiText.openLanguageMenu"
             @click="mobileLanguageMenuOpen = !mobileLanguageMenuOpen"
           >
@@ -141,13 +164,13 @@
           </button>
           <div
             v-if="mobileLanguageMenuOpen"
-            class="absolute left-0 z-20 mt-2 w-40 rounded-lg border border-stone-200 bg-white p-1 shadow-lg"
+            class="absolute left-0 z-20 mt-2 w-40 rounded-lg border border-[#d4e4e0] bg-[#fafbfa] p-1 shadow-lg"
           >
             <button
               v-for="lang in languageOptions"
               :key="`mobile-lang-${lang.code}`"
               type="button"
-              class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-stone-700 hover:bg-stone-100"
+              class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs text-[#42524b] hover:bg-[#e8f1ed]"
               @click="changeLanguage(lang.code)"
             >
               <span>{{ lang.label }}</span>
@@ -162,25 +185,25 @@
   <Teleport to="body">
     <div
       v-if="showAuthModal"
-      class="fixed inset-0 z-[100] overflow-y-auto bg-stone-900/50"
+      class="fixed inset-0 z-[100] overflow-y-auto bg-[#1f2d26]/45"
       @click.self="closeAuthModal"
       @keydown.esc="closeAuthModal"
     >
       <div class="flex min-h-full items-center justify-center px-4 py-6">
-        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @click.stop>
+        <div class="w-full max-w-md rounded-2xl border border-[#d4e4e0] bg-[#fafbfa] p-6 shadow-2xl" @click.stop>
           <BrandLogo size="sm" centered class="mb-4" />
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-stone-900">{{ $t('auth.accountTitle') }}</h2>
-            <button type="button" class="text-stone-500 hover:text-stone-800" @click="closeAuthModal" :aria-label="uiText.close">
+            <h2 class="text-lg font-semibold text-[#2c3e35]">{{ $t('auth.accountTitle') }}</h2>
+            <button type="button" class="text-[#6e7d76] hover:text-[#2c3e35]" @click="closeAuthModal" :aria-label="uiText.close">
               ✕
             </button>
           </div>
 
-      <div class="mb-4 grid grid-cols-2 rounded-lg bg-stone-100 p-1">
+      <div class="mb-4 grid grid-cols-2 rounded-lg bg-[#e8f1ed] p-1">
         <button
           type="button"
           class="rounded-md px-3 py-2 text-sm"
-          :class="authTab === 'login' ? 'bg-white font-medium text-stone-900 shadow-sm' : 'text-stone-600'"
+          :class="authTab === 'login' ? 'bg-[#fafbfa] font-medium text-[#2c3e35] shadow-sm' : 'text-[#5a6b63]'"
           @click="switchTab('login')"
         >
           {{ $t('auth.login') }}
@@ -188,7 +211,7 @@
         <button
           type="button"
           class="rounded-md px-3 py-2 text-sm"
-          :class="authTab === 'register' ? 'bg-white font-medium text-stone-900 shadow-sm' : 'text-stone-600'"
+          :class="authTab === 'register' ? 'bg-[#fafbfa] font-medium text-[#2c3e35] shadow-sm' : 'text-[#5a6b63]'"
           @click="switchTab('register')"
         >
           {{ $t('auth.register') }}
@@ -198,7 +221,7 @@
       <div class="mb-4 grid grid-cols-2 gap-2">
         <button
           type="button"
-          class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+          class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2 text-sm font-medium text-[#42524b] hover:bg-[#f0f4f1] disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'apple'"
           @click="loginWithGoogle"
           :aria-label="uiText.continueGoogle"
@@ -210,7 +233,7 @@
         </button>
         <button
           type="button"
-          class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+          class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2 text-sm font-medium text-[#42524b] hover:bg-[#f0f4f1] disabled:opacity-50"
           :disabled="authLoading || socialLoading === 'google'"
           @click="loginWithApple"
           :aria-label="uiText.continueApple"
@@ -224,17 +247,17 @@
 
       <form v-if="authTab === 'login'" class="space-y-3" @submit.prevent="submitLogin">
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.email') }}</label>
-          <input v-model="loginEmail" type="email" required class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          <label class="mb-1 block text-sm font-medium text-[#42524b]">{{ $t('auth.email') }}</label>
+          <input v-model="loginEmail" type="email" required class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.password') }}</label>
-          <input v-model="loginPassword" type="password" required class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          <label class="mb-1 block text-sm font-medium text-[#42524b]">{{ $t('auth.password') }}</label>
+          <input v-model="loginPassword" type="password" required class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2" />
         </div>
         <div class="text-right">
           <button
             type="button"
-            class="text-sm text-amber-700 hover:underline"
+            class="text-sm text-[#7bb8a0] hover:underline"
             :disabled="authLoading"
             @click="goToRecover"
           >
@@ -245,7 +268,7 @@
         <button
           type="submit"
           :disabled="authLoading"
-          class="w-full rounded-lg bg-amber-600 py-2 text-white hover:bg-amber-700 disabled:opacity-50"
+          class="w-full rounded-lg bg-[#7bb8a0] py-2 text-white hover:bg-[#6da78f] disabled:opacity-50"
         >
           {{ authLoading ? $t('common.loading') : $t('auth.login') }}
         </button>
@@ -254,25 +277,25 @@
       <form v-else class="space-y-3" @submit.prevent="submitRegister">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.firstName') }}</label>
-            <input v-model="registerFirstName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <label class="mb-1 block text-sm font-medium text-[#42524b]">{{ $t('auth.firstName') }}</label>
+            <input v-model="registerFirstName" type="text" class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2" />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.lastName') }}</label>
-            <input v-model="registerLastName" type="text" class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <label class="mb-1 block text-sm font-medium text-[#42524b]">{{ $t('auth.lastName') }}</label>
+            <input v-model="registerLastName" type="text" class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2" />
           </div>
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.email') }}</label>
-          <input v-model="registerEmail" type="email" required class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          <label class="mb-1 block text-sm font-medium text-[#42524b]">{{ $t('auth.email') }}</label>
+          <input v-model="registerEmail" type="email" required class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.password') }}</label>
-          <input v-model="registerPassword" type="password" minlength="8" required class="w-full rounded-lg border border-stone-300 px-3 py-2" />
+          <label class="mb-1 block text-sm font-medium text-[#42524b]">{{ $t('auth.password') }}</label>
+          <input v-model="registerPassword" type="password" minlength="8" required class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-stone-700">{{ $t('auth.language') }}</label>
-          <select v-model="registerLanguage" class="w-full rounded-lg border border-stone-300 px-3 py-2">
+          <label class="mb-1 block text-sm font-medium text-[#42524b]">{{ $t('auth.language') }}</label>
+          <select v-model="registerLanguage" class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2">
             <option value="ro">Romana</option>
             <option value="en">English</option>
             <option value="de">Deutsch</option>
@@ -287,7 +310,7 @@
         <button
           type="submit"
           :disabled="authLoading || !!authSuccess"
-          class="w-full rounded-lg bg-amber-600 py-2 text-white hover:bg-amber-700 disabled:opacity-50"
+          class="w-full rounded-lg bg-[#7bb8a0] py-2 text-white hover:bg-[#6da78f] disabled:opacity-50"
         >
           {{ authLoading ? $t('common.loading') : $t('auth.register') }}
         </button>
@@ -307,10 +330,12 @@ const route = useRoute()
 const { locale, setLocale, t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 const { getPostAuthPath } = useOnboarding()
+const { fetchApi } = useApi()
 const selectedLanguageCookie = useCookie<string | null>('i18n_redirect', { default: () => null })
 const selectedLanguageCookieLegacy = useCookie<string | null>('i18n_redirected', { default: () => null })
 
 const mobileOpen = ref(false)
+const isHydrated = ref(false)
 const hasScrolled = ref(false)
 const isOverDarkZone = ref(false)
 const navRef = ref<HTMLElement | null>(null)
@@ -359,6 +384,28 @@ const ticketsLabel = computed(() => {
     es: 'Ticket',
     pl: 'Ticket',
   }[code] || 'Ticket'
+})
+
+const hasProgramsAccess = computed(() => {
+  const user = authStore.user
+  if (!user) return false
+  if (user.is_superuser || user.is_staff) return true
+
+  const paidPlans = new Set(['basic', 'premium', 'premium_discounted', 'vip'])
+  return paidPlans.has(user.plan_tier) || user.membership_tier === 'premium' || user.is_premium
+})
+
+const programsLockedLabel = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: 'Disponibil doar pentru planuri platite',
+    en: 'Available only on paid plans',
+    de: 'Nur fuer kostenpflichtige Plaene verfuegbar',
+    fr: 'Disponible uniquement avec un abonnement payant',
+    it: 'Disponibile solo con piani a pagamento',
+    es: 'Disponible solo para planes de pago',
+    pl: 'Dostepne tylko dla planow platnych',
+  }[code] || 'Available only on paid plans'
 })
 
 const uiText = computed(() => {
@@ -437,31 +484,35 @@ const navClass = computed(() => {
   return [
     'sticky top-0 z-40 px-4 py-3 transition-all duration-300',
     scrolled && darkZone
-      ? 'border-b border-white/25 bg-stone-900/55 text-white shadow-[0_8px_30px_-20px_rgba(2,6,23,0.7)] backdrop-blur-xl'
+      ? 'border-b border-white/25 bg-[#1f2d26]/58 text-white shadow-[0_8px_30px_-20px_rgba(2,6,23,0.7)] backdrop-blur-xl'
       : scrolled
-      ? 'border-b border-white/35 bg-white/72 shadow-[0_8px_30px_-20px_rgba(15,23,42,0.45)] backdrop-blur-xl'
-      : 'border-b border-stone-200 bg-white/98',
+      ? 'border-b border-[#d4e4e0] bg-[#fafbfa]/86 shadow-[0_8px_30px_-20px_rgba(44,62,53,0.32)] backdrop-blur-xl'
+      : 'border-b border-[#d4e4e0] bg-[#fafbfa]/98',
     hidden ? '-translate-y-full' : 'translate-y-0',
   ]
 })
 
 const navLinkClass = computed(() =>
-  isOverDarkZone.value ? 'text-white/85 hover:text-white transition-colors' : 'text-stone-600 hover:text-stone-900 transition-colors',
+  isOverDarkZone.value ? 'text-white/85 hover:text-white transition-colors' : 'text-[#5a6b63] hover:text-[#2c3e35] transition-colors',
+)
+
+const programsDisabledClass = computed(() =>
+  isOverDarkZone.value ? 'text-white/45 cursor-not-allowed' : 'text-[#9aa8a2] cursor-not-allowed',
 )
 
 const mobileToggleClass = computed(() => [
   'lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors',
-  isOverDarkZone.value ? 'border-white/40 text-white' : 'border-stone-300 text-stone-700',
+  isOverDarkZone.value ? 'border-white/40 text-white' : 'border-[#c6d9d2] text-[#42524b]',
 ])
 
 const accountButtonClass = computed(() => [
   'inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors',
-  isOverDarkZone.value ? 'border-white/40 text-white hover:border-white/70 hover:text-white' : 'border-stone-300 text-stone-600 hover:border-stone-400 hover:text-stone-900',
+  isOverDarkZone.value ? 'border-white/40 text-white hover:border-white/70 hover:text-white' : 'border-[#c6d9d2] text-[#5a6b63] hover:border-[#7bb8a0] hover:text-[#2c3e35]',
 ])
 
 const languageButtonClass = computed(() => [
   'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
-  isOverDarkZone.value ? 'border-white/40 text-white hover:border-white/70' : 'border-stone-300 text-stone-700 hover:border-stone-400',
+  isOverDarkZone.value ? 'border-white/40 text-white hover:border-white/70' : 'border-[#c6d9d2] text-[#42524b] hover:border-[#7bb8a0]',
 ])
 
 const showAuthModal = ref(false)
@@ -635,7 +686,19 @@ async function submitRegister() {
     )
     authSuccess.value = res.detail || t('auth.registerSuccess')
   } catch (e: unknown) {
-    authError.value = (e as { data?: { detail?: string } })?.data?.detail || t('auth.registerFailed')
+    const apiError = e as { data?: Record<string, unknown>; message?: string }
+    const detail = apiError?.data?.detail
+    if (typeof detail === 'string' && detail.trim()) {
+      authError.value = detail
+    } else {
+      const data = apiError?.data || {}
+      const firstFieldError = Object.values(data)
+        .flatMap((value) => Array.isArray(value) ? value : [value])
+        .find((value) => typeof value === 'string' && value.trim())
+      authError.value = (firstFieldError as string | undefined)
+        || apiError?.message
+        || t('auth.registerFailed')
+    }
   } finally {
     authLoading.value = false
   }
@@ -650,6 +713,7 @@ async function changeLanguage(code: LocaleCode) {
   try {
     selectedLanguageCookie.value = code
     selectedLanguageCookieLegacy.value = code
+    await syncAuthenticatedLanguage(code)
     const targetPath = switchLocalePath(code)
     if (targetPath && targetPath !== route.fullPath) {
       await router.push(targetPath)
@@ -660,6 +724,27 @@ async function changeLanguage(code: LocaleCode) {
     desktopLanguageMenuOpen.value = false
     mobileLanguageMenuOpen.value = false
     mobileOpen.value = false
+  }
+}
+
+async function syncAuthenticatedLanguage(code: LocaleCode) {
+  if (!authStore.isLoggedIn || authStore.user?.language === code) {
+    return
+  }
+
+  try {
+    const updated = await fetchApi<{ language: string }>('/me', {
+      method: 'PATCH',
+      body: { language: code },
+    })
+    if (authStore.user) {
+      authStore.user = {
+        ...authStore.user,
+        language: updated.language || code,
+      }
+    }
+  } catch {
+    // Keep locale switch responsive even if profile language sync fails.
   }
 }
 
@@ -716,7 +801,21 @@ onMounted(() => {
   updateNavTone()
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('resize', updateNavTone, { passive: true })
+  isHydrated.value = true
+
+  const code = preferredLanguage()
+  syncAuthenticatedLanguage(code)
 })
+
+watch(
+  () => locale.value,
+  (value) => {
+    const code = (value || 'en').slice(0, 2).toLowerCase() as LocaleCode
+    if (LANGUAGE_CODES.includes(code)) {
+      syncAuthenticatedLanguage(code)
+    }
+  },
+)
 
 onBeforeUnmount(() => {
   if (!import.meta.client) return

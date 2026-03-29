@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>doi sense - Bine ai venit</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafbfa;
+  --surface: #fafbfa;
+  --surface2: #e8f1ed;
+  --border: rgba(168,213,186,0.2);
+  --border2: rgba(168,213,186,0.1);
+  --text: #2c3e35;
+  --text2: #5a6b63;
+  --text3: #8a9b94;
+  --accent: #7bb8a0;
+  --accent2: #a8d5ba;
+  --accent-glow: rgba(168,213,186,0.15);
+  --gold: #d4e4e0;
+  --gold-soft: rgba(212,228,224,0.2);
+  --danger: #c05848;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── AMBIENT BG ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(168,213,186,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(212,228,224,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+.shell {
+  width: 100%;
+  max-width: 1100px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── STEP ── */
+.step {
+  display: none;
+  width: 100%;
+  animation: stepIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+}
+.step.active { display: flex; flex-direction: column; gap: 0; }
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.progress-label {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text3);
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.progress-track {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: visible;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7bb8a0, #a8d5ba);
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(42,138,154,0.6);
+}
+
+.progress-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.pdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+.pdot.done { background: var(--accent2); }
+.pdot.current { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.8) inset;
+}
+
+/* ── HERO HEADER ── */
+.card-hero {
+  padding: 48px 56px 44px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e8f1ed 0%, #f0f4f1 60%, #fafbfa 100%);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168,213,186,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,228,224,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.step-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(168,213,186,0.15);
+  border: 1px solid rgba(168,213,186,0.3);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #7bb8a0;
+  margin-bottom: 24px;
+  font-weight: 400;
+}
+
+.step-chip-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #7bb8a0;
+  box-shadow: 0 0 6px #7bb8a0;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-title .gold { color: var(--gold); font-style: italic; }
+
+.hero-desc {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text2);
+  max-width: 580px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-note {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.03em;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── CARD BODY ── */
+.card-body {
+  padding: 36px 56px;
+}
+
+/* ── CARD FOOTER ── */
+.card-footer {
+  padding: 20px 56px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border2);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--text);
+  color: var(--surface);
+  font-weight: 400;
+}
+.btn-primary:hover {
+  background: #000;
+  box-shadow: 0 0 20px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: #fff;
+  font-weight: 400;
+}
+.btn-accent:hover {
+  box-shadow: 0 0 24px rgba(42,138,154,0.3);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text3);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text2); border-color: var(--text3); }
+
+/* ── FEATURE GRID (Step 2) ── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.feature-item {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 20px 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: all 0.25s;
+  cursor: default;
+}
+
+.feature-item:hover {
+  border-color: rgba(42,138,154,0.2);
+  background: rgba(42,138,154,0.04);
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--accent-glow);
+  border: 1px solid rgba(42,138,154,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.feature-text { display: flex; flex-direction: column; gap: 3px; }
+.feature-name { font-size: 13px; font-weight: 300; color: var(--text); }
+.feature-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
+
+/* ── DISCLAIMER (Step 3) ── */
+.disclaimer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.disc-item {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.disc-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+
+.disc-ok .disc-icon { background: rgba(106,159,126,0.15); }
+.disc-no .disc-icon { background: rgba(224,120,112,0.12); }
+
+.disc-title { font-size: 12px; font-weight: 400; color: var(--text); }
+.disc-sub { font-size: 11px; color: var(--text3); line-height: 1.6; }
+
+.disc-no .disc-title { color: #e07870; }
+
+/* ── PRIVACY (Step 4) ── */
+.privacy-box {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.privacy-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.custom-checkbox {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  background: rgba(42,138,154,0.1);
+  border: 1.5px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.custom-checkbox svg { display: block; }
+
+.check-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text2);
+}
+
+.check-text a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(126,206,206,0.3);
+  transition: border-color 0.2s;
+}
+.check-text a:hover { border-bottom-color: var(--accent); }
+
+.doc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.doc-tag {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.04em;
+}
+.doc-tag:hover { border-color: var(--accent2); color: var(--accent); }
+
+/* ── EMOTIONAL PROFILE (Step 5) ── */
+.emo-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+}
+
+.emo-panel {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+}
+
+.panel-label {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 18px;
+  font-weight: 400;
+}
+
+.mood-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mood-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.mood-item:hover {
+  border-color: rgba(42,138,154,0.25);
+  background: rgba(42,138,154,0.05);
+}
+
+.mood-item.selected {
+  border-color: var(--accent);
+  background: rgba(42,138,154,0.08);
+  box-shadow: 0 0 16px rgba(42,138,154,0.1);
+}
+
+.mood-emoji { font-size: 22px; line-height: 1; }
+.mood-label { font-size: 11px; color: var(--text2); text-align: center; }
+.mood-item.selected .mood-label { color: var(--accent); }
+
+/* ENERGY SLIDER */
+.energy-section { margin-top: 20px; }
+
+.energy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.energy-title { font-size: 12px; color: var(--text2); }
+.energy-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  margin: 8px 0 16px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(42,138,154,0.35);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 16px rgba(42,138,154,0.5);
+}
+
+.energy-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.05em;
+}
+
+/* JOURNAL */
+.journal-panel { display: flex; flex-direction: column; }
+
+textarea {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+  min-height: 110px;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+textarea::placeholder { color: var(--text3); }
+textarea:focus { border-bottom-color: var(--accent); }
+
+.journal-note {
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.6;
+}
+
+/* ── LOGO ── */
+.logo-mark {
+  position: fixed;
+  top: 28px;
+  left: 40px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  z-index: 10;
+  text-decoration: none;
+}
+.logo-mark span { color: var(--accent); font-style: italic; }
+
+/* ── STEP INDICATOR ── */
+.step-counter {
+  position: fixed;
+  bottom: 32px;
+  right: 40px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  z-index: 10;
+}
+
+/* ── WELCOME ILLUSTRATION ── */
+.welcome-visual {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0 8px;
+}
+
+.breathing-orb {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(42,138,154,0.2), rgba(26,106,122,0.06) 50%, transparent);
+  border: 1px solid rgba(42,138,154,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.breathing-orb::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(42,138,154,0.08);
+  animation: breathe 4s ease-in-out infinite 0.5s;
+}
+
+.breathing-orb::after {
+  content: '';
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  border: 1px solid rgba(42,138,154,0.04);
+  animation: breathe 4s ease-in-out infinite 1s;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+.orb-inner {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--accent);
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<a class="logo-mark" href="#">doi<span>sense</span></a>
+<div class="step-counter" id="stepCounter">1 / 5</div>
+
+<div class="shell">
+
+  <!-- ══ STEP 1 ══ -->
+  <div class="step active" id="step1">
+    <div class="progress-wrap">
+      <span class="progress-label">Pasul 1 din 5</span>
+      <div class="progress-track"><div class="progress-fill" style="width:20%"></div></div>
+      <div class="progress-dots">
+        <div class="pdot current"></div>
+        <div class="pdot"></div>
+        <div class="pdot"></div>
+        <div class="pdot"></div>
+        <div class="pdot"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hero">
+        <div class="step-chip"><div class="step-chip-dot"></div>Bun venit</div>
+        <h1 class="hero-title">Bine ai venit în spațiul tău de <em>claritate</em> și <span class="gold">echilibru</span></h1>
+        <p class="hero-desc">Vei lucra cu un AI creat pentru a te ajuta să înțelegi mai bine ce simți, să-ți clarifici obiectivele și să evoluezi în ritmul tău.</p>
+        <p class="hero-note">Parcurgi fluxul de bază · Poți face upgrade oricând din profil</p>
+      </div>
+      <div class="card-body">
+        <div class="welcome-visual">
+          <div class="breathing-orb">
+            <div class="orb-inner">∞</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div></div>
+        <button class="btn btn-accent" onclick="goTo(2)">Începe</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2 ══ -->
+  <div class="step" id="step2">
+    <div class="progress-wrap">
+      <span class="progress-label">Pasul 2 din 5</span>
+      <div class="progress-track"><div class="progress-fill" style="width:40%"></div></div>
+      <div class="progress-dots">
+        <div class="pdot done"></div>
+        <div class="pdot current"></div>
+        <div class="pdot"></div>
+        <div class="pdot"></div>
+        <div class="pdot"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hero">
+        <div class="step-chip"><div class="step-chip-dot"></div>Capabilități</div>
+        <h1 class="hero-title">Cum te poate <em>ajuta</em> platforma</h1>
+        <p class="hero-desc">Platforma combină auto-reflecția cu inteligența artificială pentru a crea o experiență personalizată de wellbeing.</p>
+      </div>
+      <div class="card-body">
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-icon">🧠</div>
+            <div class="feature-text">
+              <span class="feature-name">Analizează stările emoționale</span>
+              <span class="feature-desc">Identifică tipare și te ajută să înțelegi ce simți</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">💬</div>
+            <div class="feature-text">
+              <span class="feature-name">Pune întrebări inteligente</span>
+              <span class="feature-desc">Conversații adaptate la contextul tău personal</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📋</div>
+            <div class="feature-text">
+              <span class="feature-name">Creează planuri zilnice</span>
+              <span class="feature-desc">Rapoarte și structuri adaptate ritmului tău</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <div class="feature-text">
+              <span class="feature-name">Clarifică obiectivele</span>
+              <span class="feature-desc">Transformă dorințele vagi în direcții clare</span>
+            </div>
+          </div>
+          <div class="feature-item" style="grid-column: 1/-1;">
+            <div class="feature-icon">🤝</div>
+            <div class="feature-text">
+              <span class="feature-name">Suport emoțional general</span>
+              <span class="feature-desc">Un spațiu sigur pentru a procesa și reflecta fără judecată</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-ghost" onclick="goTo(1)">Înapoi</button>
+        <button class="btn btn-accent" onclick="goTo(3)">Continuă</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3 ══ -->
+  <div class="step" id="step3">
+    <div class="progress-wrap">
+      <span class="progress-label">Pasul 3 din 5</span>
+      <div class="progress-track"><div class="progress-fill" style="width:60%"></div></div>
+      <div class="progress-dots">
+        <div class="pdot done"></div>
+        <div class="pdot done"></div>
+        <div class="pdot current"></div>
+        <div class="pdot"></div>
+        <div class="pdot"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hero">
+        <div class="step-chip"><div class="step-chip-dot"></div>Transparență</div>
+        <h1 class="hero-title">Ce este <em>important</em> să știi</h1>
+        <p class="hero-desc">Platforma îți oferă suport emoțional general și instrumente de auto-reflecție. Înainte să continui, câteva clarificări esențiale.</p>
+      </div>
+      <div class="card-body">
+        <div class="disclaimer-grid">
+          <div class="disc-item disc-ok">
+            <div class="disc-icon">✓</div>
+            <div class="disc-title">Ce oferim</div>
+            <div class="disc-sub">Suport emoțional, auto-reflecție ghidată, claritate personală și instrumente de wellbeing general.</div>
+          </div>
+          <div class="disc-item disc-no">
+            <div class="disc-icon">✕</div>
+            <div class="disc-title">Ce nu oferim</div>
+            <div class="disc-sub">Sfaturi medicale, psihologice sau terapeutice. Nu suntem un substitut pentru un specialist.</div>
+          </div>
+          <div class="disc-item disc-ok" style="grid-column:1/-1; flex-direction:row; align-items:flex-start; gap:14px;">
+            <div class="disc-icon" style="flex-shrink:0;">⚠</div>
+            <div>
+              <div class="disc-title" style="margin-bottom:6px;">Situații grave</div>
+              <div class="disc-sub">Dacă te confrunți cu o situație gravă sau ai nevoie de ajutor urgent, este esențial să cauți ajutor specializat de la un profesionist de sănătate mintală.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-ghost" onclick="goTo(2)">Înapoi</button>
+        <button class="btn btn-accent" onclick="goTo(4)">Am înțeles</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 4 ══ -->
+  <div class="step" id="step4">
+    <div class="progress-wrap">
+      <span class="progress-label">Pasul 4 din 5</span>
+      <div class="progress-track"><div class="progress-fill" style="width:80%"></div></div>
+      <div class="progress-dots">
+        <div class="pdot done"></div>
+        <div class="pdot done"></div>
+        <div class="pdot done"></div>
+        <div class="pdot current"></div>
+        <div class="pdot"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hero">
+        <div class="step-chip"><div class="step-chip-dot"></div>Confidențialitate</div>
+        <h1 class="hero-title">Protejăm <em>confidențialitatea</em> ta</h1>
+        <p class="hero-desc">Nu colectăm nume, adresă sau date personale sensibile. Folosim doar un ID anonim. Datele tale sunt criptate și pot fi șterse oricând.</p>
+      </div>
+      <div class="card-body">
+        <div class="privacy-box">
+          <div class="privacy-check">
+            <div class="custom-checkbox">
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4L3.5 6.5L9 1" stroke="#2a8a9a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="check-text">
+              Sunt de acord cu <a href="#">Termenii și Condițiile</a>, <a href="#">Politica de Confidențialitate</a> și <a href="#">Acordul AI</a>.
+            </div>
+          </div>
+          <div class="doc-tags">
+            <span class="doc-tag">Termeni și Condiții</span>
+            <span class="doc-tag">Politica GDPR</span>
+            <span class="doc-tag">Acord AI</span>
+            <span class="doc-tag">Politica Cookies</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-ghost" onclick="goTo(3)">Înapoi</button>
+        <button class="btn btn-accent" onclick="goTo(5)">Accept și continuă</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 5 ══ -->
+  <div class="step" id="step5">
+    <div class="progress-wrap">
+      <span class="progress-label">Pasul 5 din 5</span>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+      <div class="progress-dots">
+        <div class="pdot done"></div>
+        <div class="pdot done"></div>
+        <div class="pdot done"></div>
+        <div class="pdot done"></div>
+        <div class="pdot current"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hero">
+        <div class="step-chip"><div class="step-chip-dot"></div>Profil emoțional</div>
+        <h1 class="hero-title">Setarea profilului tău <em>emoțional</em></h1>
+        <p class="hero-desc">Înainte de prima conversație, setează rapid starea ta actuală. Asta ne ajută să pornim mai relevant și mai calm.</p>
+      </div>
+      <div class="card-body">
+        <div class="emo-layout">
+          <!-- Mood -->
+          <div class="emo-panel">
+            <div class="panel-label">Cum te simți acum?</div>
+            <div class="mood-grid">
+              <div class="mood-item" onclick="selectMood(this)">
+                <span class="mood-emoji">🌧</span>
+                <span class="mood-label">Apăsat(ă)</span>
+              </div>
+              <div class="mood-item" onclick="selectMood(this)">
+                <span class="mood-emoji">🌿</span>
+                <span class="mood-label">Echilibrat(ă)</span>
+              </div>
+              <div class="mood-item selected" onclick="selectMood(this)">
+                <span class="mood-emoji">⛅</span>
+                <span class="mood-label">Bine</span>
+              </div>
+              <div class="mood-item" onclick="selectMood(this)">
+                <span class="mood-emoji">🌸</span>
+                <span class="mood-label">Foarte bine</span>
+              </div>
+            </div>
+            <div class="energy-section">
+              <div class="energy-header">
+                <span class="energy-title">Nivel de energie</span>
+                <span class="energy-val" id="energyVal">3/5</span>
+              </div>
+              <input type="range" min="1" max="5" value="3" oninput="document.getElementById('energyVal').textContent=this.value+'/5'">
+              <div class="energy-labels"><span>Epuizat</span><span>Neutru</span><span>Plin de energie</span></div>
+            </div>
+          </div>
+
+          <!-- Journal -->
+          <div class="emo-panel journal-panel">
+            <div class="panel-label">Jurnal inițial</div>
+            <textarea placeholder="Scrie câteva rânduri despre ce simți, ce te apasă sau ce ai vrea să clarifici..."></textarea>
+            <p class="journal-note">Vom salva starea ta actuală pentru a personaliza experiența din chat. Nota de jurnal este opțională, dar utilă pentru primul context.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-ghost" onclick="goTo(4)">Înapoi</button>
+        <button class="btn btn-accent" onclick="finish()">Continuă către AI →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function goTo(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  document.getElementById('stepCounter').textContent = n + ' / 5';
+}
+
+function selectMood(el) {
+  document.querySelectorAll('.mood-item').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function finish() {
+  const btn = event.target;
+  btn.textContent = '✓ Se pregătește spațiul tău...';
+  btn.style.background = 'linear-gradient(135deg, #4a9a8a, #6acece)';
+  setTimeout(() => { btn.textContent = '✓ Gata! Bun venit 🌿'; }, 1500);
+}
+</script>
+</body>
+</html>

@@ -126,5 +126,19 @@
     "impactTitle": "Mira el alcance, los resultados y el crecimiento que facilitamos",
     "seoTitle": "Doisense - Bienestar digital con AI y diario guiado",
     "seoDesc": "Doisense ofrece diario guiado, chat AI contextual, programas estructurados y páginas legales completas."
+  },
+  "pwaInstall": {
+    "title": "Agrega Doisense a tu pantalla de inicio",
+    "subtitle": "Ábrelo más rápido, como una app.",
+    "notNow": "Ahora no",
+    "neverShow": "No mostrar de nuevo",
+    "iAdded": "Ya lo agregué",
+    "iosStep1": "Pulsa el botón Compartir en Safari.",
+    "iosStep2": "Elige Añadir a pantalla de inicio.",
+    "iosStep3": "Confirma con Añadir.",
+    "androidPromptReady": "Tu navegador puede instalar Doisense directamente.",
+    "androidInstall": "Añadir a pantalla de inicio",
+    "androidStep1": "Abre el menú del navegador (tres puntos).",
+    "androidStep2": "Elige Añadir a pantalla de inicio."
   }
 }

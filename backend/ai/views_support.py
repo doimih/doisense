@@ -214,9 +214,11 @@ def _build_support_context(user) -> str:
         else "no"
     )
 
+    internal_subject_id = f"u-{user.id}"
+
     return (
         f"User account context:\n"
-        f"- Email: {user.email}\n"
+        f"- Internal subject id: {internal_subject_id}\n"
         f"- Plan tier: {plan}\n"
         f"- Trial active: {trial_active} (expires: {trial_ends})\n"
         f"- Subscription status: {sub_status}\n"
@@ -224,6 +226,15 @@ def _build_support_context(user) -> str:
         f"- Cancel at period end: {cancel_flag}\n"
         f"- Language preference: {user.language or 'en'}\n"
     )
+
+
+def _public_support_reply(reply: str, language: str) -> str:
+    text = (reply or "").strip()
+    if not text:
+        return _support_text(language, "support_unavailable")
+    if text.startswith("["):
+        return _support_text(language, "support_unavailable")
+    return text
 
 
 _INTENT_INSTRUCTIONS = {
@@ -312,9 +323,10 @@ def _should_open_support_ticket(message: str, intent: str) -> bool:
         "contacta",
         "tiket",
         "tichet",
-        "urgent",
     )
     return intent in {"account", "billing", "gdpr"} and any(keyword in msg for keyword in escalation_keywords)
+
+
 def _create_or_reuse_ticket(user, intent: str, message: str):
     if not _should_open_support_ticket(message, intent):
         return None, False
@@ -362,7 +374,6 @@ def _create_or_reuse_ticket(user, intent: str, message: str):
         context_key=str(ticket.id),
     )
     return ticket, True
-    return intent in {"account", "billing", "gdpr", "tech"} and any(keyword in msg for keyword in escalation_keywords)
 
 def _ticket_response_note(user, ticket, created: bool) -> str:
     if not ticket:
@@ -410,6 +421,8 @@ class SupportChatView(APIView):
             )
         except Exception:
             reply = _support_text(language, "support_unavailable")
+
+        reply = _public_support_reply(reply, language)
 
         reply = f"{reply}{_ticket_response_note(request.user, ticket, created_ticket)}"
         payload = {"reply": reply, "intent": intent}

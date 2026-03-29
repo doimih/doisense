@@ -1,5 +1,9 @@
 <template>
   <div class="max-w-6xl mx-auto px-4">
+    <div v-if="authNotice" class="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      {{ authNotice }}
+    </div>
+
     <!-- CMS Content Section -->
     <section v-if="hasCmsContent && cmsPage" class="mb-8 space-y-3">
       <h1 class="text-3xl font-bold text-slate-900">{{ cmsPage.title }}</h1>
@@ -59,6 +63,8 @@ definePageMeta({ middleware: ['auth', 'subscription'] as any })
 
 const { fetchApi } = useApi()
 const { locale, t } = useI18n()
+const route = useRoute()
+const localePath = useLocalePath()
 const { cmsPage, hasCmsContent } = useCmsStaticPage('journal')
 
 interface Question {
@@ -74,6 +80,26 @@ interface CategoryGroup {
 
 const questions = ref<Question[]>([])
 const loadingQuestions = ref(true)
+const authNotice = ref('')
+
+const sessionExpiredMessage = computed(() => {
+  const code = (locale.value || 'en').slice(0, 2).toLowerCase()
+  return {
+    ro: 'Sesiunea ta a expirat. Te rugam sa te autentifici din nou.',
+    en: 'Your session expired. Please sign in again.',
+    de: 'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.',
+    fr: 'Votre session a expire. Veuillez vous reconnecter.',
+    it: 'La tua sessione e scaduta. Effettua nuovamente il login.',
+    es: 'Tu sesion expiro. Inicia sesion nuevamente.',
+    pl: 'Twoja sesja wygasla. Zaloguj sie ponownie.',
+  }[code] || 'Your session expired. Please sign in again.'
+})
+
+function isUnauthorized(error: unknown): boolean {
+  const status = (error as { statusCode?: number; response?: { status?: number } })?.statusCode
+    ?? (error as { response?: { status?: number } })?.response?.status
+  return status === 401
+}
 
 // Dynamic SEO based on language
 const seoTitles: Record<string, string> = {
@@ -198,7 +224,18 @@ onMounted(async () => {
   try {
     const lang = locale.value || 'en'
     questions.value = await fetchApi<Question[]>(`/journal/questions?language=${lang}`)
-  } catch {
+  } catch (error) {
+    if (isUnauthorized(error)) {
+      authNotice.value = sessionExpiredMessage.value
+      await navigateTo({
+        path: localePath('/auth/login'),
+        query: {
+          reason: 'session_expired',
+          next: route.fullPath,
+        },
+      })
+      return
+    }
     questions.value = []
   } finally {
     loadingQuestions.value = false

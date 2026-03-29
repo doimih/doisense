@@ -13,6 +13,9 @@ This document maps platform scheduler job codes to Django management commands.
 - `send_inactivity_reminders` -> `send_inactivity_reminders`
 - `send_reactivation_campaign` -> `send_reactivation_campaign`
 - `ai_update_profiles` -> `ai_update_profiles`
+- `ai_generate_daily_reports` -> `ai_generate_daily_reports`
+- `ai_generate_weekly_reports` -> `ai_generate_weekly_reports`
+- `ai_generate_monthly_reports` -> `ai_generate_monthly_reports`
 - `verify_backup_flow` -> `verify_backup_flow`
 
 Execution entrypoint used by cron:

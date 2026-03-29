@@ -35,21 +35,21 @@
 
               <div class="flex flex-wrap gap-3">
                 <NuxtLink
-                  v-if="!authStore.isLoggedIn"
+                  v-if="isHydrated ? !authStore.isLoggedIn : true"
                   :to="localePath('/auth/register')"
                   class="rounded-full bg-sky-300 px-6 py-3 text-sm font-semibold text-stone-900 transition hover:bg-sky-200"
                 >
                   {{ $t('home.primaryCta') }}
                 </NuxtLink>
                 <NuxtLink
-                  v-if="!authStore.isLoggedIn"
+                  v-if="isHydrated ? !authStore.isLoggedIn : true"
                   :to="localePath('/auth/login')"
                   class="rounded-full border border-white/35 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
                 >
                   {{ $t('auth.login') }}
                 </NuxtLink>
                 <NuxtLink
-                  v-if="authStore.isLoggedIn"
+                  v-if="isHydrated && authStore.isLoggedIn"
                   :to="localePath('/chat')"
                   class="rounded-full bg-sky-300 px-6 py-3 text-sm font-semibold text-stone-900 transition hover:bg-sky-200"
                 >
@@ -84,28 +84,65 @@
       </div>
     </section>
 
-    <section class="mt-[120px] rounded-3xl border border-stone-200 bg-stone-100/70 px-5 py-8 md:px-8 md:py-10">
-      <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
-        <div class="space-y-6">
-          <p class="inline-flex items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-xs font-semibold text-stone-700 md:text-sm">
+    <section class="mt-24 rounded-[2rem] border border-[#d4e4e0] bg-[#e8f1ed] px-5 py-10 md:px-8 md:py-12">
+      <div class="text-center">
+        <h2 class="text-2xl font-semibold tracking-tight text-[#2c3e35] md:text-3xl">
+          {{ $t('home.impactTitle') }}
+        </h2>
+      </div>
+      <div class="mt-8 grid gap-5 md:grid-cols-3">
+        <article class="rounded-2xl border border-[#c6d9d2] bg-[#fafbfa] p-6 transition hover:-translate-y-1 hover:shadow-[0_12px_28px_-16px_rgba(44,62,53,0.35)]">
+          <p class="text-4xl">🔐</p>
+          <h3 class="mt-3 text-lg font-semibold text-[#2c3e35]">GDPR Ready</h3>
+          <p class="mt-2 text-sm leading-7 text-[#5a6b63]">{{ $t('home.card2Desc') }}</p>
+        </article>
+        <article class="rounded-2xl border border-[#c6d9d2] bg-[#fafbfa] p-6 transition hover:-translate-y-1 hover:shadow-[0_12px_28px_-16px_rgba(44,62,53,0.35)]">
+          <p class="text-4xl">🛡️</p>
+          <h3 class="mt-3 text-lg font-semibold text-[#2c3e35]">Data Control</h3>
+          <p class="mt-2 text-sm leading-7 text-[#5a6b63]">{{ $t('home.card1Desc') }}</p>
+        </article>
+        <article class="rounded-2xl border border-[#c6d9d2] bg-[#fafbfa] p-6 transition hover:-translate-y-1 hover:shadow-[0_12px_28px_-16px_rgba(44,62,53,0.35)]">
+          <p class="text-4xl">📋</p>
+          <h3 class="mt-3 text-lg font-semibold text-[#2c3e35]">Clear Terms</h3>
+          <p class="mt-2 text-sm leading-7 text-[#5a6b63]">{{ $t('home.card3Desc') }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="mt-24 rounded-[2rem] border border-[#d4e4e0] bg-[#fafbfa] px-5 py-10 md:px-8 md:py-12">
+      <div class="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+        <div class="space-y-5">
+          <p class="inline-flex items-center rounded-full border border-[#c6d9d2] bg-[#f4f8f6] px-4 py-2 text-xs font-semibold text-[#42524b] md:text-sm">
             {{ $t('home.heroBadge') }}
           </p>
-          <h2 class="max-w-4xl text-4xl font-bold leading-tight text-stone-900 md:text-6xl">
+          <h2 class="max-w-4xl text-4xl font-bold leading-tight text-[#2c3e35] md:text-6xl">
             {{ $t('home.sectionTwoTitle') }}
           </h2>
         </div>
 
-        <div class="space-y-6 lg:pt-4">
-          <p class="max-w-lg text-lg leading-8 text-stone-600">
+        <div class="space-y-5 lg:pt-3">
+          <p class="max-w-lg text-lg leading-8 text-[#5a6b63]">
             {{ $t('home.sectionTwoDesc') }}
           </p>
           <NuxtLink
             :to="sectionTwoCta.to"
-            class="inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-stone-900"
+            class="inline-flex items-center rounded-xl bg-[#a8d5ba] px-6 py-3 text-sm font-semibold text-[#2c3e35] transition hover:bg-[#7bb8a0] hover:text-white"
           >
             {{ sectionTwoCta.label }}
           </NuxtLink>
         </div>
+      </div>
+
+      <div class="mt-10 grid gap-5 md:grid-cols-3">
+        <article
+          v-for="(card, index) in homeCards"
+          :key="card.title"
+          class="rounded-2xl border border-[#d4e4e0] p-6"
+          :class="index === 1 ? 'bg-[#e8f1ed]' : 'bg-[#f9fbfa]'"
+        >
+          <h3 class="text-2xl font-semibold leading-tight text-[#2c3e35]">{{ card.title }}</h3>
+          <p class="mt-3 text-base leading-7 text-[#5a6b63]">{{ card.description }}</p>
+        </article>
       </div>
 
       <div class="mt-8 flex flex-wrap gap-3">
@@ -113,39 +150,31 @@
           v-for="link in quickLinks"
           :key="link.to"
           :to="localePath(link.to)"
-          class="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+          class="rounded-full border border-[#c6d9d2] bg-[#fafbfa] px-4 py-2 text-sm font-medium text-[#42524b] transition hover:bg-[#e8f1ed]"
         >
           {{ link.title }}
         </NuxtLink>
       </div>
     </section>
 
-    <section class="mt-[120px] rounded-3xl border border-stone-200 bg-stone-100/70 px-5 py-8 md:px-8 md:py-10">
-      <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-        <p class="inline-flex h-fit w-fit justify-self-start items-center rounded-full border border-stone-300 bg-white px-4 py-2 text-xs font-semibold text-stone-700 md:text-sm">
-          {{ $t('home.impactBadge') }}
-        </p>
-        <h2 class="max-w-4xl text-4xl font-bold leading-tight text-stone-900 md:text-6xl">
-          {{ $t('home.impactTitle') }}
-        </h2>
-      </div>
-
-      <div class="mt-8 grid gap-4 lg:grid-cols-4">
-        <article
-          v-for="(item, index) in impactCards"
-          :key="item.label"
-          :class="[
-            'rounded-2xl border p-5 md:p-6',
-            index === 1 ? 'border-sky-200 bg-sky-100/70' : 'border-stone-200 bg-white',
-          ]"
+    <section class="mt-24 rounded-[2rem] bg-gradient-to-br from-[#a8d5ba] to-[#7bb8a0] px-5 py-10 text-center md:px-8 md:py-14">
+      <h2 class="text-3xl font-semibold tracking-tight text-white md:text-5xl">{{ $t('home.heroTitle') }}</h2>
+      <p class="mx-auto mt-4 max-w-2xl text-base leading-8 text-white/90 md:text-lg">
+        {{ $t('home.heroSubtitle') }}
+      </p>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <NuxtLink
+          :to="localePath('/auth/register')"
+          class="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#2c3e35] transition hover:-translate-y-0.5 hover:shadow-lg"
         >
-          <div class="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-stone-50 text-[1.95rem] leading-none">
-            ✹
-          </div>
-          <p class="mt-5 text-5xl font-bold tracking-tight text-stone-900">{{ item.value }}</p>
-          <h3 class="mt-2 text-3xl font-semibold leading-tight text-stone-900">{{ item.label }}</h3>
-          <p class="mt-4 text-xl leading-8 text-stone-600">{{ item.description }}</p>
-        </article>
+          {{ $t('home.primaryCta') }}
+        </NuxtLink>
+        <NuxtLink
+          :to="localePath('/features')"
+          class="rounded-xl border border-white/45 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+        >
+          {{ $t('home.secondaryCta') }}
+        </NuxtLink>
       </div>
     </section>
 
@@ -155,6 +184,7 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
 const authStore = useAuthStore()
+const isHydrated = ref(false)
 const { locale, t } = useI18n()
 const { cmsPage } = useCmsStaticPage('home')
 type HomeCard = { title: string; description: string }
@@ -228,37 +258,16 @@ const quickLinks = computed(() => [
   { to: '/contact', title: t('nav.contact') },
 ])
 
-const impactCards = computed(() => {
-  const cards = homeCards.value
-  return [
-    {
-      value: `${cards.length}+`,
-      label: cards[0]?.title || t('home.card1Title'),
-      description: cards[0]?.description || t('home.heroSubtitle'),
-    },
-    {
-      value: `${quickLinks.value.length}+`,
-      label: cards[1]?.title || t('home.card2Title'),
-      description: cards[1]?.description || t('home.heroSubtitle'),
-    },
-    {
-      value: '7+',
-      label: cards[2]?.title || t('home.card3Title'),
-      description: cards[2]?.description || t('home.heroSubtitle'),
-    },
-    {
-      value: `${quickLinks.value.length * 15}+`,
-      label: t('nav.features'),
-      description: t('home.secondaryCta'),
-    },
-  ]
-})
-
 const seoTitle = computed(() => t('home.seoTitle'))
 const seoDescription = computed(() => t('home.seoDesc'))
 
 usePublicSeo({
   title: seoTitle,
   description: seoDescription,
+})
+
+onMounted(() => {
+  authStore.hydrate()
+  isHydrated.value = true
 })
 </script>

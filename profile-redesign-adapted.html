@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil - doi sense</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafbfa;
+    --surface: #fafbfa;
+    --border: #d4e4e0;
+    --text: #2c3e35;
+    --muted: #8a9b94;
+    --accent: #7bb8a0;
+    --accent-soft: #e8f1ed;
+    --danger: #c05848;
+    --danger-soft: #fdf0ee;
+    --success: #6a9f7e;
+    --radius: 6px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 40px 0;
+    flex-shrink: 0;
+    animation: fadeIn 0.5s ease both;
+  }
+
+  .sidebar-logo {
+    padding: 0 28px 36px;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo span { color: var(--accent); font-style: italic; }
+
+  .sidebar-nav {
+    padding: 24px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nav-item {
+    padding: 10px 28px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 2px solid transparent;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--accent-soft); }
+  .nav-item.active { color: var(--text); border-left-color: var(--accent); background: var(--accent-soft); font-weight: 400; }
+
+  .nav-icon { width: 15px; opacity: 0.6; }
+
+  .sidebar-footer {
+    padding: 24px 28px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .plan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 2px;
+  }
+
+  .plan-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 48px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 820px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    margin-bottom: 40px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .page-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 36px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .page-header p {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    margin-bottom: 32px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.07s; }
+  .section:nth-child(3) { animation-delay: 0.14s; }
+  .section:nth-child(4) { animation-delay: 0.21s; }
+  .section:nth-child(5) { animation-delay: 0.28s; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .section-action {
+    font-size: 11px;
+    color: var(--accent);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s;
+  }
+  .section-action:hover { opacity: 0.7; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* ── PROFILE HERO ── */
+  .profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 28px 32px;
+  }
+
+  .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a8d5ba, #7bb8a0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+
+  .profile-info { flex: 1; }
+
+  .profile-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 26px;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+  }
+
+  .profile-email {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  /* ── FORM GRID ── */
+  .form-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 32px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 24px 32px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 16px 12px 0;
+  }
+
+  .form-group:nth-child(even) { padding: 12px 0 12px 16px; border-left: 1px solid var(--border); }
+  .form-group.full { grid-column: 1 / -1; padding: 12px 0; border-left: none; }
+
+  label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"] {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus { border-bottom-color: var(--accent); }
+
+  /* ── CARD ROW ── */
+  .card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .card-row:last-child { border-bottom: none; }
+  .card-row:hover { background: #f0f4f1; }
+
+  .row-left { display: flex; flex-direction: column; gap: 3px; }
+  .row-label { font-size: 13px; font-weight: 300; }
+  .row-sub { font-size: 11px; color: var(--muted); }
+
+  .row-right { display: flex; align-items: center; gap: 12px; }
+
+  /* ── PHONE SELECT ── */
+  .phone-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  select {
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .phone-input { flex: 1; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 9px 20px;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--text);
+    color: var(--surface);
+  }
+  .btn-primary:hover { background: #1a2119; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  .btn-danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid #f0c8c0;
+  }
+  .btn-danger:hover { background: #fae0dc; }
+
+  .btn-accent {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-accent:hover { background: #ecddc8; }
+
+  /* ── DANGER ZONE ── */
+  .danger-card {
+    border-color: #f0c8c0;
+    background: var(--danger-soft);
+  }
+
+  .danger-card .card-row:hover { background: #fce6e2; }
+
+  .danger-warning {
+    font-size: 11px;
+    color: var(--danger);
+    line-height: 1.6;
+    padding: 16px 32px;
+    border-top: 1px solid #f0c8c0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .warn-icon { flex-shrink: 0; margin-top: 1px; opacity: 0.7; }
+
+  /* ── STATUS CHIP ── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  .chip-success { background: #eaf4ee; color: var(--success); }
+  .chip-muted { background: #f0ebe5; color: var(--muted); }
+
+  /* ── FOOTER ACTIONS ── */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px 32px;
+    border-top: 1px solid var(--border);
+    background: #f0f4f1;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">doi <span>sense</span></div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Profil
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7h6M5 10h4"/></svg>
+      Abonament
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+      Notificări
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      Istoric
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
+      Support
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="plan-badge"><div class="plan-dot"></div> Premium</div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <div class="page-header">
+    <h1>Contul meu</h1>
+    <p>Gestionează informațiile personale și preferințele contului</p>
+  </div>
+
+  <!-- SECTION: Identitate -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Identitate</span>
+    </div>
+    <div class="card">
+      <div class="profile-hero">
+        <div class="avatar">GM</div>
+        <div class="profile-info">
+          <div class="profile-name">Gheorghe Mihaita</div>
+          <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="721617011b151c32161d1b1f1b1a5c1c1706">[email&#160;protected]</a></div>
+        </div>
+        <div class="chip chip-success">● Activ</div>
+      </div>
+      <div class="form-divider"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Prenume</label>
+          <input type="text" value="Gheorghe">
+        </div>
+        <div class="form-group">
+          <label>Nume</label>
+          <input type="text" value="Mihaita">
+        </div>
+        <div class="form-group full">
+          <label>Email</label>
+          <input type="email" value="design@doimih.net">
+        </div>
+        <div class="form-group full">
+          <label>Telefon contact</label>
+          <div class="phone-row">
+            <select>
+              <option>RO +40</option>
+              <option>UK +44</option>
+              <option>DE +49</option>
+              <option>IT +39</option>
+              <option>FR +33</option>
+            </select>
+            <input type="tel" class="phone-input" value="0723090350">
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost">Anulează</button>
+        <button class="btn btn-primary">Salvează modificările</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: Securitate -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Securitate</span>
+    </div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-left">
+          <span class="row-label">Parolă</span>
+          <span class="row-sub">Ultima modificare: necunoscută</span>
+        </div>
+        <button class="btn btn-ghost">Schimbă parola</button>
+      </div>
+      <div class="card-row">
+        <div class="row-left">
+          <span class="row-label">Autentificare în doi pași</span>
+          <span class="row-sub">Adaugă un strat suplimentar de securitate</span>
+        </div>
+        <div class="chip chip-muted">Inactiv</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: Date & Preferinte -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Date & Preferințe</span>
+    </div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-left">
+          <span class="row-label">Card de plată</span>
+          <span class="row-sub">Nu există card salvat</span>
+        </div>
+        <button class="btn btn-accent">+ Adaugă card</button>
+      </div>
+      <div class="card-row">
+        <div class="row-left">
+          <span class="row-label">Notificări</span>
+          <span class="row-sub">Email, push, SMS</span>
+        </div>
+        <button class="btn btn-ghost">Configurează</button>
+      </div>
+      <div class="card-row">
+        <div class="row-left">
+          <span class="row-label">Exportă datele personale</span>
+          <span class="row-sub">Format JSON — toate datele asociate contului</span>
+        </div>
+        <button class="btn btn-ghost">Descarcă</button>
+      </div>
+      <div class="card-row">
+        <div class="row-left">
+          <span class="row-label">Redescoperă funcțiile platformei</span>
+          <span class="row-sub">Repornește ghidul de onboarding</span>
+        </div>
+        <button class="btn btn-ghost">Pornește turul</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: Zona periculoasă -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Zona periculoasă</span>
+    </div>
+    <div class="card danger-card">
+      <div class="card-row">
+        <div class="row-left">
+          <span class="row-label">Șterge contul</span>
+          <span class="row-sub">Această acțiune este ireversibilă</span>
+        </div>
+        <button class="btn btn-danger">Șterge contul</button>
+      </div>
+      <div class="danger-warning">
+        <svg class="warn-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c97060" stroke-width="1.5"><path d="M8 2L14 13H2L8 2z"/><line x1="8" y1="7" x2="8" y2="10"/><circle cx="8" cy="12" r="0.5" fill="#c97060"/></svg>
+        Ștergerea contului elimină definitiv toate datele personale, jurnalul și check-in-urile. C

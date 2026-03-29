@@ -9,6 +9,26 @@
 {% endblock %}
 
 {% block content %}
+    <style>
+        .analytics-kpi-grid > *:nth-child(1) .material-symbols-outlined { color: #0ea5e9 !important; }
+        .analytics-kpi-grid > *:nth-child(2) .material-symbols-outlined { color: #f59e0b !important; }
+        .analytics-kpi-grid > *:nth-child(3) .material-symbols-outlined { color: #10b981 !important; }
+        .analytics-kpi-grid > *:nth-child(4) .material-symbols-outlined { color: #6366f1 !important; }
+        .analytics-kpi-grid > *:nth-child(5) .material-symbols-outlined { color: #06b6d4 !important; }
+        .analytics-kpi-grid > *:nth-child(6) .material-symbols-outlined { color: #84cc16 !important; }
+        .analytics-kpi-grid > *:nth-child(7) .material-symbols-outlined { color: #f43f5e !important; }
+        .analytics-kpi-grid > *:nth-child(8) .material-symbols-outlined { color: #f97316 !important; }
+        .analytics-kpi-grid > *:nth-child(9) .material-symbols-outlined { color: #ef4444 !important; }
+        .analytics-kpi-grid > *:nth-child(10) .material-symbols-outlined { color: #8b5cf6 !important; }
+        .analytics-kpi-grid > *:nth-child(11) .material-symbols-outlined { color: #14b8a6 !important; }
+        .analytics-kpi-grid > *:nth-child(12) .material-symbols-outlined { color: #d946ef !important; }
+        .analytics-kpi-grid > *:nth-child(13) .material-symbols-outlined { color: #3b82f6 !important; }
+        .analytics-kpi-grid > *:nth-child(14) .material-symbols-outlined { color: #eab308 !important; }
+        .analytics-kpi-grid > *:nth-child(15) .material-symbols-outlined { color: #ec4899 !important; }
+        .analytics-kpi-grid > *:nth-child(16) .material-symbols-outlined { color: #78716c !important; }
+        .analytics-kpi-grid > *:nth-child(17) .material-symbols-outlined { color: #0d9488 !important; }
+    </style>
+
     <div class="flex flex-col gap-6">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">
@@ -29,85 +49,96 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {% component "unfold/components/card.html" with title="Total users" icon="group" %}
+        <div class="analytics-kpi-grid grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {% component "unfold/components/card.html" with title="Total users" icon="group" icon_class="text-sky-400 dark:text-sky-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.total_users }}</p>
                 <p class="text-xs text-base-500 mt-2">+{{ analytics.new_users_30d }} in last 30 days</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Premium users" icon="workspace_premium" %}
+            {% component "unfold/components/card.html" with title="Premium users" icon="workspace_premium" icon_class="text-amber-400 dark:text-amber-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.premium_users }}</p>
                 <p class="text-xs text-base-500 mt-2">{{ analytics.premium_rate }}% conversion</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Premium conversion (period)" icon="auto_graph" %}
+            {% component "unfold/components/card.html" with title="Premium conversion (period)" icon="auto_graph" icon_class="text-emerald-400 dark:text-emerald-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.premium_conversion_period }}%</p>
                 <p class="text-xs text-base-500 mt-2">Based on users created in selected period</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Active subscriptions" icon="credit_card" %}
+            {% component "unfold/components/card.html" with title="Active subscriptions" icon="credit_card" icon_class="text-indigo-400 dark:text-indigo-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.active_subscriptions }}</p>
                 <p class="text-xs text-base-500 mt-2">Status active or trialing</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Active users (7d)" icon="monitoring" %}
+            {% component "unfold/components/card.html" with title="Active users (7d)" icon="monitoring" icon_class="text-cyan-400 dark:text-cyan-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.active_users_7d }}</p>
                 <p class="text-xs text-base-500 mt-2">Users with journal or AI activity</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="MRR estimate (RON)" icon="payments" %}
+            {% component "unfold/components/card.html" with title="MRR estimate (RON)" icon="payments" icon_class="text-lime-400 dark:text-lime-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.mrr }}</p>
                 <p class="text-xs text-base-500 mt-2">Active + trialing subscriptions</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Churn rate (30d)" icon="trending_down" %}
+            {% component "unfold/components/card.html" with title="Churn rate (30d)" icon="trending_down" icon_class="text-rose-400 dark:text-rose-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.churn_rate_30d }}%</p>
                 <p class="text-xs text-base-500 mt-2">Cancelled or past_due over active baseline</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Webhook failures (30d)" icon="warning" %}
+            {% component "unfold/components/card.html" with title="Webhook failures (30d)" icon="warning" icon_class="text-orange-400 dark:text-orange-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.webhook_failed_30d }}</p>
                 <p class="text-xs text-base-500 mt-2">Ignored: {{ analytics.webhook_ignored_30d }} | Total: {{ analytics.webhook_events_30d }}</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="System errors (24h)" icon="error" %}
+            {% component "unfold/components/card.html" with title="Chunk recovery (24h)" icon="sync_problem" icon_class="text-amber-400 dark:text-amber-500" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.chunk_recovery_triggered_24h }}</p>
+                <p class="text-xs text-base-500 mt-2">Failed (no recovery): {{ analytics.chunk_recovery_failed_24h }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="System errors (24h)" icon="error" icon_class="text-red-400 dark:text-red-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.system_errors_24h }}</p>
                 <p class="text-xs text-base-500 mt-2">7d total: {{ analytics.system_errors_7d }} | High/Critical: {{ analytics.critical_errors_7d }}</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Admin audit changes (7d)" icon="admin_panel_settings" %}
+            {% component "unfold/components/card.html" with title="Admin audit changes (7d)" icon="admin_panel_settings" icon_class="text-violet-400 dark:text-violet-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.admin_audit_7d }}</p>
                 <p class="text-xs text-base-500 mt-2">Sensitive admin updates tracked</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Backup verify status" icon="backup" %}
+            {% component "unfold/components/card.html" with title="Backup verify status" icon="backup" icon_class="text-teal-400 dark:text-teal-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.latest_backup_status|upper }}</p>
                 <p class="text-xs text-base-500 mt-2">Last run: {{ analytics.latest_backup_at|default:"N/A" }}</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Quota exceeded (period)" icon="bolt" %}
+            {% component "unfold/components/card.html" with title="Quota exceeded (period)" icon="bolt" icon_class="text-fuchsia-400 dark:text-fuchsia-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.quota_exceeded_period }}</p>
                 <p class="text-xs text-base-500 mt-2">30d total: {{ analytics.quota_exceeded_30d }}</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Onboarding completed (period)" icon="flag" %}
+            {% component "unfold/components/card.html" with title="Onboarding completed (period)" icon="flag" icon_class="text-blue-400 dark:text-blue-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.onboarding_completed_period }}</p>
                 <p class="text-xs text-base-500 mt-2">Started: {{ analytics.onboarding_started_period }} | Restarted: {{ analytics.onboarding_restarted_period }}</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Program completions (period)" icon="emoji_events" %}
+            {% component "unfold/components/card.html" with title="Program completions (period)" icon="emoji_events" icon_class="text-yellow-400 dark:text-yellow-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.program_completed_period }}</p>
                 <p class="text-xs text-base-500 mt-2">Dropouts: {{ analytics.program_dropout_period }} | Reflections: {{ analytics.program_reflection_period }}</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Support & inbox" icon="support_agent" %}
+            {% component "unfold/components/card.html" with title="Support & inbox" icon="support_agent" icon_class="text-pink-400 dark:text-pink-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.support_ticket_open_total }}</p>
                 <p class="text-xs text-base-500 mt-2">Tickets in period: {{ analytics.support_ticket_created_period }} | Unread in-app: {{ analytics.in_app_unread_total }}</p>
             {% endcomponent %}
 
-            {% component "unfold/components/card.html" with title="Cancel requests (period)" icon="event_busy" %}
+            {% component "unfold/components/card.html" with title="Cancel requests (period)" icon="event_busy" icon_class="text-stone-400 dark:text-stone-500" %}
                 <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.subscription_cancel_requested_period }}</p>
                 <p class="text-xs text-base-500 mt-2">Refund events: {{ analytics.subscription_refunded_period }}</p>
+            {% endcomponent %}
+
+            {% component "unfold/components/card.html" with title="PWA installs (period)" icon="download_done" icon_class="text-teal-500 dark:text-teal-400" %}
+                <p class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark">{{ analytics.pwa_accepted_period }}</p>
+                <p class="text-xs text-base-500 mt-2">Rate: {{ analytics.pwa_install_rate }}% | Prompted: {{ analytics.pwa_prompted_period }} | Dismissed: {{ analytics.pwa_dismissed_period }}</p>
+                <p class="text-xs text-base-500">Android: {{ analytics.pwa_accepted_android }} | iOS: {{ analytics.pwa_accepted_ios }} | Standalone opens: {{ analytics.pwa_standalone_period }}</p>
             {% endcomponent %}
         </div>
 

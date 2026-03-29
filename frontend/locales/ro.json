@@ -126,5 +126,19 @@
     "impactTitle": "Vezi acoperirea, rezultatele și progresul construit cu utilizatorii noștri",
     "seoTitle": "Doisense - Wellbeing digital cu AI si jurnal ghidat",
     "seoDesc": "Platforma Doisense ofera jurnal ghidat, chat AI contextual, programe structurate si pagini legale complete pentru transparenta si conformitate."
+  },
+  "pwaInstall": {
+    "title": "Adauga Doisense pe ecranul principal",
+    "subtitle": "Il deschizi mai rapid, ca o aplicatie.",
+    "notNow": "Nu acum",
+    "neverShow": "Nu mai afisa",
+    "iAdded": "L-am adaugat",
+    "iosStep1": "Apasa butonul Share din Safari.",
+    "iosStep2": "Alege Add to Home Screen.",
+    "iosStep3": "Confirma cu Add.",
+    "androidPromptReady": "Browserul tau poate instala direct Doisense.",
+    "androidInstall": "Adauga pe ecranul principal",
+    "androidStep1": "Deschide meniul browserului (trei puncte).",
+    "androidStep2": "Alege Add to Home Screen."
   }
 }

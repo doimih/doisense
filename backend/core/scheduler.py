@@ -31,6 +31,9 @@ DEFAULT_SCHEDULER_TASKS = [
     SchedulerTaskDefinition("send_inactivity_reminders", "Send Inactivity Reminders", "send_inactivity_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 9),
     SchedulerTaskDefinition("send_reactivation_campaign", "Send Reactivation Campaign", "send_reactivation_campaign", PlatformScheduledJob.SCHEDULE_DAILY, 0, 11),
     SchedulerTaskDefinition("ai_update_profiles", "Refresh AI Profiles", "ai_update_profiles", PlatformScheduledJob.SCHEDULE_DAILY, 0, 2),
+    SchedulerTaskDefinition("ai_generate_daily_reports", "Generate AI Daily Reports", "ai_generate_daily_reports", PlatformScheduledJob.SCHEDULE_DAILY, 10, 2),
+    SchedulerTaskDefinition("ai_generate_weekly_reports", "Generate AI Weekly Reports", "ai_generate_weekly_reports", PlatformScheduledJob.SCHEDULE_WEEKLY, 20, 2, 0),
+    SchedulerTaskDefinition("ai_generate_monthly_reports", "Generate AI Monthly Reports", "ai_generate_monthly_reports", PlatformScheduledJob.SCHEDULE_DAILY, 30, 2),
     SchedulerTaskDefinition("verify_backup_flow", "Verify Backup Flow", "verify_backup_flow", PlatformScheduledJob.SCHEDULE_DAILY, 30, 3),
 ]
 

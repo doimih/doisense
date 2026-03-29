@@ -33,7 +33,7 @@
       return;
     }
 
-    var activeLink = container.querySelector("a.active");
+    var activeLink = container.querySelector("a.active, a[aria-current='page']");
     if (activeLink) {
       var activeGroup = activeLink.closest("div[x-data]");
       groups.forEach(function (group) {

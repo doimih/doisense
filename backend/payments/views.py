@@ -22,6 +22,7 @@ from core.notifications import (
 )
 from core.analytics import track_event
 from core.feature_access import require_feature
+from core.i18n import get_user_language, translate
 from core.models import SystemErrorEvent
 from core.system_config import (
     get_stripe_price_id_for_tier,
@@ -38,6 +39,140 @@ from .models import Payment, StripeWebhookEvent
 
 VALID_PLAN_TIERS = {"basic", "premium", "vip"}
 EARLY_DISCOUNT_PERCENT = 10
+
+_PAYMENT_COPY = {
+    "ro": {
+        "payment_failed_title": "Plata a esuat",
+        "payment_expiring_title": "Abonamentul expira curand",
+        "payment_invalid_method_title": "Actualizeaza metoda de plata",
+        "payment_failed_body": "Nu am putut procesa ultima ta plata. Verifica setarile de facturare.",
+        "payment_expiring_body": "Abonamentul tau se apropie de data de expirare. Verifica starea planului tau.",
+        "payment_invalid_method_body": "Metoda ta de plata pare invalida sau aproape de expirare.",
+        "billing_update_title": "Actualizare facturare",
+        "billing_update_body": "Exista o actualizare legata de abonamentul tau.",
+        "invalid_plan_tier": "plan_tier invalid. Trebuie sa fie unul din: {tiers}.",
+        "manual_vip_bypass": "Utilizatorii VIP manuali ocolesc logica de checkout si abonament.",
+        "manual_vip_upgrade_bypass": "Utilizatorii VIP manuali ocolesc logica de upgrade al abonamentului.",
+        "manual_vip_cancel_bypass": "Utilizatorii VIP manuali ocolesc logica de anulare a abonamentului.",
+        "stripe_not_configured": "Stripe nu este configurat.",
+        "no_stripe_customer": "Nu exista un client Stripe asociat acestui cont.",
+        "no_active_subscription": "Nu exista un abonament activ. Foloseste fluxul de checkout pentru a te abona.",
+        "no_active_subscription_cancel": "Nu exista un abonament activ de anulat.",
+    },
+    "en": {
+        "payment_failed_title": "Payment failed",
+        "payment_expiring_title": "Subscription expiring soon",
+        "payment_invalid_method_title": "Update your payment method",
+        "payment_failed_body": "We could not process your latest payment. Please check billing settings.",
+        "payment_expiring_body": "Your subscription is approaching period end. Review your plan status.",
+        "payment_invalid_method_body": "Your payment method appears invalid or near expiry.",
+        "billing_update_title": "Billing update",
+        "billing_update_body": "There is an update related to your subscription.",
+        "invalid_plan_tier": "Invalid plan_tier. Must be one of: {tiers}.",
+        "manual_vip_bypass": "Manual VIP users bypass checkout and subscription logic.",
+        "manual_vip_upgrade_bypass": "Manual VIP users bypass subscription upgrade logic.",
+        "manual_vip_cancel_bypass": "Manual VIP users bypass cancellation and subscription lifecycle logic.",
+        "stripe_not_configured": "Stripe is not configured.",
+        "no_stripe_customer": "No Stripe customer found for this account yet.",
+        "no_active_subscription": "No active subscription found. Use the checkout flow to subscribe.",
+        "no_active_subscription_cancel": "No active subscription found to cancel.",
+    },
+    "de": {
+        "payment_failed_title": "Zahlung fehlgeschlagen",
+        "payment_expiring_title": "Abonnement laeuft bald ab",
+        "payment_invalid_method_title": "Zahlungsmethode aktualisieren",
+        "payment_failed_body": "Ihre letzte Zahlung konnte nicht verarbeitet werden. Bitte pruefen Sie die Abrechnungseinstellungen.",
+        "payment_expiring_body": "Ihr Abonnement naehert sich dem Ende des Zeitraums. Bitte ueberpruefen Sie Ihren Planstatus.",
+        "payment_invalid_method_body": "Ihre Zahlungsmethode scheint ungueltig oder nahe dem Ablaufdatum zu sein.",
+        "billing_update_title": "Abrechnungsupdate",
+        "billing_update_body": "Es gibt ein Update in Bezug auf Ihr Abonnement.",
+        "invalid_plan_tier": "Ungueltiger plan_tier. Muss einer der folgenden sein: {tiers}.",
+        "manual_vip_bypass": "Manuelle VIP-Benutzer umgehen die Checkout- und Abonnementlogik.",
+        "manual_vip_upgrade_bypass": "Manuelle VIP-Benutzer umgehen die Upgrade-Logik des Abonnements.",
+        "manual_vip_cancel_bypass": "Manuelle VIP-Benutzer umgehen die Kuendigungs- und Abonnementlogik.",
+        "stripe_not_configured": "Stripe ist nicht konfiguriert.",
+        "no_stripe_customer": "Fuer dieses Konto wurde noch kein Stripe-Kunde gefunden.",
+        "no_active_subscription": "Kein aktives Abonnement gefunden. Verwende den Checkout-Prozess zum Abonnieren.",
+        "no_active_subscription_cancel": "Kein aktives Abonnement zum Kuendigen gefunden.",
+    },
+    "fr": {
+        "payment_failed_title": "Paiement echoue",
+        "payment_expiring_title": "Abonnement expirant bientot",
+        "payment_invalid_method_title": "Mettre a jour votre moyen de paiement",
+        "payment_failed_body": "Nous n avons pas pu traiter votre dernier paiement. Veuillez verifier les parametres de facturation.",
+        "payment_expiring_body": "Votre abonnement approche de sa fin de periode. Verifiez votre statut de plan.",
+        "payment_invalid_method_body": "Votre moyen de paiement semble invalide ou proche de l expiration.",
+        "billing_update_title": "Mise a jour de facturation",
+        "billing_update_body": "Il y a une mise a jour concernant votre abonnement.",
+        "invalid_plan_tier": "plan_tier invalide. Doit etre l un des suivants: {tiers}.",
+        "manual_vip_bypass": "Les utilisateurs VIP manuels contournent la logique de paiement et d abonnement.",
+        "manual_vip_upgrade_bypass": "Les utilisateurs VIP manuels contournent la logique de mise a niveau d abonnement.",
+        "manual_vip_cancel_bypass": "Les utilisateurs VIP manuels contournent la logique d annulation d abonnement.",
+        "stripe_not_configured": "Stripe n est pas configure.",
+        "no_stripe_customer": "Aucun client Stripe trouve pour ce compte.",
+        "no_active_subscription": "Aucun abonnement actif trouve. Utilisez le processus de paiement pour vous abonner.",
+        "no_active_subscription_cancel": "Aucun abonnement actif a annuler.",
+    },
+    "it": {
+        "payment_failed_title": "Pagamento fallito",
+        "payment_expiring_title": "Abbonamento in scadenza",
+        "payment_invalid_method_title": "Aggiorna il metodo di pagamento",
+        "payment_failed_body": "Non siamo riusciti a elaborare il tuo ultimo pagamento. Controlla le impostazioni di fatturazione.",
+        "payment_expiring_body": "Il tuo abbonamento si sta avvicinando alla fine del periodo. Controlla lo stato del tuo piano.",
+        "payment_invalid_method_body": "Il tuo metodo di pagamento sembra non valido o prossimo alla scadenza.",
+        "billing_update_title": "Aggiornamento fatturazione",
+        "billing_update_body": "C e un aggiornamento relativo al tuo abbonamento.",
+        "invalid_plan_tier": "plan_tier non valido. Deve essere uno dei seguenti: {tiers}.",
+        "manual_vip_bypass": "Gli utenti VIP manuali bypassano la logica di checkout e abbonamento.",
+        "manual_vip_upgrade_bypass": "Gli utenti VIP manuali bypassano la logica di aggiornamento abbonamento.",
+        "manual_vip_cancel_bypass": "Gli utenti VIP manuali bypassano la logica di cancellazione abbonamento.",
+        "stripe_not_configured": "Stripe non e configurato.",
+        "no_stripe_customer": "Nessun cliente Stripe trovato per questo account.",
+        "no_active_subscription": "Nessun abbonamento attivo trovato. Usa il flusso di checkout per abbonarti.",
+        "no_active_subscription_cancel": "Nessun abbonamento attivo da annullare.",
+    },
+    "es": {
+        "payment_failed_title": "Pago fallido",
+        "payment_expiring_title": "Suscripcion por vencer",
+        "payment_invalid_method_title": "Actualiza tu metodo de pago",
+        "payment_failed_body": "No pudimos procesar tu ultimo pago. Por favor revisa la configuracion de facturacion.",
+        "payment_expiring_body": "Tu suscripcion se acerca al final del periodo. Revisa el estado de tu plan.",
+        "payment_invalid_method_body": "Tu metodo de pago parece invalido o proximo a vencer.",
+        "billing_update_title": "Actualizacion de facturacion",
+        "billing_update_body": "Hay una actualizacion relacionada con tu suscripcion.",
+        "invalid_plan_tier": "plan_tier invalido. Debe ser uno de: {tiers}.",
+        "manual_vip_bypass": "Los usuarios VIP manuales omiten la logica de pago y suscripcion.",
+        "manual_vip_upgrade_bypass": "Los usuarios VIP manuales omiten la logica de actualizacion de suscripcion.",
+        "manual_vip_cancel_bypass": "Los usuarios VIP manuales omiten la logica de cancelacion de suscripcion.",
+        "stripe_not_configured": "Stripe no esta configurado.",
+        "no_stripe_customer": "No se encontro cliente de Stripe para esta cuenta.",
+        "no_active_subscription": "No se encontro suscripcion activa. Usa el flujo de pago para suscribirte.",
+        "no_active_subscription_cancel": "No se encontro suscripcion activa para cancelar.",
+    },
+    "pl": {
+        "payment_failed_title": "Platnosc nie powiodla sie",
+        "payment_expiring_title": "Subskrypcja wkrotce wygasnie",
+        "payment_invalid_method_title": "Zaktualizuj metode platnosci",
+        "payment_failed_body": "Nie mogligmy przetworzyc Twojej ostatniej platnosci. Sprawdz ustawienia rozliczen.",
+        "payment_expiring_body": "Twoja subskrypcja zblizy sie do konca okresu. Sprawdz status swojego planu.",
+        "payment_invalid_method_body": "Twoja metoda platnosci wydaje sie nieprawidlowa lub bliska wygasniecia.",
+        "billing_update_title": "Aktualizacja rozliczen",
+        "billing_update_body": "Nastapila aktualizacja dotyczaca Twojej subskrypcji.",
+        "invalid_plan_tier": "Nieprawidlowy plan_tier. Musi byc jednym z: {tiers}.",
+        "manual_vip_bypass": "Reczni uzytkownicy VIP pomijaja logike kasy i subskrypcji.",
+        "manual_vip_upgrade_bypass": "Reczni uzytkownicy VIP pomijaja logike aktualizacji subskrypcji.",
+        "manual_vip_cancel_bypass": "Reczni uzytkownicy VIP pomijaja logike anulowania subskrypcji.",
+        "stripe_not_configured": "Stripe nie jest skonfigurowany.",
+        "no_stripe_customer": "Nie znaleziono klienta Stripe dla tego konta.",
+        "no_active_subscription": "Nie znaleziono aktywnej subskrypcji. Uzyj procesu kasy, aby sie zapisac.",
+        "no_active_subscription_cancel": "Nie znaleziono aktywnej subskrypcji do anulowania.",
+    },
+}
+
+
+def _payment_text(user, key: str, **kwargs) -> str:
+    text = translate(_PAYMENT_COPY, get_user_language(user)).get(key, _PAYMENT_COPY["en"][key])
+    return text.format(**kwargs) if kwargs else text
 
 
 def _build_promo_state_for_user(user: User) -> dict:
@@ -122,20 +257,20 @@ def _send_payment_notification_once(user: User, notification_type: str, context_
     sender()
     record_notification_delivery(user, notification_type, context_key=context_key)
     title_map = {
-        "payment_failed": "Payment failed",
-        "payment_expiring": "Subscription expiring soon",
-        "payment_invalid_method": "Update your payment method",
+        "payment_failed": _payment_text(user, "payment_failed_title"),
+        "payment_expiring": _payment_text(user, "payment_expiring_title"),
+        "payment_invalid_method": _payment_text(user, "payment_invalid_method_title"),
     }
     body_map = {
-        "payment_failed": "We could not process your latest payment. Please check billing settings.",
-        "payment_expiring": "Your subscription is approaching period end. Review your plan status.",
-        "payment_invalid_method": "Your payment method appears invalid or near expiry.",
+        "payment_failed": _payment_text(user, "payment_failed_body"),
+        "payment_expiring": _payment_text(user, "payment_expiring_body"),
+        "payment_invalid_method": _payment_text(user, "payment_invalid_method_body"),
     }
     create_in_app_notification(
         user,
         notification_type,
-        title_map.get(notification_type, "Billing update"),
-        body_map.get(notification_type, "There is an update related to your subscription."),
+        title_map.get(notification_type, _payment_text(user, "billing_update_title")),
+        body_map.get(notification_type, _payment_text(user, "billing_update_body")),
         context_key=context_key,
     )
 
@@ -192,7 +327,7 @@ class CreateCheckoutSessionView(APIView):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
         if plan_tier not in VALID_PLAN_TIERS:
             return Response(
-                {"detail": f"Invalid plan_tier. Must be one of: {', '.join(sorted(VALID_PLAN_TIERS))}."},
+                {"detail": _payment_text(request.user, "invalid_plan_tier", tiers=", ".join(sorted(VALID_PLAN_TIERS)))},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -204,7 +339,7 @@ class CreateCheckoutSessionView(APIView):
                     "internal_activation": False,
                     "manual_vip": True,
                     "effective_tier": User.PLAN_VIP,
-                    "detail": "Manual VIP users bypass checkout and subscription logic.",
+                    "detail": _payment_text(user, "manual_vip_bypass"),
                 },
                 status=status.HTTP_200_OK,
             )
@@ -279,7 +414,7 @@ class SavedCardView(APIView):
         stripe_secret_key = get_stripe_secret_key()
         if not stripe_secret_key:
             return Response(
-                {"detail": "Stripe is not configured."},
+                {"detail": _payment_text(request.user, "stripe_not_configured")},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
@@ -330,7 +465,7 @@ class CreateBillingPortalSessionView(APIView):
         stripe_secret_key = get_stripe_secret_key()
         if not stripe_secret_key:
             return Response(
-                {"detail": "Stripe is not configured."},
+                {"detail": _payment_text(request.user, "stripe_not_configured")},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
@@ -346,7 +481,7 @@ class CreateBillingPortalSessionView(APIView):
 
         if not payment:
             return Response(
-                {"detail": "No Stripe customer found for this account yet."},
+                {"detail": _payment_text(request.user, "no_stripe_customer")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -420,7 +555,7 @@ class UpgradeSubscriptionView(APIView):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
         if plan_tier not in VALID_PLAN_TIERS:
             return Response(
-                {"detail": f"Invalid plan_tier. Must be one of: {', '.join(sorted(VALID_PLAN_TIERS))}."},
+                {"detail": _payment_text(request.user, "invalid_plan_tier", tiers=", ".join(sorted(VALID_PLAN_TIERS)))},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -431,7 +566,7 @@ class UpgradeSubscriptionView(APIView):
                     "upgraded": False,
                     "manual_vip": True,
                     "effective_tier": User.PLAN_VIP,
-                    "detail": "Manual VIP users bypass subscription upgrade logic.",
+                    "detail": _payment_text(user, "manual_vip_upgrade_bypass"),
                 },
                 status=status.HTTP_200_OK,
             )
@@ -474,7 +609,7 @@ class UpgradeSubscriptionView(APIView):
 
         if not payment:
             return Response(
-                {"detail": "No active subscription found. Use the checkout flow to subscribe."},
+                {"detail": _payment_text(request.user, "no_active_subscription")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -520,7 +655,7 @@ class CancelSubscriptionView(APIView):
                     "cancel_at_period_end": False,
                     "manual_vip": True,
                     "effective_tier": User.PLAN_VIP,
-                    "detail": "Manual VIP users bypass cancellation and subscription lifecycle logic.",
+                    "detail": _payment_text(user, "manual_vip_cancel_bypass"),
                 },
                 status=status.HTTP_200_OK,
             )
@@ -536,7 +671,7 @@ class CancelSubscriptionView(APIView):
 
         if not payment:
             return Response(
-                {"detail": "No active subscription found to cancel."},
+                {"detail": _payment_text(request.user, "no_active_subscription_cancel")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

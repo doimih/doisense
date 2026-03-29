@@ -15,9 +15,13 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 ADMIN_STATIC_URL = env("STATIC_URL", default="/doisense/ro/admin/static/")
 
-SECRET_KEY = env("SECRET_KEY", default="dev-secret-change-in-production")
+SECRET_KEY = env(
+    "SECRET_KEY",
+    default="dev-secret-change-in-production-please-override-with-32-plus-chars",
+)
 DEBUG = env("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
+AI_BUDGET_ALERT_THRESHOLD_USD = env.float("AI_BUDGET_ALERT_THRESHOLD_USD", default=20.0)
 
 INSTALLED_APPS = [
     "unfold",
@@ -41,8 +45,10 @@ INSTALLED_APPS = [
     "profiles",
     "journal",
     "programs",
+    "calendar_tasks",
     "ai",
     "payments",
+    "ai_core",
 ]
 
 UNFOLD = {
@@ -120,12 +126,6 @@ UNFOLD = {
                         "permission": _perm("programs.view_guidedprogramday"),
                     },
                     {
-                        "title": "AI Templates",
-                        "icon": "smart_toy",
-                        "link": lambda request: reverse("admin:ai_conversationtemplate_changelist"),
-                        "permission": _perm("ai.view_conversationtemplate"),
-                    },
-                    {
                         "title": "Setari email",
                         "icon": "mail",
                         "link": lambda request: reverse("admin:core_systemconfig_email_settings"),
@@ -141,12 +141,6 @@ UNFOLD = {
                         "title": "Stripe Settings",
                         "icon": "credit_card",
                         "link": lambda request: reverse("admin:core_stripeconfig_changelist"),
-                        "permission": _perm("core.view_systemconfig"),
-                    },
-                    {
-                        "title": "AI Settings",
-                        "icon": "psychology",
-                        "link": lambda request: reverse("admin:core_aiconfig_changelist"),
                         "permission": _perm("core.view_systemconfig"),
                     },
                     {
@@ -182,6 +176,18 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Platform Settings",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Social Media API Settings",
+                        "icon": "settings_ethernet",
+                        "link": lambda request: reverse("admin:ai_core_socialmediasettings_changelist"),
+                        "permission": _perm("ai_core.view_socialmediasettings"),
+                    },
+                ],
+            },
+            {
                 "title": "Storage",
                 "collapsible": True,
                 "items": [
@@ -212,6 +218,144 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "AI",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "AI Cost Dashboard",
+                        "icon": "monitoring",
+                        "link": lambda request: reverse("admin:ai_cost_dashboard"),
+                        "permission": _perm("ai.view_aibudgetcredit"),
+                    },
+                    {
+                        "title": "Budget Credits",
+                        "icon": "account_balance_wallet",
+                        "link": lambda request: reverse("admin:ai_aibudgetcredit_changelist"),
+                        "permission": _perm("ai.view_aibudgetcredit"),
+                    },
+                    {
+                        "title": "Monthly Targets",
+                        "icon": "flag",
+                        "link": lambda request: reverse("admin:ai_aibudgetmonthlytarget_changelist"),
+                        "permission": _perm("ai.view_aibudgetmonthlytarget"),
+                    },
+                    {
+                        "title": "AI Settings",
+                        "icon": "psychology",
+                        "link": lambda request: reverse("admin:core_aiconfig_changelist"),
+                        "permission": _perm("core.view_systemconfig"),
+                    },
+                    {
+                        "title": "AI Templates",
+                        "icon": "smart_toy",
+                        "link": lambda request: reverse("admin:ai_conversationtemplate_changelist"),
+                        "permission": _perm("ai.view_conversationtemplate"),
+                    },
+                    {
+                        "title": "Conversations",
+                        "icon": "forum",
+                        "link": lambda request: reverse("admin:ai_conversation_changelist"),
+                        "permission": _perm("ai.view_conversation"),
+                    },
+                    {
+                        "title": "AI Logs",
+                        "icon": "receipt_long",
+                        "link": lambda request: reverse("admin:ai_ailog_changelist"),
+                        "permission": _perm("ai.view_ailog"),
+                    },
+                    {
+                        "title": "Emotional Analyses",
+                        "icon": "monitor_heart",
+                        "link": lambda request: reverse("admin:ai_emotionalanalysis_changelist"),
+                        "permission": _perm("ai.view_emotionalanalysis"),
+                    },
+                    {
+                        "title": "Wellness Metrics",
+                        "icon": "query_stats",
+                        "link": lambda request: reverse("admin:ai_wellnessmetric_changelist"),
+                        "permission": _perm("ai.view_wellnessmetric"),
+                    },
+                    {
+                        "title": "Questions",
+                        "icon": "quiz",
+                        "link": lambda request: reverse("admin:ai_question_changelist"),
+                        "permission": _perm("ai.view_question"),
+                    },
+                    {
+                        "title": "Daily Reports",
+                        "icon": "today",
+                        "link": lambda request: reverse("admin:ai_dailyreport_changelist"),
+                        "permission": _perm("ai.view_dailyreport"),
+                    },
+                    {
+                        "title": "Weekly Reports",
+                        "icon": "date_range",
+                        "link": lambda request: reverse("admin:ai_weeklyreport_changelist"),
+                        "permission": _perm("ai.view_weeklyreport"),
+                    },
+                    {
+                        "title": "Monthly Reports",
+                        "icon": "calendar_month",
+                        "link": lambda request: reverse("admin:ai_monthlyreport_changelist"),
+                        "permission": _perm("ai.view_monthlyreport"),
+                    },
+                ],
+            },
+            {
+                "title": "AI Brain",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Prompts",
+                        "icon": "psychology_alt",
+                        "link": lambda request: reverse("admin:ai_core_prompt_changelist"),
+                        "permission": _perm("ai_core.view_prompt"),
+                    },
+                    {
+                        "title": "Prompt Versions",
+                        "icon": "history",
+                        "link": lambda request: reverse("admin:ai_core_promptversion_changelist"),
+                        "permission": _perm("ai_core.view_promptversion"),
+                    },
+                    {
+                        "title": "Audit Prompt",
+                        "icon": "fact_check",
+                        "link": lambda request: reverse("admin:ai_core_prompt_audit_hub"),
+                        "permission": _perm("ai_core.view_prompt"),
+                    },
+                    {
+                        "title": "Improve Prompt",
+                        "icon": "auto_fix_high",
+                        "link": lambda request: reverse("admin:ai_core_prompt_improve_hub"),
+                        "permission": _perm("ai_core.view_prompt"),
+                    },
+                    {
+                        "title": "Orchestrator Preview",
+                        "icon": "preview",
+                        "link": lambda request: reverse("admin:ai_core_prompt_preview_hub"),
+                        "permission": _perm("ai_core.view_prompt"),
+                    },
+                    {
+                        "title": "AI Health Dashboard",
+                        "icon": "monitoring",
+                        "link": lambda request: reverse("admin:ai_core_dashboard"),
+                        "permission": _perm("ai_core.view_prompt"),
+                    },
+                    {
+                        "title": "Social Media Generator",
+                        "icon": "edit_square",
+                        "link": lambda request: reverse("admin:ai_core_social_generator"),
+                        "permission": _perm("ai_core.add_socialmediapost"),
+                    },
+                    {
+                        "title": "Social Media Content",
+                        "icon": "campaign",
+                        "link": lambda request: reverse("admin:ai_core_socialmediapost_changelist"),
+                        "permission": _perm("ai_core.view_socialmediapost"),
+                    },
+                ],
+            },
+            {
                 "title": "Activity",
                 "collapsible": True,
                 "items": [
@@ -220,12 +364,6 @@ UNFOLD = {
                         "icon": "edit_note",
                         "link": lambda request: reverse("admin:journal_journalentry_changelist"),
                         "permission": _perm("journal.view_journalentry"),
-                    },
-                    {
-                        "title": "AI Logs",
-                        "icon": "receipt_long",
-                        "link": lambda request: reverse("admin:ai_ailog_changelist"),
-                        "permission": _perm("ai.view_ailog"),
                     },
                 ],
             },
@@ -360,6 +498,42 @@ CKEDITOR_5_CONFIGS = {
         },
         "simpleUpload": {
             "uploadUrl": CMS_EDITOR_UPLOAD_URL,
+        },
+    },
+    "programs_content": {
+        "toolbar": [
+            "bold",
+            "italic",
+            "underline",
+            "strikethrough",
+            "|",
+            "link",
+            "bulletedList",
+            "numberedList",
+            "indent",
+            "outdent",
+            "|",
+            "alignment",
+            "|",
+            "fontSize",
+            "fontColor",
+            "fontBackgroundColor",
+            "|",
+            "imageUpload",
+            "insertTable",
+            "code",
+            "|",
+            "undo",
+            "redo",
+        ],
+        "image": {
+            "toolbar": ["imageTextAlternative"],
+        },
+        "simpleUpload": {
+            "uploadUrl": CMS_EDITOR_UPLOAD_URL,
+        },
+        "fontSize": {
+            "options": [10, 12, 14, "default", 18, 20, 24, 28, 36],
         },
     },
 }

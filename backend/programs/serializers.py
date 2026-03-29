@@ -3,28 +3,54 @@ from rest_framework import serializers
 from .models import GuidedProgram, GuidedProgramDay, ProgramReflection, UserProgramProgress
 
 
-class GuidedProgramSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GuidedProgram
-        fields = ("id", "title", "description", "language", "active", "is_premium")
-
-
 class GuidedProgramDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = GuidedProgramDay
-        fields = ("id", "program", "day_number", "title", "content", "question", "ai_prompt")
+        fields = (
+            "id",
+            "day_number",
+            "title",
+            "content",
+            "task_type",
+            "estimated_time_minutes",
+            "question",
+            "ai_prompt",
+        )
+
+
+class GuidedProgramSerializer(serializers.ModelSerializer):
+    daily_steps = GuidedProgramDaySerializer(source="days", many=True, read_only=True)
+
+    class Meta:
+        model = GuidedProgram
+        fields = (
+            "id",
+            "category",
+            "title",
+            "description",
+            "duration_days",
+            "plan_access",
+            "language",
+            "active",
+            "is_premium",
+            "daily_steps",
+        )
 
 
 class UserProgramProgressSerializer(serializers.ModelSerializer):
     total_days = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    progress_day = serializers.IntegerField(source="current_day", read_only=True)
+    start_date = serializers.DateField(read_only=True)
 
     class Meta:
         model = UserProgramProgress
         fields = (
             "id",
             "program",
+            "start_date",
             "current_day",
+            "progress_day",
             "completed_days",
             "is_paused",
             "paused_at",

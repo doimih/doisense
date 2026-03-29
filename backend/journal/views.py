@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from core.analytics import track_event
 from core.feature_access import require_feature
+from core.i18n import get_user_language, translate
 from core.quota import check_and_consume
 
 from .models import JournalQuestion, JournalEntry
@@ -13,6 +14,20 @@ from .serializers import JournalQuestionSerializer, JournalEntrySerializer
 
 
 MIN_JOURNAL_QUESTIONS = 12
+
+_JOURNAL_COPY = {
+    "ro": {"quota_exceeded": "Cota lunara de jurnal a fost depasita pentru planul tau."},
+    "en": {"quota_exceeded": "Monthly journal quota exceeded for your tier."},
+    "de": {"quota_exceeded": "Monatliches Journal-Kontingent fuer Ihr Abonnement ueberschritten."},
+    "fr": {"quota_exceeded": "Quota mensuel de journal depasse pour votre abonnement."},
+    "it": {"quota_exceeded": "Quota mensile del diario superata per il tuo piano."},
+    "es": {"quota_exceeded": "Cuota mensual del diario superada para tu plan."},
+    "pl": {"quota_exceeded": "Miesieczny limit dziennika zostal przekroczony dla Twojego planu."},
+}
+
+
+def _journal_text(user, key: str) -> str:
+    return translate(_JOURNAL_COPY, get_user_language(user)).get(key, _JOURNAL_COPY["en"][key])
 DEFAULT_RO_QUESTIONS = [
     {
         "text": "Ce emotie a fost cea mai prezenta azi si ce anume a declansat-o?",
@@ -127,7 +142,7 @@ class JournalEntriesView(APIView):
             language = request.user.language or "en"
             return Response(
                 {
-                    "detail": "Monthly journal quota exceeded for your tier.",
+                    "detail": _journal_text(request.user, "quota_exceeded"),
                     "code": "quota_exceeded",
                     "metric": "journal_entries",
                     "limit": limit,

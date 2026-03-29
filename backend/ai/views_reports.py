@@ -3,7 +3,45 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.i18n import get_user_language, translate
+
 from .models import DailyReport, MonthlyReport, WeeklyReport
+
+
+_REPORT_COPY = {
+    "ro": {
+        "invalid_type": "Tipul de raport este invalid.",
+        "plan_restricted": "Acest tip de raport nu este disponibil pentru planul tau.",
+    },
+    "en": {
+        "invalid_type": "Invalid report type.",
+        "plan_restricted": "This report type is not available for your plan.",
+    },
+    "de": {
+        "invalid_type": "Ungültiger Berichtstyp.",
+        "plan_restricted": "Dieser Berichtstyp ist fuer Ihr Abonnement nicht verfuegbar.",
+    },
+    "fr": {
+        "invalid_type": "Type de rapport invalide.",
+        "plan_restricted": "Ce type de rapport n est pas disponible pour votre abonnement.",
+    },
+    "it": {
+        "invalid_type": "Tipo di report non valido.",
+        "plan_restricted": "Questo tipo di report non e disponibile per il tuo piano.",
+    },
+    "es": {
+        "invalid_type": "Tipo de informe no valido.",
+        "plan_restricted": "Este tipo de informe no esta disponible para tu plan.",
+    },
+    "pl": {
+        "invalid_type": "Nieprawidlowy typ raportu.",
+        "plan_restricted": "Ten typ raportu nie jest dostepny dla Twojego planu.",
+    },
+}
+
+
+def _report_text(user, key: str) -> str:
+    return translate(_REPORT_COPY, get_user_language(user)).get(key, _REPORT_COPY["en"][key])
 
 
 def _allowed_report_types_for_user(user) -> set[str]:
@@ -28,9 +66,9 @@ class ReportListView(APIView):
 
         allowed = _allowed_report_types_for_user(request.user)
         if report_type not in {"daily", "weekly", "monthly"}:
-            return Response({"detail": "Invalid report type."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": _report_text(request.user, "invalid_type")}, status=status.HTTP_400_BAD_REQUEST)
         if report_type not in allowed:
-            return Response({"detail": "This report type is not available for your plan."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": _report_text(request.user, "plan_restricted")}, status=status.HTTP_403_FORBIDDEN)
 
         if report_type == "daily":
             rows = DailyReport.objects.filter(user=request.user).order_by("-date")[:limit]

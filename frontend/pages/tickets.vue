@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-6xl space-y-8">
 
     <!-- ── User: Create ticket + history ── -->
-    <div class="mx-auto max-w-3xl w-full space-y-6">
+    <div v-if="!isSuperadmin" class="mx-auto max-w-3xl w-full space-y-6">
       <header class="space-y-2">
         <h1 class="text-2xl font-bold text-stone-900">{{ text.title }}</h1>
         <p class="text-sm text-stone-600">{{ text.subtitle }}</p>
@@ -265,7 +265,8 @@ const { fetchApi } = useApi()
 const { locale } = useI18n()
 const authStore = useAuthStore()
 
-const isAdmin = computed(() => Boolean(authStore.user?.is_superuser))
+const isSuperadmin = computed(() => Boolean(authStore.user?.is_superuser))
+const isAdmin = computed(() => Boolean(authStore.user?.is_superuser || authStore.user?.is_staff))
 
 // ── Shared helpers ────────────────────────────────────────────
 function formatDate(value: string) {
@@ -750,7 +751,19 @@ async function sendAdminReply() {
 
 onMounted(async () => {
   await authStore.hydrate()
-  await loadTickets()
+  if (authStore.accessToken) {
+    try {
+      const me = await fetchApi('/me')
+      if (me) {
+        authStore.setUser(me as any)
+      }
+    } catch {
+      // Keep tickets page usable even if profile refresh fails.
+    }
+  }
+  if (!isSuperadmin.value) {
+    await loadTickets()
+  }
   if (isAdmin.value) {
     await adminLoadTickets()
   }

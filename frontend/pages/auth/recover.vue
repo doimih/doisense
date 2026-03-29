@@ -119,13 +119,19 @@ usePublicSeo({
   noindex: true,
 })
 
+function normalizeApiBase(base: string): string {
+  const cleaned = (base || '').trim().replace(/^['\"]+|['\"]+$/g, '')
+  if (!cleaned) return '/api'
+  return cleaned.replace(/\/+$/, '')
+}
+
 async function requestRecovery() {
   loading.value = true
   error.value = ''
   success.value = ''
   try {
     const config = useRuntimeConfig()
-    const base = config.public.apiBase as string
+    const base = normalizeApiBase(config.public.apiBase as string)
     const res = await $fetch<{ detail?: string }>(`${base}/auth/recover`, {
       method: 'POST',
       body: { email: email.value },
@@ -144,7 +150,7 @@ async function confirmReset() {
   success.value = ''
   try {
     const config = useRuntimeConfig()
-    const base = config.public.apiBase as string
+    const base = normalizeApiBase(config.public.apiBase as string)
     const res = await $fetch<{ detail?: string }>(`${base}/auth/recover/confirm`, {
       method: 'POST',
       body: {

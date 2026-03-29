@@ -5,9 +5,6 @@ from django.views.static import serve
 from django.views.generic import RedirectView
 
 admin.site.site_url = "https://projects.doimih.net/doisense"
-admin.site.has_permission = lambda request: bool(
-    request.user.is_active and request.user.is_staff
-)
 
 urlpatterns = [
     path("doisense/admin/", RedirectView.as_view(url="/doisense/ro/admin/", permanent=False)),
@@ -21,7 +18,9 @@ urlpatterns = [
     path("api/profile/", include("profiles.urls")),
     path("api/chat/", include("ai.urls_chat")),
     path("api/support/", include("ai.urls_support")),
+    path("api/social/", include("ai_core.urls")),
     path("api/journal/", include("journal.urls")),
     path("api/programs/", include("programs.urls")),
+    path("api/calendar/", include("calendar_tasks.urls")),
     path("api/payments/", include("payments.urls")),
 ]

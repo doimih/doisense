@@ -6,9 +6,23 @@ export default defineNuxtConfig({
     baseURL: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense/",
     head: {
       title: "Doisense",
-      meta: [{ charset: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" }],
+      meta: [
+        { charset: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+        { name: "apple-mobile-web-app-title", content: "Doisense" },
+        { name: "mobile-web-app-capable", content: "yes" },
+      ],
       link: [
-        { rel: "apple-touch-icon", href: "/doisense/pwa-192x192.svg" },
+        { rel: "apple-touch-icon", href: "/doisense/apple-touch-icon.png" },
+      ],
+      script: [
+        {
+          key: "chunk-recovery",
+          src: "/doisense/chunk-recovery.js",
+          defer: true,
+        },
       ],
     },
   },
@@ -24,6 +38,7 @@ export default defineNuxtConfig({
   },
   experimental: {
     payloadExtraction: true,
+    emitRouteChunkError: "automatic",
   },
   nitro: {
     compressPublicAssets: true,
@@ -56,7 +71,7 @@ export default defineNuxtConfig({
   },
   modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@nuxtjs/i18n", "@nuxt/content", "@vite-pwa/nuxt"],
   pwa: {
-    disable: true,
+    disable: false,
     registerType: "autoUpdate",
     manifest: {
       id: "/doisense/",
@@ -71,20 +86,21 @@ export default defineNuxtConfig({
       lang: "en",
       icons: [
         {
-          src: "/doisense/pwa-192x192.svg",
+            src: "/doisense/pwa-192x192.png",
           sizes: "192x192",
-          type: "image/svg+xml",
+            type: "image/png",
           purpose: "any maskable",
         },
         {
-          src: "/doisense/pwa-512x512.svg",
+            src: "/doisense/pwa-512x512.png",
           sizes: "512x512",
-          type: "image/svg+xml",
+            type: "image/png",
           purpose: "any maskable",
         },
       ],
     },
     workbox: {
+      navigateFallback: "/doisense/",
       navigateFallbackDenylist: [
         /^\/doisense\/(?:[a-z]{2}\/)?admin(?:\/|$)/,
       ],

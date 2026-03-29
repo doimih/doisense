@@ -40,6 +40,16 @@
               {{ m.emoji }}
             </button>
           </div>
+
+          <ClientOnly>
+            <TaskCalendarMini />
+            <template #fallback>
+              <div class="mt-3 rounded-xl border border-slate-200 bg-white p-3">
+                <p class="text-[11px] uppercase tracking-[0.18em] text-slate-500">Calendar task-uri</p>
+                <p class="mt-2 text-xs text-slate-500">Se incarca...</p>
+              </div>
+            </template>
+          </ClientOnly>
         </div>
       </aside>
 
@@ -70,7 +80,7 @@
             :class="msg.isUser ? 'ml-auto' : 'mr-auto'"
           >
             <div
-              class="rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm"
+                class="whitespace-pre-line rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm"
               :class="msg.isUser ? 'rounded-br-md border border-teal-200 bg-[#e9f7f5] text-slate-800' : 'rounded-bl-md border border-slate-200 bg-slate-50 text-slate-800'"
             >
               {{ msg.message }}
@@ -101,6 +111,7 @@
               rows="1"
               :placeholder="t('chat.placeholder')"
               class="max-h-40 min-h-[42px] flex-1 resize-y rounded-xl border border-transparent bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
+              @keydown.enter.exact.prevent="send()"
             />
             <button
               type="submit"
@@ -182,6 +193,8 @@
 </template>
 
 <script setup lang="ts">
+import TaskCalendarMini from '~/components/calendar/TaskCalendarMini.vue'
+
 interface ChatMessage {
   message: string
   isUser: boolean
@@ -209,7 +222,7 @@ interface WellbeingSummary {
 
 const { t } = useI18n()
 const { locale } = useI18n()
-const { fetchApi } = useApi()
+const { fetchApi, getAccessToken, base } = useApi()
 
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
@@ -229,6 +242,9 @@ type ChatUiText = {
   energyToday: string
   disclaimer: string
   sendError: string
+  quotaExceededError: string
+  tierRestrictedError: string
+  loginRequiredError: string
 }
 
 const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
@@ -239,7 +255,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Invata', name: 'Educatie', description: 'Concepte psihologice explicate simplu.', welcome: 'Buna! Pot explica pe scurt concepte de psihologie aplicata.', prompts: ['Ce este burnout-ul?', 'Cum functioneaza anxietatea?', 'Ce inseamna CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Suport', name: 'Suport', description: 'Spatiu sigur pentru descarcare emotionala.', welcome: 'Sunt aici sa te ascult, fara judecata. Ce apasa azi pe tine?', prompts: ['Am o zi grea', 'Ma simt coplesit/a', 'Nu stiu ce simt'] },
     ],
-    ui: { moduleLabel: 'Module AI', coachBadge: 'Coach AI', quickActions: 'Actiuni rapide', crisisTitle: 'Este posibil sa ai nevoie de ajutor imediat.', crisisSubtitle: 'Daca e urgenta, suna la 112 sau contacteaza o linie locala de suport.', streak: 'Serie', streakDays: 'zile consecutive', mood: 'Stare', energyCheckin: 'Energie zilnica', energyToday: 'Nivel energie azi', disclaimer: 'Asistentul AI ofera suport complementar, nu inlocuieste un specialist licentiat.', sendError: 'Eroare la trimiterea mesajului.' },
+    ui: { moduleLabel: 'Module AI', coachBadge: 'Coach AI', quickActions: 'Actiuni rapide', crisisTitle: 'Este posibil sa ai nevoie de ajutor imediat.', crisisSubtitle: 'Daca e urgenta, suna la 112 sau contacteaza o linie locala de suport.', streak: 'Serie', streakDays: 'zile consecutive', mood: 'Stare', energyCheckin: 'Energie zilnica', energyToday: 'Nivel energie azi', disclaimer: 'Asistentul AI ofera suport complementar, nu inlocuieste un specialist licentiat.', sendError: 'Eroare la trimiterea mesajului.', quotaExceededError: 'Ai depasit cota zilnica de mesaje chat pentru planul tau.', tierRestrictedError: 'Chat-ul AI nu este disponibil pentru planul tau curent.', loginRequiredError: 'Trebuie sa te autentifici pentru a folosi chat-ul.' },
   },
   en: {
     modules: [
@@ -248,7 +264,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Learn', name: 'Education', description: 'Psychology concepts explained simply.', welcome: 'Hi! I can explain practical psychology concepts in a short way.', prompts: ['What is burnout?', 'How does anxiety work?', 'What is CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Care', name: 'Support', description: 'Safe space for emotional release.', welcome: 'I am here to listen without judgment. What feels heavy today?', prompts: ['I am having a hard day', 'I feel overwhelmed', 'I do not know what I feel'] },
     ],
-    ui: { moduleLabel: 'AI modules', coachBadge: 'AI Coach', quickActions: 'Quick actions', crisisTitle: 'You may need immediate help.', crisisSubtitle: 'If this is an emergency, call your local emergency number now.', streak: 'Streak', streakDays: 'days in a row', mood: 'Mood', energyCheckin: 'Energy check-in', energyToday: 'Energy level today', disclaimer: 'AI assistant support is complementary and does not replace licensed care.', sendError: 'Failed to send message.' },
+    ui: { moduleLabel: 'AI modules', coachBadge: 'AI Coach', quickActions: 'Quick actions', crisisTitle: 'You may need immediate help.', crisisSubtitle: 'If this is an emergency, call your local emergency number now.', streak: 'Streak', streakDays: 'days in a row', mood: 'Mood', energyCheckin: 'Energy check-in', energyToday: 'Energy level today', disclaimer: 'AI assistant support is complementary and does not replace licensed care.', sendError: 'Failed to send message.', quotaExceededError: 'Daily chat quota exceeded for your tier.', tierRestrictedError: 'AI chat is not available for your current plan.', loginRequiredError: 'Please sign in to use chat.' },
   },
   de: {
     modules: [
@@ -257,7 +273,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Lern', name: 'Bildung', description: 'Psychologische Konzepte einfach erklart.', welcome: 'Hallo! Ich kann psychologische Konzepte kurz und klar erklaren.', prompts: ['Was ist Burnout?', 'Wie funktioniert Angst?', 'Was bedeutet CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Hilfe', name: 'Support', description: 'Sicherer Raum fur emotionale Entlastung.', welcome: 'Ich hore dir ohne Bewertung zu. Was belastet dich heute?', prompts: ['Ich habe einen schweren Tag', 'Ich fuhle mich uberfordert', 'Ich weiss nicht, was ich fuhle'] },
     ],
-    ui: { moduleLabel: 'KI-Module', coachBadge: 'KI Coach', quickActions: 'Schnellaktionen', crisisTitle: 'Du brauchst moglicherweise sofort Hilfe.', crisisSubtitle: 'Bei einem Notfall rufe sofort die lokale Notrufnummer an.', streak: 'Serie', streakDays: 'Tage in Folge', mood: 'Stimmung', energyCheckin: 'Energie-Check-in', energyToday: 'Energie heute', disclaimer: 'Die KI-Unterstutzung ist erganzend und ersetzt keine fachliche Behandlung.', sendError: 'Nachricht konnte nicht gesendet werden.' },
+    ui: { moduleLabel: 'KI-Module', coachBadge: 'KI Coach', quickActions: 'Schnellaktionen', crisisTitle: 'Du brauchst moglicherweise sofort Hilfe.', crisisSubtitle: 'Bei einem Notfall rufe sofort die lokale Notrufnummer an.', streak: 'Serie', streakDays: 'Tage in Folge', mood: 'Stimmung', energyCheckin: 'Energie-Check-in', energyToday: 'Energie heute', disclaimer: 'Die KI-Unterstutzung ist erganzend und ersetzt keine fachliche Behandlung.', sendError: 'Nachricht konnte nicht gesendet werden.', quotaExceededError: 'Dein tagliches Chat-Kontingent fur dein Abo ist aufgebraucht.', tierRestrictedError: 'KI-Chat ist fur deinen aktuellen Tarif nicht verfugbar.', loginRequiredError: 'Bitte melde dich an, um den Chat zu nutzen.' },
   },
   fr: {
     modules: [
@@ -266,7 +282,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Appr', name: 'Education', description: 'Concepts psychologiques expliques simplement.', welcome: 'Bonjour ! Je peux expliquer des concepts de psychologie de facon simple.', prompts: ['Qu\'est-ce que le burnout ?', 'Comment fonctionne l\'anxiete ?', 'Que signifie CBT ?'] },
       { id: 'support', icon: '🤝', shortName: 'Soin', name: 'Soutien', description: 'Espace sur pour relacher les emotions.', welcome: 'Je suis la pour t\'ecouter sans jugement. Qu\'est-ce qui te pese aujourd\'hui ?', prompts: ['Je passe une journee difficile', 'Je me sens depasse(e)', 'Je ne sais pas ce que je ressens'] },
     ],
-    ui: { moduleLabel: 'Modules IA', coachBadge: 'Coach IA', quickActions: 'Actions rapides', crisisTitle: 'Tu pourrais avoir besoin d\'aide immediate.', crisisSubtitle: 'En cas d\'urgence, appelle immediatement le numero d\'urgence local.', streak: 'Serie', streakDays: 'jours d\'affilee', mood: 'Humeur', energyCheckin: 'Check-in energie', energyToday: 'Niveau d\'energie aujourd\'hui', disclaimer: 'L\'assistant IA offre un soutien complementaire et ne remplace pas un professionnel de sante.', sendError: 'Impossible d\'envoyer le message.' },
+    ui: { moduleLabel: 'Modules IA', coachBadge: 'Coach IA', quickActions: 'Actions rapides', crisisTitle: 'Tu pourrais avoir besoin d\'aide immediate.', crisisSubtitle: 'En cas d\'urgence, appelle immediatement le numero d\'urgence local.', streak: 'Serie', streakDays: 'jours d\'affilee', mood: 'Humeur', energyCheckin: 'Check-in energie', energyToday: 'Niveau d\'energie aujourd\'hui', disclaimer: 'L\'assistant IA offre un soutien complementaire et ne remplace pas un professionnel de sante.', sendError: 'Impossible d\'envoyer le message.', quotaExceededError: 'Quota quotidien de messages chat depasse pour ton forfait.', tierRestrictedError: 'Le chat IA n\'est pas disponible pour ton forfait actuel.', loginRequiredError: 'Connecte-toi pour utiliser le chat.' },
   },
   it: {
     modules: [
@@ -275,7 +291,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Impara', name: 'Educazione', description: 'Concetti psicologici spiegati in modo semplice.', welcome: 'Ciao! Posso spiegare in breve concetti utili di psicologia.', prompts: ['Cos\'e il burnout?', 'Come funziona l\'ansia?', 'Che cos\'e la CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Cura', name: 'Supporto', description: 'Spazio sicuro per il rilascio emotivo.', welcome: 'Sono qui per ascoltarti senza giudicare. Cosa ti pesa oggi?', prompts: ['Sto vivendo una giornata difficile', 'Mi sento sopraffatto/a', 'Non so cosa provo'] },
     ],
-    ui: { moduleLabel: 'Moduli AI', coachBadge: 'Coach AI', quickActions: 'Azioni rapide', crisisTitle: 'Potresti aver bisogno di aiuto immediato.', crisisSubtitle: 'In caso di emergenza chiama subito il numero locale di emergenza.', streak: 'Serie', streakDays: 'giorni consecutivi', mood: 'Umore', energyCheckin: 'Check energia', energyToday: 'Livello energia oggi', disclaimer: 'L\'assistente AI offre supporto complementare e non sostituisce specialisti abilitati.', sendError: 'Invio del messaggio non riuscito.' },
+    ui: { moduleLabel: 'Moduli AI', coachBadge: 'Coach AI', quickActions: 'Azioni rapide', crisisTitle: 'Potresti aver bisogno di aiuto immediato.', crisisSubtitle: 'In caso di emergenza chiama subito il numero locale di emergenza.', streak: 'Serie', streakDays: 'giorni consecutivi', mood: 'Umore', energyCheckin: 'Check energia', energyToday: 'Livello energia oggi', disclaimer: 'L\'assistente AI offre supporto complementare e non sostituisce specialisti abilitati.', sendError: 'Invio del messaggio non riuscito.', quotaExceededError: 'Hai superato la quota giornaliera di messaggi chat per il tuo piano.', tierRestrictedError: 'La chat AI non e disponibile per il tuo piano attuale.', loginRequiredError: 'Accedi per usare la chat.' },
   },
   es: {
     modules: [
@@ -284,7 +300,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Aprende', name: 'Educacion', description: 'Conceptos de psicologia explicados de forma simple.', welcome: 'Hola, puedo explicar conceptos de psicologia de forma practica.', prompts: ['Que es el burnout?', 'Como funciona la ansiedad?', 'Que significa CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Apoyo', name: 'Apoyo', description: 'Espacio seguro para descarga emocional.', welcome: 'Estoy aqui para escucharte sin juicio. Que te pesa hoy?', prompts: ['Tengo un dia dificil', 'Me siento abrumado/a', 'No se que siento'] },
     ],
-    ui: { moduleLabel: 'Modulos IA', coachBadge: 'Coach IA', quickActions: 'Acciones rapidas', crisisTitle: 'Podrias necesitar ayuda inmediata.', crisisSubtitle: 'Si es una emergencia, llama ahora al numero local de emergencias.', streak: 'Racha', streakDays: 'dias seguidos', mood: 'Estado de animo', energyCheckin: 'Chequeo de energia', energyToday: 'Nivel de energia hoy', disclaimer: 'El asistente AI brinda apoyo complementario y no sustituye atencion profesional.', sendError: 'No se pudo enviar el mensaje.' },
+    ui: { moduleLabel: 'Modulos IA', coachBadge: 'Coach IA', quickActions: 'Acciones rapidas', crisisTitle: 'Podrias necesitar ayuda inmediata.', crisisSubtitle: 'Si es una emergencia, llama ahora al numero local de emergencias.', streak: 'Racha', streakDays: 'dias seguidos', mood: 'Estado de animo', energyCheckin: 'Chequeo de energia', energyToday: 'Nivel de energia hoy', disclaimer: 'El asistente AI brinda apoyo complementario y no sustituye atencion profesional.', sendError: 'No se pudo enviar el mensaje.', quotaExceededError: 'Has superado la cuota diaria de mensajes de chat para tu plan.', tierRestrictedError: 'El chat AI no esta disponible para tu plan actual.', loginRequiredError: 'Inicia sesion para usar el chat.' },
   },
   pl: {
     modules: [
@@ -293,7 +309,7 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
       { id: 'education', icon: '📚', shortName: 'Nauka', name: 'Edukacja', description: 'Pojecia psychologiczne wyjasnione prosto.', welcome: 'Czesc! Moge krotko wyjasnic praktyczne pojecia psychologiczne.', prompts: ['Co to jest wypalenie?', 'Jak dziala lek?', 'Co oznacza CBT?'] },
       { id: 'support', icon: '🤝', shortName: 'Pomoc', name: 'Wsparcie', description: 'Bezpieczna przestrzen na emocje.', welcome: 'Jestem tutaj, by wysluchac bez oceniania. Co cie dzis obciaza?', prompts: ['Mam trudny dzien', 'Czuje przytloczenie', 'Nie wiem, co czuje'] },
     ],
-    ui: { moduleLabel: 'Moduly AI', coachBadge: 'AI Coach', quickActions: 'Szybkie akcje', crisisTitle: 'Mozesz potrzebowac natychmiastowej pomocy.', crisisSubtitle: 'Jesli to nagla sytuacja, zadzwon pod lokalny numer alarmowy.', streak: 'Seria', streakDays: 'dni z rzedu', mood: 'Nastroj', energyCheckin: 'Dzienna energia', energyToday: 'Poziom energii dzis', disclaimer: 'Asystent AI wspiera dodatkowo i nie zastepuje specjalisty.', sendError: 'Nie udalo sie wyslac wiadomosci.' },
+    ui: { moduleLabel: 'Moduly AI', coachBadge: 'AI Coach', quickActions: 'Szybkie akcje', crisisTitle: 'Mozesz potrzebowac natychmiastowej pomocy.', crisisSubtitle: 'Jesli to nagla sytuacja, zadzwon pod lokalny numer alarmowy.', streak: 'Seria', streakDays: 'dni z rzedu', mood: 'Nastroj', energyCheckin: 'Dzienna energia', energyToday: 'Poziom energii dzis', disclaimer: 'Asystent AI wspiera dodatkowo i nie zastepuje specjalisty.', sendError: 'Nie udalo sie wyslac wiadomosci.', quotaExceededError: 'Przekroczono dzienny limit wiadomosci czatu dla Twojego planu.', tierRestrictedError: 'Czat AI nie jest dostepny w Twoim obecnym planie.', loginRequiredError: 'Zaloguj sie, aby korzystac z czatu.' },
   },
 }
 
@@ -324,6 +340,7 @@ const messages = computed(() => moduleMessages[currentModuleId.value])
 const moduleHistory = ref<Record<string, ChatMessage[]>>({})
 const input = ref('')
 const loading = ref(false)
+const translatingDraft = ref(false)
 const showCrisisBanner = ref(false)
 const messagesEl = ref<HTMLElement | null>(null)
 
@@ -462,36 +479,204 @@ function detectCrisis(text: string): boolean {
   )
 }
 
-async function send(quickPrompt?: string) {
-  const text = (quickPrompt || input.value).trim()
-  if (!text || loading.value) return
+function resolveApiErrorMessage(error: unknown, ui: ChatUiText): string {
+  const err = error as {
+    data?: { detail?: string; code?: string }
+    statusCode?: number
+    message?: string
+  }
 
-  moduleMessages[currentModuleId.value].push({ message: text, isUser: true })
+  if (err?.data?.code === 'quota_exceeded') {
+    return ui.quotaExceededError
+  }
+
+  const detail = err?.data?.detail?.trim()
+  if (detail) {
+    const normalized = detail.toLowerCase()
+    if (normalized.includes('daily chat quota exceeded')) {
+      return ui.quotaExceededError
+    }
+    if (normalized.includes('not available for your current tier') || normalized.includes('current tier')) {
+      return ui.tierRestrictedError
+    }
+    if (normalized.includes('authentication credentials were not provided')) {
+      return ui.loginRequiredError
+    }
+    return detail
+  }
+
+  if (err?.statusCode === 403) {
+    return ui.tierRestrictedError
+  }
+
+  if (err?.statusCode === 401) {
+    return ui.loginRequiredError
+  }
+
+  const generic = err?.message?.trim()
+  if (generic && !generic.startsWith('[POST]')) {
+    return generic
+  }
+
+  return ui.sendError
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (messagesEl.value) {
+      messagesEl.value.scrollTop = messagesEl.value.scrollHeight
+    }
+  })
+}
+
+function buildChatMessagePayload(userText: string) {
+  return {
+    message: `[${currentModule.value.id}|mood:${selectedMood.value}|energy:${energyLevel.value}] ${userText}`,
+  }
+}
+
+function applyAssistantMessage(index: number, message: string) {
+  if (!moduleMessages[currentModuleId.value][index]) return
+  moduleMessages[currentModuleId.value][index].message = message
+  if (detectCrisis(message)) {
+    showCrisisBanner.value = true
+  }
+}
+
+async function streamChatReply(userText: string, assistantIndex: number): Promise<void> {
+  const token = await getAccessToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Language': localeCode.value,
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${base}/chat/send-stream`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(buildChatMessagePayload(userText)),
+  })
+
+  if (!response.ok || !response.body) {
+    throw new Error(`stream_unavailable_${response.status}`)
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder('utf-8')
+  let buffer = ''
+  let assistantText = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    let marker = buffer.indexOf('\n\n')
+    while (marker !== -1) {
+      const rawEvent = buffer.slice(0, marker)
+      buffer = buffer.slice(marker + 2)
+
+      const lines = rawEvent.split('\n')
+      let eventType = 'message'
+      let dataRaw = ''
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          eventType = line.slice(6).trim()
+        } else if (line.startsWith('data:')) {
+          dataRaw += line.slice(5).trim()
+        }
+      }
+
+      if (!dataRaw) {
+        marker = buffer.indexOf('\n\n')
+        continue
+      }
+
+      let payload: { token?: string; reply?: string; message?: string; detail?: string } = {}
+      try {
+        payload = JSON.parse(dataRaw)
+      } catch {
+        marker = buffer.indexOf('\n\n')
+        continue
+      }
+
+      if (eventType === 'ack' && payload.message) {
+        applyAssistantMessage(assistantIndex, payload.message)
+        scrollToBottom()
+      } else if (eventType === 'token' && payload.token) {
+        assistantText += payload.token
+        applyAssistantMessage(assistantIndex, assistantText)
+        scrollToBottom()
+      } else if (eventType === 'done') {
+        applyAssistantMessage(assistantIndex, payload.reply || assistantText)
+        return
+      } else if (eventType === 'error') {
+        throw new Error(payload.detail || text.value.sendError)
+      }
+
+      marker = buffer.indexOf('\n\n')
+    }
+  }
+
+  if (!assistantText) {
+    throw new Error('empty_stream_reply')
+  }
+  applyAssistantMessage(assistantIndex, assistantText)
+}
+
+async function send(quickPrompt?: string) {
+  const userText = (quickPrompt || input.value).trim()
+  if (!userText || loading.value) return
+
+  moduleMessages[currentModuleId.value].push({ message: userText, isUser: true })
+  const assistantIndex = moduleMessages[currentModuleId.value].push({ message: '...', isUser: false }) - 1
   input.value = ''
   loading.value = true
   try {
-    const res = await fetchApi<{ reply: string }>('/chat/send', {
-      method: 'POST',
-      body: {
-        message: `[${currentModule.value.id}|mood:${selectedMood.value}|energy:${energyLevel.value}] ${text}`,
-      },
-    })
-    moduleMessages[currentModuleId.value].push({ message: res.reply, isUser: false })
-    if (detectCrisis(res.reply)) {
-      showCrisisBanner.value = true
+    try {
+      await streamChatReply(userText, assistantIndex)
+    } catch {
+      // Backward compatible fallback to existing sync endpoint.
+      const res = await fetchApi<{ reply: string }>('/chat/send', {
+        method: 'POST',
+        body: buildChatMessagePayload(userText),
+      })
+      applyAssistantMessage(assistantIndex, res.reply)
     }
   } catch (e) {
-    moduleMessages[currentModuleId.value].push({
-      message: (e as Error).message || text.sendError,
-      isUser: false,
-    })
+    applyAssistantMessage(assistantIndex, resolveApiErrorMessage(e, text.value))
   } finally {
     loading.value = false
-    nextTick(() => {
-      if (messagesEl.value) {
-        messagesEl.value.scrollTop = messagesEl.value.scrollHeight
-      }
+    scrollToBottom()
+  }
+}
+
+async function translateDraftToLocale(targetLocale: string, previousLocale?: string) {
+  const sourceLocale = (previousLocale || '').slice(0, 2).toLowerCase()
+  const targetLanguage = (targetLocale || '').slice(0, 2).toLowerCase()
+  const originalText = input.value
+
+  if (!originalText.trim() || sourceLocale === targetLanguage || translatingDraft.value) return
+
+  translatingDraft.value = true
+  try {
+    const res = await fetchApi<{ translated_text: string }>('/chat/translate-draft', {
+      method: 'POST',
+      body: {
+        text: originalText,
+        source_language: sourceLocale,
+        target_language: targetLanguage,
+      },
     })
+    if (input.value === originalText && (res.translated_text || '').trim()) {
+      input.value = res.translated_text
+    }
+  } catch {
+    // Keep user's original draft if translation is unavailable.
+  } finally {
+    translatingDraft.value = false
   }
 }
 
@@ -503,13 +688,11 @@ onMounted(async () => {
     resetConversation(id)
   }
   nextTick(() => {
-    if (messagesEl.value) {
-      messagesEl.value.scrollTop = messagesEl.value.scrollHeight
-    }
+    scrollToBottom()
   })
 })
 
-watch(localeCode, () => {
+watch(localeCode, async (nextLocale, previousLocale) => {
   const moduleIds: ChatModule['id'][] = ['wellness', 'coaching', 'education', 'support']
   for (const id of moduleIds) {
     if (moduleMessages[id].length === 1 && !moduleMessages[id][0].isUser) {
@@ -517,5 +700,7 @@ watch(localeCode, () => {
       moduleMessages[id] = [{ message: mod.welcome, isUser: false }]
     }
   }
+
+  await translateDraftToLocale(nextLocale, previousLocale)
 })
 </script>

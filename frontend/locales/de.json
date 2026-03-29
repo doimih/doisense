@@ -126,5 +126,19 @@
     "impactTitle": "Sieh Reichweite, Ergebnisse und Wachstum, das wir gemeinsam aufbauen",
     "seoTitle": "Doisense - Digitales Wellbeing mit KI und Tagebuch",
     "seoDesc": "Doisense bietet geführtes Tagebuch, KI-Chat, strukturierte Programme und vollständige rechtliche Seiten."
+  },
+  "pwaInstall": {
+    "title": "Doisense zum Startbildschirm hinzufügen",
+    "subtitle": "Schneller öffnen und wie eine App nutzen.",
+    "notNow": "Jetzt nicht",
+    "neverShow": "Nicht mehr anzeigen",
+    "iAdded": "Ich habe es hinzugefügt",
+    "iosStep1": "Tippe in Safari auf Teilen.",
+    "iosStep2": "Wähle Zum Home-Bildschirm.",
+    "iosStep3": "Bestätige mit Hinzufügen.",
+    "androidPromptReady": "Dein Browser kann Doisense direkt installieren.",
+    "androidInstall": "Zum Startbildschirm hinzufügen",
+    "androidStep1": "Öffne das Browser-Menü (drei Punkte).",
+    "androidStep2": "Wähle Zum Startbildschirm hinzufügen."
   }
 }

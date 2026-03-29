@@ -20,6 +20,9 @@ jobs:
     environment: production
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+
       - name: Validate required secrets
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -60,4 +63,44 @@ jobs:
           if [ "$RUN_MIGRATIONS" = "true" ]; then
             docker compose run --rm backend python manage.py migrate
           fi
+          
+          # Post-deploy health checks
+          echo "=== Waiting for services to be healthy ==="
+          for i in {1..30}; do
+            # Check backend
+            if curl -f -s http://localhost:8000/api/health/ > /dev/null 2>&1; then
+              echo "✓ Backend is healthy"
+            else
+              echo "Attempt $i: Backend not ready, retrying..."
+              sleep 2
+              continue
+            fi
+            
+            # Check frontend
+            if curl -f -s http://localhost:3000/doisense/ > /dev/null 2>&1; then
+              echo "✓ Frontend is healthy"
+            else
+              echo "Attempt $i: Frontend not ready, retrying..."
+              sleep 2
+              continue
+            fi
+            
+            # Check DB
+            if docker compose exec -T db pg_isready -U doisense > /dev/null 2>&1; then
+              echo "✓ Database is healthy"
+            else
+              echo "Attempt $i: Database not ready, retrying..."
+              sleep 2
+              continue
+            fi
+            
+            # All checks passed
+            echo "=== All services are healthy ==="
+            exit 0
+          done
+          
+          echo "ERROR: Services failed to become healthy after deploy"
+          echo "Current container status:"
+          docker compose ps
+          exit 1
           EOF

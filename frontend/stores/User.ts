@@ -13,6 +13,7 @@ export interface User {
   onboarding_completed: boolean;
   membership_tier: 'normal' | 'premium';
   has_saved_card: boolean;
+  is_staff: boolean;
   is_superuser: boolean;
   created_at: string;
 }

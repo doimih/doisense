@@ -126,5 +126,19 @@
     "impactTitle": "Découvrez la portée, les résultats et la progression que nous facilitons",
     "seoTitle": "Doisense - Bien-être numérique avec IA et journal guidé",
     "seoDesc": "Doisense offre un journal guidé, un chat IA contextuel, des programmes structurés et des pages légales complètes."
+  },
+  "pwaInstall": {
+    "title": "Ajouter Doisense à l'écran d'accueil",
+    "subtitle": "Ouvrez-le plus vite, comme une application.",
+    "notNow": "Pas maintenant",
+    "neverShow": "Ne plus afficher",
+    "iAdded": "Je l'ai ajouté",
+    "iosStep1": "Touchez le bouton Partager dans Safari.",
+    "iosStep2": "Choisissez Ajouter à l'écran d'accueil.",
+    "iosStep3": "Confirmez avec Ajouter.",
+    "androidPromptReady": "Votre navigateur peut installer Doisense directement.",
+    "androidInstall": "Ajouter à l'écran d'accueil",
+    "androidStep1": "Ouvrez le menu du navigateur (trois points).",
+    "androidStep2": "Choisissez Ajouter à l'écran d'accueil."
   }
 }

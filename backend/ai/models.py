@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from core.validators import validate_language
 
@@ -52,12 +53,62 @@ class AILog(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
+    provider = models.CharField(max_length=50, default="unknown")
     model = models.CharField(max_length=50)
     prompt_hash = models.CharField(max_length=64, blank=True)
+    input_tokens = models.PositiveIntegerField(null=True, blank=True)
+    output_tokens = models.PositiveIntegerField(null=True, blank=True)
+    estimated_cost_usd = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "ai_ailog"
+
+
+class AIBudgetCredit(models.Model):
+    provider = models.CharField(max_length=50)
+    amount_usd = models.DecimalField(max_digits=12, decimal_places=2)
+    credited_at = models.DateTimeField(default=timezone.now)
+    source_reference = models.CharField(max_length=120, blank=True, default="")
+    notes = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ai_budget_credits",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ai_aibudgetcredit"
+        ordering = ["-credited_at", "-created_at"]
+
+    def __str__(self):
+        return f"{self.provider} +${self.amount_usd}"
+
+
+class AIBudgetMonthlyTarget(models.Model):
+    provider = models.CharField(max_length=50)
+    year = models.PositiveSmallIntegerField()
+    month = models.PositiveSmallIntegerField()
+    target_usd = models.DecimalField(max_digits=12, decimal_places=2)
+    notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ai_aibudgetmonthlytarget"
+        ordering = ["-year", "-month", "provider"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "year", "month"],
+                name="ai_budget_monthly_target_provider_month_uniq",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.provider} {self.year}-{self.month:02d}: ${self.target_usd}"
 
 
 class EmotionalAnalysis(models.Model):

@@ -110,6 +110,17 @@ def _get_chat_guardrails(plan_tier: str) -> str:
     )
 
 
+def _get_conversational_format_instruction() -> str:
+    return (
+        "Formatting is strict. Use plain text only and keep replies compact. "
+        "Do not use markdown syntax (#, **, __), and do not output long dense paragraphs. "
+        "Use this shape: line 1 short greeting; line 2 topic title; line 3 short lead-in; "
+        "then 3-6 bullet points prefixed with '- '; then one short follow-up question on a new line. "
+        "Each bullet must be one sentence. Max 140 words total unless the user explicitly asks for detail. "
+        "Prefer clear, human wording and spacing between sections."
+    )
+
+
 def _load_default_chat_prompt_template() -> str:
     """Load default chat prompt from filesystem."""
     repo_root = Path(__file__).resolve().parents[2]
@@ -118,6 +129,35 @@ def _load_default_chat_prompt_template() -> str:
         return prompt_path.read_text(encoding="utf-8").strip()
     except OSError:
         return ""
+
+
+def _load_ai_brain_prompts() -> tuple[str, str]:
+    """
+    Load prompts managed in AI Brain admin (ai_core.Prompt).
+
+    Returns:
+        (system_section, extra_section)
+        system_section  – TYPE_SYSTEM contents; replaces ConversationTemplate when present.
+        extra_section   – TYPE_PERSONALITY + TYPE_RULES + TYPE_CONTEXT; always appended.
+    """
+    from ai_core.models import Prompt as BrainPrompt  # local import – avoids circular at module load
+
+    system_contents = list(
+        BrainPrompt.objects.filter(type=BrainPrompt.TYPE_SYSTEM)
+        .order_by("name")
+        .values_list("content", flat=True)
+    )
+    extra_contents: list[str] = []
+    for ptype in (BrainPrompt.TYPE_PERSONALITY, BrainPrompt.TYPE_RULES, BrainPrompt.TYPE_CONTEXT):
+        extra_contents.extend(
+            BrainPrompt.objects.filter(type=ptype)
+            .order_by("name")
+            .values_list("content", flat=True)
+        )
+
+    system_section = "\n\n".join(c.strip() for c in system_contents if c.strip())
+    extra_section = "\n\n".join(c.strip() for c in extra_contents if c.strip())
+    return system_section, extra_section
 
 
 def _load_orchestrator_prompt_template() -> str:
@@ -154,15 +194,26 @@ def get_chat_system_prompt(
     except UserProfile.DoesNotExist:
         pass
 
-    template = ConversationTemplate.objects.filter(
-        language=language, name="default"
-    ).first()
-    if template:
-        parts.insert(0, template.prompt)
+    # --- AI Brain prompts (managed in Admin → AI Brain) ---
+    ai_brain_system, ai_brain_extra = _load_ai_brain_prompts()
+
+    if ai_brain_system:
+        # AI Brain TYPE_SYSTEM prompts take priority over ConversationTemplate
+        parts.insert(0, ai_brain_system)
     else:
-        default_template = _load_default_chat_prompt_template()
-        if default_template:
-            parts.insert(0, default_template)
+        # Fall back to ConversationTemplate or filesystem template
+        template = ConversationTemplate.objects.filter(
+            language=language, name="default"
+        ).first()
+        if template:
+            parts.insert(0, template.prompt)
+        else:
+            default_template = _load_default_chat_prompt_template()
+            if default_template:
+                parts.insert(0, default_template)
+
+    if ai_brain_extra:
+        parts.append(ai_brain_extra)
 
     base = get_system_config().ai_system_prompt_base or (
         "You are a supportive wellbeing assistant. Respond in the user's language. "
@@ -171,6 +222,7 @@ def get_chat_system_prompt(
     parts.append(f"User language: {language}.")
     parts.append(_get_chat_capability_instruction(effective_tier))
     parts.append(_get_chat_guardrails(effective_tier))
+    parts.append(_get_conversational_format_instruction())
     parts.append(_get_disclaimer_instruction(current_message, conversation_count))
     if parts:
         return base + " " + " ".join(parts)

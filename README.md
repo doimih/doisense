@@ -127,6 +127,10 @@ Stare curentă pentru stabilitate producție:
 - PWA dezactivat temporar în nuxt config
 - pagină offline cu flow de recovery
 - cleanup automat service worker și cache pentru clienți cu stare stale
+- auto-recovery pentru chunk errors (import/module load fail):
+  - clear cache + reload o singură dată
+  - fallback redirect controlat către login (`reason=client_recovery`) dacă recovery-ul eșuează
+  - telemetrie best-effort în `/api/analytics/track` pentru evenimentele `frontend_chunk_recovery_triggered` și `frontend_chunk_recovery_failed`
 
 ## Setup local (dev)
 

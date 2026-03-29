@@ -85,6 +85,23 @@ def test_me_success(authenticated_client, user):
 
 
 @pytest.mark.django_db
+def test_me_patch_updates_onboarding_completed(authenticated_client, user):
+    user.onboarding_completed = False
+    user.save(update_fields=["onboarding_completed"])
+
+    response = authenticated_client.patch(
+        reverse("me"),
+        {"onboarding_completed": True},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    user.refresh_from_db()
+    assert user.onboarding_completed is True
+    assert response.data["onboarding_completed"] is True
+
+
+@pytest.mark.django_db
 def test_social_login_google_creates_user(api_client, monkeypatch):
     url = reverse("auth-social-login")
 

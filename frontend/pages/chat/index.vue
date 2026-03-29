@@ -1,5 +1,12 @@
 <template>
-  <ChatWindow />
+  <ClientOnly>
+    <ChatWindow />
+    <template #fallback>
+      <div class="rounded-[28px] border border-slate-200 bg-white p-6 text-sm text-slate-500">
+        Se incarca chat-ul...
+      </div>
+    </template>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">

@@ -3,6 +3,15 @@ export default defineNuxtPlugin(() => {
     return
   }
 
+  // Cleanup is opt-in and should only run when explicitly enabled.
+  const shouldCleanup = localStorage.getItem('doisense_sw_cleanup') === '1'
+    || new URLSearchParams(window.location.search).get('sw_cleanup') === '1'
+  if (!shouldCleanup) {
+    return
+  }
+
+  localStorage.removeItem('doisense_sw_cleanup')
+
   // Recovery guard for clients stuck on stale Workbox configurations.
   window.addEventListener('load', async () => {
     try {

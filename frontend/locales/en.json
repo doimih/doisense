@@ -126,5 +126,19 @@
     "impactTitle": "See The Reach, Results, And Growth We've Helped Facilitate",
     "seoTitle": "Doisense - Digital wellbeing with AI and guided journaling",
     "seoDesc": "Doisense provides guided journaling, contextual AI chat, structured programs, and complete legal pages for transparent compliance."
+  },
+  "pwaInstall": {
+    "title": "Add Doisense to your home screen",
+    "subtitle": "Open it faster and use it like an app.",
+    "notNow": "Not now",
+    "neverShow": "Do not show again",
+    "iAdded": "I added it",
+    "iosStep1": "Tap the Share button in Safari.",
+    "iosStep2": "Choose Add to Home Screen.",
+    "iosStep3": "Confirm by tapping Add.",
+    "androidPromptReady": "Your browser can install Doisense directly.",
+    "androidInstall": "Add to home screen",
+    "androidStep1": "Open the browser menu (three dots).",
+    "androidStep2": "Choose Add to Home Screen."
   }
 }

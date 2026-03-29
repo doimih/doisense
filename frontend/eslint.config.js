@@ -1,11 +1,13 @@
-// ESLint: run after npm install. For Nuxt, consider: npx nuxi prepare && use .nuxt/eslint.config.mjs
+import tsParser from '@typescript-eslint/parser'
+
 export default [
   {
-    ignores: ['.output/**', 'node_modules/**'],
+    ignores: ['.nuxt/**', '.output/**', 'node_modules/**'],
   },
   {
-    files: ['**/*.{js,ts}'],
+    files: ['**/*.{js,mjs,cjs,ts}'],
     languageOptions: {
+      parser: tsParser,
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
     rules: {},

@@ -1,17 +1,17 @@
 <template>
   <div class="-mt-6 pb-10">
-    <header class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-[linear-gradient(130deg,#f8fafc_0%,#f5f3ff_45%,#f0f9ff_100%)]">
-      <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-sky-200/50 blur-3xl" />
-      <div class="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-amber-200/40 blur-3xl" />
+    <header class="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-[linear-gradient(135deg,#fafbfa_0%,#f4f8f6_48%,#eef4f1_100%)]">
+      <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#a8d5ba]/40 blur-3xl" />
+      <div class="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-[#d4e4e0]/45 blur-3xl" />
       <div class="relative mx-auto max-w-[1440px] px-4 py-12 sm:px-6 md:py-16 lg:px-8">
         <div class="relative grid gap-7 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div class="space-y-5">
-            <p class="inline-flex items-center rounded-full border border-stone-300 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-700">
+            <p class="inline-flex items-center rounded-full border border-[#c6d9d2] bg-[#fafbfa] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#42524b]">
               {{ text.badge }}
             </p>
-            <h1 class="text-4xl font-bold leading-tight text-stone-900 md:text-6xl">{{ text.title }}</h1>
+            <h1 class="text-4xl font-bold leading-tight text-[#2c3e35] md:text-6xl">{{ text.title }}</h1>
           </div>
-          <p class="max-w-xl text-lg leading-8 text-stone-700 lg:ml-auto">{{ text.subtitle }}</p>
+          <p class="max-w-xl text-lg leading-8 text-[#5a6b63] lg:ml-auto">{{ text.subtitle }}</p>
         </div>
       </div>
     </header>
@@ -24,44 +24,44 @@
         :class="[
           'relative rounded-3xl border p-6 shadow-sm transition-transform md:p-7',
           plan.key === 'premium'
-            ? 'scale-[1.01] border-sky-300 bg-sky-50/80 shadow-[0_30px_80px_-45px_rgba(2,132,199,0.7)]'
+            ? 'scale-[1.01] border-[#a8d5ba] bg-[#e8f1ed] shadow-[0_30px_80px_-45px_rgba(123,184,160,0.62)]'
             : plan.key === 'vip'
-              ? 'border-amber-300 bg-amber-50/70'
-              : 'border-stone-200 bg-white',
+              ? 'border-[#d4e4e0] bg-[#f0f4f1]'
+              : 'border-[#d4e4e0] bg-[#fafbfa]',
         ]"
       >
         <p
           v-if="plan.highlight"
-          class="absolute -top-3 left-6 inline-flex rounded-full border border-sky-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-sky-700"
+          class="absolute -top-3 left-6 inline-flex rounded-full border border-[#a8d5ba] bg-[#fafbfa] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4f8f75]"
         >
           {{ text.mostChosen }}
         </p>
         <p
           v-if="currentPlanKey === plan.key"
-          class="absolute -top-3 right-6 inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-700"
+          class="absolute -top-3 right-6 inline-flex rounded-full border border-[#a8d5ba] bg-[#e8f1ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4f8f75]"
         >
           {{ text.currentPlan }}
         </p>
 
-        <p class="text-sm font-semibold uppercase tracking-[0.12em] text-stone-500">{{ plan.tone }}</p>
-        <h2 class="mt-2 text-2xl font-bold text-stone-900">{{ plan.title }}</h2>
-        <p class="mt-3 text-sm leading-6 text-stone-700">{{ plan.description }}</p>
+        <p class="text-sm font-semibold uppercase tracking-[0.12em] text-[#8a9b94]">{{ plan.tone }}</p>
+        <h2 class="mt-2 text-2xl font-bold text-[#2c3e35]">{{ plan.title }}</h2>
+        <p class="mt-3 text-sm leading-6 text-[#5a6b63]">{{ plan.description }}</p>
 
-        <div class="mt-5 flex items-end gap-2 border-b border-stone-200 pb-5">
-          <p class="text-5xl font-bold tracking-tight text-stone-900">{{ plan.price }}</p>
-          <p class="pb-1 text-sm font-medium text-stone-600">{{ plan.period }}</p>
+        <div class="mt-5 flex items-end gap-2 border-b border-[#d4e4e0] pb-5">
+          <p class="text-5xl font-bold tracking-tight text-[#2c3e35]">{{ plan.price }}</p>
+          <p class="pb-1 text-sm font-medium text-[#5a6b63]">{{ plan.period }}</p>
         </div>
 
-        <ul class="mt-5 space-y-2.5 text-sm leading-6 text-stone-700">
+        <ul class="mt-5 space-y-2.5 text-sm leading-6 text-[#5a6b63]">
           <li v-for="item in plan.items" :key="item" class="flex items-start gap-2">
-            <span class="mt-[1px] text-emerald-600">✓</span>
+            <span class="mt-[1px] text-[#7bb8a0]">✓</span>
             <span>{{ item }}</span>
           </li>
         </ul>
 
         <p
           v-if="plan.key === 'premium'"
-          class="mt-5 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-medium leading-6 text-sky-900"
+          class="mt-5 rounded-xl border border-[#a8d5ba] bg-[#fafbfa] px-4 py-3 text-sm font-medium leading-6 text-[#42524b]"
         >
           {{ text.premiumArgument }}
         </p>
@@ -73,12 +73,12 @@
           :class="[
             'mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition disabled:opacity-60',
             currentPlanKey === plan.key
-              ? 'bg-emerald-600 text-white cursor-default'
+              ? 'bg-[#6aa188] text-white cursor-default'
               : plan.key === 'premium'
-                ? 'bg-sky-600 text-white hover:bg-sky-700'
+                ? 'bg-[#7bb8a0] text-white hover:bg-[#669884]'
                 : plan.key === 'vip'
-                  ? 'bg-stone-900 text-white hover:bg-black'
-                  : 'bg-white text-stone-900 border border-stone-300 hover:bg-stone-100',
+                  ? 'bg-[#2c3e35] text-white hover:bg-[#1f2d26]'
+                  : 'bg-[#fafbfa] text-[#2c3e35] border border-[#c6d9d2] hover:bg-[#e8f1ed]',
           ]"
           @click="handlePlanAction(plan.key)"
         >
@@ -90,10 +90,10 @@
           :class="[
             'mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition',
             plan.key === 'premium'
-              ? 'bg-sky-600 text-white hover:bg-sky-700'
+              ? 'bg-[#7bb8a0] text-white hover:bg-[#669884]'
               : plan.key === 'vip'
-                ? 'bg-stone-900 text-white hover:bg-black'
-                : 'bg-white text-stone-900 border border-stone-300 hover:bg-stone-100',
+                ? 'bg-[#2c3e35] text-white hover:bg-[#1f2d26]'
+                : 'bg-[#fafbfa] text-[#2c3e35] border border-[#c6d9d2] hover:bg-[#e8f1ed]',
           ]"
         >
           {{ plan.action }}
@@ -101,40 +101,40 @@
       </article>
     </section>
 
-    <section class="mb-10 overflow-hidden rounded-3xl border border-stone-200 bg-white">
-      <div class="border-b border-stone-200 bg-stone-50 px-5 py-4">
-        <h3 class="text-xl font-semibold text-stone-900">{{ text.comparisonTitle }}</h3>
+    <section class="mb-10 overflow-hidden rounded-3xl border border-[#d4e4e0] bg-[#fafbfa]">
+      <div class="border-b border-[#d4e4e0] bg-[#f0f4f1] px-5 py-4">
+        <h3 class="text-xl font-semibold text-[#2c3e35]">{{ text.comparisonTitle }}</h3>
       </div>
 
       <div class="overflow-x-auto">
         <table class="min-w-full text-left text-sm">
-          <thead class="bg-stone-50 text-stone-700">
+          <thead class="bg-[#f0f4f1] text-[#42524b]">
             <tr>
               <th class="px-5 py-3 font-semibold">{{ text.tableFeature }}</th>
               <th class="px-5 py-3 text-center font-semibold">BASIC</th>
-              <th class="px-5 py-3 text-center font-semibold text-sky-700">PREMIUM</th>
+              <th class="px-5 py-3 text-center font-semibold text-[#4f8f75]">PREMIUM</th>
               <th class="px-5 py-3 text-center font-semibold">VIP</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in text.comparisonRows" :key="row.name" class="border-t border-stone-100">
-              <td class="px-5 py-3 font-medium text-stone-800">{{ row.name }}</td>
-              <td class="px-5 py-3 text-center" :class="row.basic ? 'text-emerald-600' : 'text-stone-300'">{{ row.basic ? '✓' : '—' }}</td>
-              <td class="px-5 py-3 text-center" :class="row.premium ? 'text-emerald-600' : 'text-stone-300'">{{ row.premium ? '✓' : '—' }}</td>
-              <td class="px-5 py-3 text-center" :class="row.vip ? 'text-emerald-600' : 'text-stone-300'">{{ row.vip ? '✓' : '—' }}</td>
+            <tr v-for="row in text.comparisonRows" :key="row.name" class="border-t border-[#edf3ef]">
+              <td class="px-5 py-3 font-medium text-[#42524b]">{{ row.name }}</td>
+              <td class="px-5 py-3 text-center" :class="row.basic ? 'text-[#7bb8a0]' : 'text-[#b9c8c1]'">{{ row.basic ? '✓' : '—' }}</td>
+              <td class="px-5 py-3 text-center" :class="row.premium ? 'text-[#7bb8a0]' : 'text-[#b9c8c1]'">{{ row.premium ? '✓' : '—' }}</td>
+              <td class="px-5 py-3 text-center" :class="row.vip ? 'text-[#7bb8a0]' : 'text-[#b9c8c1]'">{{ row.vip ? '✓' : '—' }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <section class="my-10 grid gap-10 rounded-2xl border border-stone-200 bg-stone-50 p-4 font-semibold text-stone-700 sm:grid-cols-3">
-      <p class="rounded-xl border border-stone-200 bg-white px-4 py-[35px] text-center text-[25px] leading-tight">{{ text.trust[0] }}</p>
-      <p class="rounded-xl border border-stone-200 bg-white px-4 py-[35px] text-center text-[25px] leading-tight">{{ text.trust[1] }}</p>
-      <p class="rounded-xl border border-stone-200 bg-white px-4 py-[35px] text-center text-[25px] leading-tight">{{ text.trust[2] }}</p>
+    <section class="my-10 grid gap-10 rounded-2xl border border-[#d4e4e0] bg-[#f0f4f1] p-4 font-semibold text-[#42524b] sm:grid-cols-3">
+      <p class="rounded-xl border border-[#d4e4e0] bg-[#fafbfa] px-4 py-[35px] text-center text-[25px] leading-tight">{{ text.trust[0] }}</p>
+      <p class="rounded-xl border border-[#d4e4e0] bg-[#fafbfa] px-4 py-[35px] text-center text-[25px] leading-tight">{{ text.trust[1] }}</p>
+      <p class="rounded-xl border border-[#d4e4e0] bg-[#fafbfa] px-4 py-[35px] text-center text-[25px] leading-tight">{{ text.trust[2] }}</p>
     </section>
 
-    <section class="rounded-3xl border border-stone-200 bg-[linear-gradient(135deg,#0f172a_0%,#1f2937_52%,#0b3b5b_100%)] px-6 py-10 text-white md:px-10">
+    <section class="rounded-3xl border border-[#d4e4e0] bg-[linear-gradient(135deg,#2c3e35_0%,#355045_52%,#4f8f75_100%)] px-6 py-10 text-white md:px-10">
       <div class="mx-auto max-w-3xl space-y-5 text-center">
         <h3 class="text-3xl font-bold leading-tight md:text-4xl">{{ text.finalTitle }}</h3>
         <p class="text-base leading-8 text-slate-200 md:text-lg">{{ text.finalSubtitle }}</p>

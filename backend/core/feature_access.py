@@ -23,6 +23,9 @@ FEATURE_MATRIX = {
     "premium_programs": ["premium", "vip"],
     "payment_checkout": ["free", "trial", "basic", "premium", "vip"],
     "payment_upgrade": ["trial", "basic", "premium", "vip"],
+    "calendar_tasks": ["basic", "premium", "vip"],
+    "calendar_advanced": ["premium", "vip"],
+    "calendar_ai": ["vip"],
 }
 
 
