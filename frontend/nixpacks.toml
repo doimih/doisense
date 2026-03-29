@@ -1,9 +1,9 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake"]
+nixPkgs = ["nodejs_22", "python3", "pkg-config", "gcc", "gnumake"]
 
 [phases.install]
 cmds = [
-  "npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --no-optional=false"
+  "node -v && npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --prod=false --no-optional=false"
 ]
 
 [phases.build]
