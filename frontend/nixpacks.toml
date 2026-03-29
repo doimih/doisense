@@ -3,11 +3,11 @@ nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake"]
 
 [phases.install]
 cmds = [
-  "node -v && npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --prod=false --no-optional=false"
+  "npm install -g n && n 20.19.0 && /usr/local/bin/node -v && /usr/local/bin/npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile --prod=false --no-optional=false"
 ]
 
 [phases.build]
-cmds = ["npm exec --yes pnpm@9.15.9 -- run build"]
+cmds = ["/usr/local/bin/npm exec --yes pnpm@9.15.9 -- run build"]
 
 [start]
-cmd = "npm exec --yes pnpm@9.15.9 -- run start"
+cmd = "/usr/local/bin/npm exec --yes pnpm@9.15.9 -- run start"
