@@ -1,16 +1,13 @@
 [phases.setup]
 nixPkgs = ["nodejs_20", "python3", "pkg-config", "gcc", "gnumake"]
 
-[variables]
-NAPI_RS_FORCE_WASI = "1"
-
 [phases.install]
 cmds = [
-  "npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile"
+  "NAPI_RS_FORCE_WASI=1 npm exec --yes pnpm@9.15.9 -- install --frozen-lockfile"
 ]
 
 [phases.build]
-cmds = ["npm exec --yes pnpm@9.15.9 -- run build"]
+cmds = ["NAPI_RS_FORCE_WASI=1 npm exec --yes pnpm@9.15.9 -- run build"]
 
 [start]
-cmd = "npm exec --yes pnpm@9.15.9 -- run start"
+cmd = "NAPI_RS_FORCE_WASI=1 npm exec --yes pnpm@9.15.9 -- run start"
