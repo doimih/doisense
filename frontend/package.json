@@ -24,7 +24,7 @@
     "nuxt": "3.21.1",
     "nuxt-studio": "1.4.0",
     "pinia": "^2.2.4",
-    "vue": "^3.5.11",
+    "vue": "^3.5.32",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
