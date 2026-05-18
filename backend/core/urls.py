@@ -15,6 +15,7 @@ urlpatterns = [
     path("contact/config", views.ContactConfigView.as_view(), name="contact-config"),
     path("contact/submit", views.ContactSubmitView.as_view(), name="contact-submit"),
     path("settings/images", views.SettingsImageLibraryView.as_view(), name="settings-images"),
+    path("settings/qa-ips", views.QAIPAllowlistView.as_view(), name="settings-qa-ips"),
     path("wellbeing/checkins", views.WellbeingCheckinView.as_view(), name="wellbeing-checkins"),
     path("wellbeing/summary", views.WellbeingSummaryView.as_view(), name="wellbeing-summary"),
     path("notifications", views.InAppNotificationListView.as_view(), name="notifications-list"),

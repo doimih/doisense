@@ -118,7 +118,7 @@ usePublicSeo({
 // Refresh user data so the updated plan_tier is reflected immediately
 onMounted(async () => {
   try {
-    const updated = await fetchApi<{ plan_tier: string; is_premium: boolean; membership_tier: string }>('/me')
+    const updated = await fetchApi<Pick<import('~/stores/User').User, 'plan_tier' | 'is_premium' | 'membership_tier'>>('/me')
     if (updated && authStore.user) {
       authStore.setUser({ ...authStore.user, ...updated })
     }

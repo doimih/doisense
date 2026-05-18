@@ -7,13 +7,41 @@ from django.urls import reverse
 env = environ.Env(DEBUG=(bool, False))
 
 
+def _normalize_public_path_prefix(raw_value: str) -> str:
+    value = (raw_value or "").strip()
+    if not value or value == "/":
+        return ""
+    return f"/{value.strip('/')}"
+
+
+def _public_path(*segments: str, trailing_slash: bool = True) -> str:
+    parts = []
+    if PUBLIC_PATH_PREFIX:
+        parts.append(PUBLIC_PATH_PREFIX.strip("/"))
+    parts.extend(segment.strip("/") for segment in segments if segment.strip("/"))
+    if not parts:
+        return "/"
+
+    path = "/" + "/".join(parts)
+    if trailing_slash:
+        path += "/"
+    return path
+
+
 def _perm(permission_codename: str):
     return lambda request: request.user.has_perm(permission_codename)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / ".env")
 
-ADMIN_STATIC_URL = env("STATIC_URL", default="/doisense/ro/admin/static/")
+PUBLIC_PATH_PREFIX = _normalize_public_path_prefix(env("PUBLIC_PATH_PREFIX", default="/doisense"))
+DEFAULT_FRONTEND_BASE_URL = env(
+    "DEFAULT_FRONTEND_BASE_URL",
+    default=f"https://projects.doimih.net{PUBLIC_PATH_PREFIX}" if PUBLIC_PATH_PREFIX else "https://projects.doimih.net",
+)
+ADMIN_SITE_URL = env("ADMIN_SITE_URL", default=DEFAULT_FRONTEND_BASE_URL)
+FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default=DEFAULT_FRONTEND_BASE_URL)
+ADMIN_STATIC_URL = env("STATIC_URL", default=_public_path("ro/admin/static"))
 
 SECRET_KEY = env(
     "SECRET_KEY",
@@ -55,7 +83,7 @@ UNFOLD = {
     "SITE_TITLE": "Doisense Admin",
     "SITE_HEADER": "Doisense",
     "SITE_SYMBOL": "dashboard",
-    "SITE_URL": env("ADMIN_SITE_URL", default="https://projects.doimih.net/doisense"),
+    "SITE_URL": ADMIN_SITE_URL,
     "SHOW_HISTORY": True,
     "STYLES": [
         f"{ADMIN_STATIC_URL}admin/css/unfold_custom_fields.css",
@@ -172,18 +200,6 @@ UNFOLD = {
                         "icon": "backup",
                         "link": lambda request: reverse("admin:core_backupconfig_changelist"),
                         "permission": _perm("core.view_systemconfig"),
-                    },
-                ],
-            },
-            {
-                "title": "Platform Settings",
-                "collapsible": True,
-                "items": [
-                    {
-                        "title": "Social Media API Settings",
-                        "icon": "settings_ethernet",
-                        "link": lambda request: reverse("admin:ai_core_socialmediasettings_changelist"),
-                        "permission": _perm("ai_core.view_socialmediasettings"),
                     },
                 ],
             },
@@ -340,18 +356,6 @@ UNFOLD = {
                         "icon": "monitoring",
                         "link": lambda request: reverse("admin:ai_core_dashboard"),
                         "permission": _perm("ai_core.view_prompt"),
-                    },
-                    {
-                        "title": "Social Media Generator",
-                        "icon": "edit_square",
-                        "link": lambda request: reverse("admin:ai_core_social_generator"),
-                        "permission": _perm("ai_core.add_socialmediapost"),
-                    },
-                    {
-                        "title": "Social Media Content",
-                        "icon": "campaign",
-                        "link": lambda request: reverse("admin:ai_core_socialmediapost_changelist"),
-                        "permission": _perm("ai_core.view_socialmediapost"),
                     },
                 ],
             },
@@ -544,6 +548,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "core.middleware.QAIPAllowlistMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "core.middleware.SystemErrorLoggingMiddleware",
@@ -609,7 +614,7 @@ AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "users.authentication.CookieJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_THROTTLE_RATES": {
@@ -631,6 +636,10 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
+JWT_ACCESS_COOKIE_NAME = env("JWT_ACCESS_COOKIE_NAME", default="doisense_access")
+JWT_REFRESH_COOKIE_NAME = env("JWT_REFRESH_COOKIE_NAME", default="doisense_refresh")
+JWT_COOKIE_SAMESITE = env("JWT_COOKIE_SAMESITE", default="Lax")
+
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
@@ -643,7 +652,18 @@ CSRF_TRUSTED_ORIGINS = env.list(
     default=["https://projects.doimih.net", "http://localhost:3000"],
 )
 
-FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default="https://projects.doimih.net/doisense")
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000 if not DEBUG else 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
+    "SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG
+)
+SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
+
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 
 # Stripe
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")

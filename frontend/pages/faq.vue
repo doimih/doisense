@@ -36,6 +36,7 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
 const { locale } = useI18n()
+const { toAbsolutePublicUrl } = usePublicSiteContext()
 
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
@@ -96,9 +97,29 @@ const faqCopy: Record<string, {
 }
 
 const text = computed(() => faqCopy[localeCode.value] || faqCopy.en)
+const faqStructuredData = computed(() => {
+  const faqUrl = toAbsolutePublicUrl('/faq')
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${faqUrl}#collection`,
+    url: faqUrl,
+    name: text.value.seoTitle,
+    description: text.value.seoDescription,
+    hasPart: text.value.items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.title,
+      description: item.description,
+      url: toAbsolutePublicUrl(item.to),
+    })),
+  }
+})
 
 usePublicSeo({
   title: computed(() => text.value.seoTitle),
   description: computed(() => text.value.seoDescription),
+  structuredData: faqStructuredData,
 })
 </script>

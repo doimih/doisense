@@ -1,3 +1,5 @@
+import ipaddress
+
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.storage import default_storage
@@ -26,6 +28,7 @@ from rest_framework.views import APIView
 from journal.models import JournalQuestion
 from programs.models import GuidedProgram
 from core.analytics import track_event
+from core.email_templates import render_basic_email_html
 
 from .image_utils import convert_uploaded_image_to_webp
 from .models import (
@@ -1071,14 +1074,19 @@ class ContactSubmitView(APIView):
                 use_ssl=config.email_use_ssl,
                 fail_silently=False,
             )
-            EmailMessage(
+            email_message = EmailMessage(
                 subject=f"[Contact] {subject}",
-                body=body,
+                body=render_basic_email_html(
+                    title=f"[Contact] {subject}",
+                    body_text=body,
+                ),
                 from_email=from_email,
                 to=[target_email],
                 reply_to=[email],
                 connection=connection,
-            ).send()
+            )
+            email_message.content_subtype = "html"
+            email_message.send()
         except smtplib.SMTPException:
             return Response(
                 {"detail": "Unable to send message right now. Please try again later."},
@@ -1109,3 +1117,61 @@ class ContactSubmitView(APIView):
         success = bool(data.get("success"))
         score = float(data.get("score") or 0.0)
         return success, score
+
+
+class QAIPAllowlistView(APIView):
+    """Manage the list of IP addresses/CIDRs allowed to access the API during QA.
+
+    GET  /api/settings/qa-ips  — Returns current allowlist as a list of strings.
+    PUT  /api/settings/qa-ips  — Replaces the allowlist. Send {"ips": ["1.2.3.4", "10.0.0.0/8"]}.
+                                  An empty list disables the allowlist (open access).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def _superuser_only(self, request):
+        if not request.user.is_superuser:
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        return None
+
+    def get(self, request):
+        denied = self._superuser_only(request)
+        if denied:
+            return denied
+
+        config = SystemConfig.get_solo()
+        raw = (config.qa_allowed_source_ips or "").strip()
+        ips = [entry.strip() for entry in raw.replace("\n", ",").split(",") if entry.strip()]
+        return Response({"ips": ips})
+
+    def put(self, request):
+        denied = self._superuser_only(request)
+        if denied:
+            return denied
+
+        ips_raw = request.data.get("ips", [])
+        if not isinstance(ips_raw, list):
+            return Response({"detail": "Field 'ips' must be a list."}, status=status.HTTP_400_BAD_REQUEST)
+
+        validated = []
+        errors = []
+        for entry in ips_raw:
+            entry = str(entry).strip()
+            if not entry:
+                continue
+            try:
+                ipaddress.ip_network(entry, strict=False)
+                validated.append(entry)
+            except ValueError:
+                errors.append(entry)
+
+        if errors:
+            return Response(
+                {"detail": "Invalid IP/CIDR entries.", "invalid": errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        config = SystemConfig.get_solo()
+        config.qa_allowed_source_ips = "\n".join(validated)
+        config.save(update_fields=["qa_allowed_source_ips"])
+        return Response({"ips": validated})

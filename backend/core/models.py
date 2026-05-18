@@ -116,6 +116,16 @@ class SystemConfig(models.Model):
     recaptcha_secret_key = models.CharField(max_length=255, blank=True)
     recaptcha_min_score = models.DecimalField(max_digits=3, decimal_places=2, default=0.50)
 
+    # QA access control settings
+    qa_allowed_source_ips = models.TextField(
+        blank=True,
+        default="",
+        help_text=(
+            "Optional allowlist for QA source IPs/CIDRs. "
+            "Use comma or newline separated values (e.g. 203.0.113.10, 198.51.100.0/24)."
+        ),
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

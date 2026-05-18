@@ -149,8 +149,8 @@ Frontend:
 
 ```bash
 cd frontend
-npm ci
-npm run dev
+pnpm install --frozen-lockfile
+pnpm run dev
 ```
 
 Variabile minime utile:
@@ -186,14 +186,29 @@ cd backend && pytest
 Frontend:
 
 ```bash
-cd frontend && npm run test
+cd frontend && pnpm run test
 ```
 
 Lint:
 
 ```bash
 cd backend && ruff check . && black --check .
-cd frontend && npm run lint
+cd frontend && pnpm run lint
+```
+
+Smoke test API QA dedicat:
+
+```bash
+API_BASE=https://qa-api.example.com/doisense/api ./scripts/qa_api_smoke.sh
+```
+
+Pentru validare auth end-to-end pe QA API:
+
+```bash
+API_BASE=https://qa-api.example.com/doisense/api \
+QA_EMAIL=qa.user@example.com \
+QA_PASSWORD='strong-password' \
+./scripts/qa_api_smoke.sh
 ```
 
 ## Mini runbook incident response

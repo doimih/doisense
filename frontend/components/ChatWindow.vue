@@ -220,6 +220,8 @@ interface WellbeingSummary {
   energy_history: Array<{ at: string; energy_level: number }>
 }
 
+type MoodId = 'low' | 'ok' | 'good' | 'great'
+
 const { t } = useI18n()
 const { locale } = useI18n()
 const { fetchApi, getAccessToken, base } = useApi()
@@ -316,14 +318,14 @@ const chatCopy: Record<string, { modules: ChatModule[]; ui: ChatUiText }> = {
 const modules = computed(() => (chatCopy[localeCode.value] || chatCopy.en).modules)
 const text = computed(() => (chatCopy[localeCode.value] || chatCopy.en).ui)
 
-const moods = [
+const moods: Array<{ id: MoodId; emoji: string }> = [
   { id: 'low', emoji: '😔' },
   { id: 'ok', emoji: '😐' },
   { id: 'good', emoji: '🙂' },
   { id: 'great', emoji: '😊' },
 ]
 
-const selectedMood = ref('ok')
+const selectedMood = ref<MoodId>('ok')
 const energyLevel = ref(3)
 const streakDays = ref(0)
 const planDays = ref(7)
@@ -426,7 +428,7 @@ async function loadChatHistory() {
   }
 }
 
-async function saveMood(mood: 'low' | 'ok' | 'good' | 'great') {
+async function saveMood(mood: MoodId) {
   selectedMood.value = mood
   try {
     await fetchApi('/wellbeing/checkins', {

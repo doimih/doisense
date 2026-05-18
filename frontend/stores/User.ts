@@ -11,7 +11,8 @@ export interface User {
   plan_tier: 'free' | 'trial' | 'basic' | 'premium' | 'premium_discounted' | 'vip';
   early_discount_eligible: boolean;
   onboarding_completed: boolean;
-  membership_tier: 'normal' | 'premium';
+  membership_tier: 'free' | 'trial' | 'normal' | 'premium' | 'basic' | 'vip';
+  trial_ends_at?: string | null;
   has_saved_card: boolean;
   is_staff: boolean;
   is_superuser: boolean;

@@ -11,6 +11,9 @@ services:
       context: ./docker/db
       dockerfile: Dockerfile
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
     environment:
       POSTGRES_USER: doisense
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-db-password}
@@ -21,7 +24,7 @@ services:
       - "5432"
     networks:
       - app_internal
-      - traefik
+      - backup_internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U doisense"]
       interval: 5s
@@ -32,6 +35,9 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
     expose:
       - "6379"
     networks:
@@ -48,6 +54,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 512
+    tmpfs:
+      - /tmp
     volumes:
       - doisense_media:/app/media
     expose:
@@ -56,7 +69,7 @@ services:
       - app_internal
       - traefik
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; req = urllib.request.Request('http://localhost:8000/api/health', headers={'X-Forwarded-Proto': 'https'}); urllib.request.urlopen(req, timeout=5)\" || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -65,6 +78,9 @@ services:
       DATABASE_URL: postgres://doisense:${POSTGRES_PASSWORD:-change-me-db-password}@db:5432/doisense
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production-with-at-least-32-characters}
+      PUBLIC_PATH_PREFIX: ${PUBLIC_PATH_PREFIX:-/doisense}
+      ADMIN_SITE_URL: ${ADMIN_SITE_URL:-https://projects.doimih.net/doisense}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://projects.doimih.net/doisense}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,backend,projects.doimih.net}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://projects.doimih.net}
       CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://projects.doimih.net}
@@ -84,25 +100,25 @@ services:
     labels:
       # Rute Traefik doar pentru doisense – nu afectează alte proiecte
       - "traefik.enable=true"
-      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"
-      - "traefik.http.routers.doisense-api.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/api`)"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik_public}"
+      - "traefik.http.routers.doisense-api.rule=${TRAEFIK_API_RULE:-Host(`projects.doimih.net`)&&PathPrefix(`/doisense/api`)}"
       - "traefik.http.routers.doisense-api.entrypoints=websecure"
       - "traefik.http.routers.doisense-api.tls=true"
       - "traefik.http.routers.doisense-api.priority=220"
       - "traefik.http.routers.doisense-api.service=doisense-api"
-      - "traefik.http.routers.doisense-admin.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && (PathPrefix(`/doisense/admin`) || PathPrefix(`/doisense/ro/admin`))"
+      - "traefik.http.routers.doisense-admin.rule=${TRAEFIK_ADMIN_RULE:-Host(`projects.doimih.net`)&&(PathPrefix(`/doisense/admin`)||PathPrefix(`/doisense/ro/admin`))}"
       - "traefik.http.routers.doisense-admin.entrypoints=websecure"
       - "traefik.http.routers.doisense-admin.tls=true"
       - "traefik.http.routers.doisense-admin.priority=200"
       - "traefik.http.routers.doisense-admin.service=doisense-api"
-      - "traefik.http.routers.doisense-media.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense/media`)"
+      - "traefik.http.routers.doisense-media.rule=${TRAEFIK_MEDIA_RULE:-Host(`projects.doimih.net`)&&PathPrefix(`/doisense/media`)}"
       - "traefik.http.routers.doisense-media.entrypoints=websecure"
       - "traefik.http.routers.doisense-media.tls=true"
       - "traefik.http.routers.doisense-media.priority=205"
       - "traefik.http.routers.doisense-media.service=doisense-api"
       - "traefik.http.services.doisense-api.loadbalancer.server.port=8000"
       # Strip prefix ca backend-ul să primească /api/...
-      - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=/doisense"
+      - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=${TRAEFIK_API_STRIP_PREFIXES:-/doisense}"
       - "traefik.http.routers.doisense-api.middlewares=doisense-api-stripprefix@docker"
 
   frontend:
@@ -110,29 +126,38 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NUXT_PUBLIC_APP_BASE_URL: /doisense/
+        NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-/doisense/}
+        NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://projects.doimih.net}
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    tmpfs:
+      - /tmp
     expose:
       - "3000"
     networks:
       - app_internal
       - traefik
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/doisense/ || exit 1"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000${FRONTEND_HEALTHCHECK_PATH:-/doisense/}').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))\" || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
     environment:
-      NUXT_PUBLIC_APP_BASE_URL: /doisense/
-      NUXT_PUBLIC_API_BASE: https://projects.doimih.net/doisense/api
+      NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-/doisense/}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://projects.doimih.net}
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-https://projects.doimih.net/doisense/api}
       NUXT_PUBLIC_GOOGLE_CLIENT_ID: ${NUXT_PUBLIC_GOOGLE_CLIENT_ID:-}
       NUXT_PUBLIC_APPLE_CLIENT_ID: ${NUXT_PUBLIC_APPLE_CLIENT_ID:-}
       NUXT_PUBLIC_APPLE_REDIRECT_URI: ${NUXT_PUBLIC_APPLE_REDIRECT_URI:-}
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"
-      - "traefik.http.routers.doisense-web.rule=Host(`${TRAEFIK_HOST:-projects.doimih.net}`) && PathPrefix(`/doisense`)"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik_public}"
+      - "traefik.http.routers.doisense-web.rule=${TRAEFIK_WEB_RULE:-Host(`projects.doimih.net`)&&PathPrefix(`/doisense`)}"
       - "traefik.http.routers.doisense-web.entrypoints=websecure"
       - "traefik.http.routers.doisense-web.tls=true"
       - "traefik.http.routers.doisense-web.priority=150"
@@ -140,12 +165,68 @@ services:
       - "traefik.http.services.doisense-web.loadbalancer.server.port=3000"
       # Nu strip prefix – Nuxt servește cu baseURL /doisense
 
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 512
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-doisense-backup}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-minio-password}
+    volumes:
+      - doisense_backup_data:/data
+    expose:
+      - "9000"
+      - "9001"
+    networks:
+      - backup_internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    read_only: true
+    environment:
+      MC_CONFIG_DIR: /tmp/.mc
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-doisense-backup}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-minio-password}
+      MINIO_BACKUP_BUCKET: ${MINIO_BACKUP_BUCKET:-doisense-backup}
+    tmpfs:
+      - /tmp
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - "mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\" && mc mb --ignore-existing \"local/$$MINIO_BACKUP_BUCKET\" && mc anonymous set private \"local/$$MINIO_BACKUP_BUCKET\" || true"
+    networks:
+      - backup_internal
+
 networks:
   app_internal:
+    name: ${APP_INTERNAL_NETWORK:-doisense_app_internal}
+    internal: true
+  backup_internal:
+    name: ${BACKUP_INTERNAL_NETWORK:-doisense_backup_internal}
     internal: true
   traefik:
     external: true
-    name: ${TRAEFIK_NETWORK:-traefik}
+    name: ${TRAEFIK_NETWORK:-traefik_public}
 volumes:
   doisense_pgdata:
   doisense_media:
+  doisense_backup_data:

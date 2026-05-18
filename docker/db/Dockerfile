@@ -6,8 +6,10 @@ RUN apt-get update \
 
 ARG WALG_VERSION=v3.0.8
 ARG WALG_ASSET=wal-g-pg-22.04-amd64.tar.gz
+ARG WALG_ASSET_SHA256=b0df1b484035eb5f131db7bbd303d1a460391848fdcce34ba1e0a564cca493e9
 
 RUN wget -qO /tmp/wal-g.tar.gz "https://github.com/wal-g/wal-g/releases/download/${WALG_VERSION}/${WALG_ASSET}" \
+    && echo "${WALG_ASSET_SHA256}  /tmp/wal-g.tar.gz" | sha256sum -c - \
     && tar -xzf /tmp/wal-g.tar.gz -C /tmp \
     && install -m 0755 /tmp/wal-g-pg-22.04-amd64 /usr/local/bin/wal-g \
     && rm -f /tmp/wal-g.tar.gz \

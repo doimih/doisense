@@ -1,9 +1,7 @@
 from pathlib import Path
-from uuid import uuid4
 
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
-from django.core.files.storage import default_storage
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -15,42 +13,9 @@ from core.audit import extract_form_changes, log_admin_change
 from .auditor import audit_prompt
 from .forms import PromptAdminForm
 from .monitoring import build_ai_health_dashboard_context
-from .models import Prompt, PromptVersion, SocialMediaPost, SocialMediaSettings
+from .models import Prompt, PromptVersion
 from .modifier import suggest_improved_prompt
 from .orchestrator import build_final_prompt
-from .publish_instagram import publish_to_instagram
-from .publish_linkedin import publish_to_linkedin
-from .publish_tiktok import publish_to_tiktok
-from .social_media import generate_social_image, generate_social_post, save_generated_post
-
-
-PLATFORM_MEDIA_SPECS = {
-    SocialMediaPost.PLATFORM_INSTAGRAM: {
-        "image": "1080 x 1350 px (recommended feed portrait)",
-        "video": "1080 x 1920 px, 9:16 (Reels)",
-    },
-    SocialMediaPost.PLATFORM_TIKTOK: {
-        "image": "1080 x 1920 px (cover/creative)",
-        "video": "1080 x 1920 px, 9:16 (required format)",
-    },
-    SocialMediaPost.PLATFORM_LINKEDIN: {
-        "image": "1200 x 627 px (shared post image)",
-        "video": "1920 x 1080 px, 16:9 (recommended)",
-    },
-}
-
-
-def _sanitize_media_folder(folder: str, default: str) -> str:
-    cleaned = (folder or "").strip().strip("/")
-    return cleaned or default
-
-
-def _save_uploaded_media(file_obj, target_folder: str) -> str:
-    safe_name = Path(file_obj.name).name
-    unique_name = f"{uuid4().hex}_{safe_name}"
-    relative_path = f"{target_folder}/{unique_name}".strip("/")
-    stored_path = default_storage.save(relative_path, file_obj)
-    return default_storage.url(stored_path)
 
 
 def ai_health_dashboard(request):
@@ -65,116 +30,6 @@ def ai_health_dashboard(request):
     return TemplateResponse(request, "admin/ai_core/dashboard.html", context)
 
 
-def social_generator_view(request):
-    if not request.user.has_perm("ai_core.add_socialmediapost"):
-        raise PermissionDenied
-
-    generated = None
-    selected_platform = SocialMediaPost.PLATFORM_INSTAGRAM
-    topic = ""
-
-    settings_obj = SocialMediaSettings.load()
-    media_image_folder = _sanitize_media_folder(settings_obj.media_image_folder, "social/images")
-    media_video_folder = _sanitize_media_folder(settings_obj.media_video_folder, "social/videos")
-
-    if request.method == "POST":
-        action = request.POST.get("action", "generate")
-        selected_platform = request.POST.get("platform", SocialMediaPost.PLATFORM_INSTAGRAM).lower().strip()
-        topic = request.POST.get("topic", "").strip()
-        uploaded_image = request.FILES.get("image_file")
-        uploaded_video = request.FILES.get("video_file")
-        image_media_path = (request.POST.get("image_media_path") or "").strip().lstrip("/")
-        video_media_path = (request.POST.get("video_media_path") or "").strip().lstrip("/")
-
-        uploaded_image_url = ""
-        uploaded_video_url = ""
-
-        if uploaded_image:
-            uploaded_image_url = _save_uploaded_media(uploaded_image, media_image_folder)
-            messages.success(request, f"Image uploaded to media folder: {media_image_folder}")
-        elif image_media_path:
-            uploaded_image_url = default_storage.url(image_media_path)
-
-        if uploaded_video:
-            uploaded_video_url = _save_uploaded_media(uploaded_video, media_video_folder)
-            messages.success(request, f"Video uploaded to media folder: {media_video_folder}")
-        elif video_media_path:
-            uploaded_video_url = default_storage.url(video_media_path)
-
-        if action == "generate":
-            generated = generate_social_post(topic=topic, platform=selected_platform)
-            generated["image_url"] = uploaded_image_url or generate_social_image(
-                f"{generated.get('wellness_topic', topic)} {selected_platform} social post"
-            )
-            generated["video_url"] = uploaded_video_url
-            saved = save_generated_post(
-                {
-                    **generated,
-                    "status": SocialMediaPost.STATUS_DRAFT,
-                    "publish_log": "Auto-saved from Social Media Generator.",
-                }
-            )
-            generated["saved_post_id"] = saved.pk
-            messages.success(request, f"Post generated and saved as draft (ID: {saved.pk}).")
-        elif action == "save":
-            post_id = request.POST.get("post_id", "").strip()
-            data = {
-                "platform": selected_platform,
-                "title": request.POST.get("title", "").strip(),
-                "body": request.POST.get("body", "").strip(),
-                "hashtags": request.POST.get("hashtags", "").strip(),
-                "image_url": uploaded_image_url or request.POST.get("image_url", "").strip(),
-                "video_url": uploaded_video_url or request.POST.get("video_url", "").strip(),
-                "wellness_topic": request.POST.get("wellness_topic", topic).strip() or topic,
-                "status": SocialMediaPost.STATUS_DRAFT,
-            }
-            if post_id:
-                post = SocialMediaPost.objects.filter(pk=post_id).first()
-                if post:
-                    post.platform = data["platform"]
-                    post.title = data["title"]
-                    post.body = data["body"]
-                    post.hashtags = data["hashtags"]
-                    post.image_url = data["image_url"]
-                    post.video_url = data["video_url"]
-                    post.wellness_topic = data["wellness_topic"]
-                    post.status = SocialMediaPost.STATUS_DRAFT
-                    post.publish_log = (post.publish_log + "\nSaved from Social Media Generator.").strip()
-                    post.save()
-                    messages.success(request, f"Draft post #{post.pk} updated.")
-                    generated = {
-                        **data,
-                        "saved_post_id": post.pk,
-                    }
-                else:
-                    saved = save_generated_post({**data, "publish_log": "Saved from Social Media Generator."})
-                    messages.success(request, f"Draft post #{saved.pk} saved.")
-                    generated = {
-                        **data,
-                        "saved_post_id": saved.pk,
-                    }
-            else:
-                saved = save_generated_post({**data, "publish_log": "Saved from Social Media Generator."})
-                messages.success(request, f"Draft post #{saved.pk} saved.")
-                generated = {
-                    **data,
-                    "saved_post_id": saved.pk,
-                }
-
-    context = {
-        **admin.site.each_context(request),
-        "title": "Social Media Generator",
-        "generated": generated,
-        "selected_platform": selected_platform,
-        "topic": topic,
-        "platform_choices": SocialMediaPost.PLATFORM_CHOICES,
-        "platform_media_specs": PLATFORM_MEDIA_SPECS,
-        "media_image_folder": media_image_folder,
-        "media_video_folder": media_video_folder,
-    }
-    return TemplateResponse(request, "admin/ai_core/social_generator.html", context)
-
-
 def _patch_admin_urls() -> None:
     if getattr(admin.site, "_ai_core_dashboard_patched", False):
         return
@@ -187,11 +42,6 @@ def _patch_admin_urls() -> None:
                 "ai_core/dashboard/",
                 admin.site.admin_view(ai_health_dashboard),
                 name="ai_core_dashboard",
-            ),
-            path(
-                "ai_core/social-generator/",
-                admin.site.admin_view(social_generator_view),
-                name="ai_core_social_generator",
             ),
         ]
         return custom_urls + original_get_urls()
@@ -572,127 +422,3 @@ class PromptVersionAdmin(ModelAdmin):
         return None
 
 
-@admin.register(SocialMediaPost)
-class SocialMediaPostAdmin(ModelAdmin):
-    list_display = ("platform", "title", "wellness_topic", "status", "created_at")
-    list_filter = ("platform", "wellness_topic", "status")
-    search_fields = ("title", "body")
-    readonly_fields = ("created_at", "posted_at", "publish_log")
-    actions = [
-        "publish_selected_to_instagram",
-        "publish_selected_to_tiktok",
-        "publish_selected_to_linkedin",
-    ]
-
-    def _publish_queryset(self, request, queryset, platform: str, publisher):
-        success_count = 0
-        skipped_count = 0
-        fail_count = 0
-
-        for post in queryset:
-            if post.platform != platform:
-                skipped_count += 1
-                post.publish_log = (
-                    post.publish_log
-                    + f"\nSkipped publish action because post platform is {post.platform}, not {platform}."
-                ).strip()
-                post.save(update_fields=["publish_log"])
-                continue
-
-            ok, _ = publisher(post)
-            if ok:
-                success_count += 1
-            else:
-                fail_count += 1
-
-        if success_count:
-            self.message_user(request, f"Published {success_count} post(s) to {platform.title()}.", level=messages.SUCCESS)
-        if fail_count:
-            self.message_user(request, f"{fail_count} post(s) failed publishing to {platform.title()}. Check publish_log.", level=messages.ERROR)
-        if skipped_count:
-            self.message_user(
-                request,
-                f"Skipped {skipped_count} post(s) because selected platform did not match action target.",
-                level=messages.WARNING,
-            )
-
-    @admin.action(description="Publish to Instagram")
-    def publish_selected_to_instagram(self, request, queryset):
-        self._publish_queryset(request, queryset, SocialMediaPost.PLATFORM_INSTAGRAM, publish_to_instagram)
-
-    @admin.action(description="Publish to TikTok")
-    def publish_selected_to_tiktok(self, request, queryset):
-        self._publish_queryset(request, queryset, SocialMediaPost.PLATFORM_TIKTOK, publish_to_tiktok)
-
-    @admin.action(description="Publish to LinkedIn")
-    def publish_selected_to_linkedin(self, request, queryset):
-        self._publish_queryset(request, queryset, SocialMediaPost.PLATFORM_LINKEDIN, publish_to_linkedin)
-
-
-@admin.register(SocialMediaSettings)
-class SocialMediaSettingsAdmin(ModelAdmin):
-    fieldsets = (
-        (
-            "Media",
-            {
-                "fields": (
-                    "media_image_folder",
-                    "media_video_folder",
-                ),
-                "description": "Subfolders relative to MEDIA_ROOT where uploads from Social Generator are stored.",
-                "classes": ("tab",),
-            },
-        ),
-        (
-            "Instagram",
-            {
-                "fields": (
-                    "instagram_app_id",
-                    "instagram_app_secret",
-                    "instagram_access_token",
-                    "instagram_refresh_token",
-                    "instagram_business_account_id",
-                    "instagram_token_expires_at",
-                ),
-                "classes": ("tab",),
-            },
-        ),
-        (
-            "TikTok",
-            {
-                "fields": (
-                    "tiktok_app_id",
-                    "tiktok_app_secret",
-                    "tiktok_access_token",
-                    "tiktok_refresh_token",
-                ),
-                "classes": ("tab",),
-            },
-        ),
-        (
-            "LinkedIn",
-            {
-                "fields": (
-                    "linkedin_client_id",
-                    "linkedin_client_secret",
-                    "linkedin_access_token",
-                    "linkedin_refresh_token",
-                    "linkedin_organization_id",
-                    "linkedin_token_expires_at",
-                ),
-                "classes": ("tab",),
-            },
-        ),
-    )
-
-    def has_add_permission(self, request):
-        if SocialMediaSettings.objects.exists():
-            return False
-        return super().has_add_permission(request)
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def changelist_view(self, request, extra_context=None):
-        settings_obj = SocialMediaSettings.load()
-        return redirect(reverse("admin:ai_core_socialmediasettings_change", args=[settings_obj.pk]))

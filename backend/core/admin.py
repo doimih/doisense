@@ -1,4 +1,5 @@
 import imghdr
+import ipaddress
 import os
 import re
 import traceback
@@ -89,6 +90,31 @@ class SystemConfigAdminForm(forms.ModelForm):
             )
         return cleaned_data
 
+    def clean_qa_allowed_source_ips(self):
+        raw_value = (self.cleaned_data.get("qa_allowed_source_ips") or "").strip()
+        if not raw_value:
+            return ""
+
+        entries = []
+        invalid_entries = []
+        for chunk in raw_value.replace("\n", ",").split(","):
+            value = chunk.strip()
+            if not value:
+                continue
+            try:
+                ipaddress.ip_network(value, strict=False)
+            except ValueError:
+                invalid_entries.append(value)
+            else:
+                entries.append(value)
+
+        if invalid_entries:
+            raise forms.ValidationError(
+                "Invalid IP/CIDR entries: " + ", ".join(invalid_entries)
+            )
+
+        return "\n".join(entries)
+
 
 @admin.register(SystemConfig)
 class SystemConfigAdmin(ModelAdmin):
@@ -135,6 +161,14 @@ class SystemConfigAdmin(ModelAdmin):
                     "backup_schedule_minutes",
                     "backup_delta_max_steps",
                     "backup_retention_full_count",
+                )
+            },
+        ),
+        (
+            "QA Access",
+            {
+                "fields": (
+                    "qa_allowed_source_ips",
                 )
             },
         ),

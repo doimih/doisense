@@ -11,7 +11,6 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
     accessToken: null as string | null,
-    refreshToken: null as string | null,
   }),
   getters: {
     isLoggedIn(state): boolean {
@@ -36,13 +35,8 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    setTokens(access: string, refresh: string) {
+    setTokens(access: string) {
       this.accessToken = access
-      this.refreshToken = refresh
-      if (import.meta.client) {
-        localStorage.setItem('doisense_access', access)
-        localStorage.setItem('doisense_refresh', refresh)
-      }
     },
     setUser(user: User) {
       this.user = user
@@ -81,12 +75,13 @@ export const useAuthStore = defineStore('auth', {
     async login(email: string, password: string) {
       const config = useRuntimeConfig()
       const base = normalizeApiBase(config.public.apiBase as string)
-      const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/login`, {
+      const res = await $fetch<{ user: User; access: string }>(`${base}/auth/login`, {
         method: 'POST',
         body: { email, password },
+        credentials: 'include',
       })
       this.setUser(res.user)
-      this.setTokens(res.access, res.refresh)
+      this.setTokens(res.access)
       await this.trackFrontendEvent('user_activated', { auth_method: 'email' })
     },
     async loginWithSocial(
@@ -97,7 +92,7 @@ export const useAuthStore = defineStore('auth', {
     ) {
       const config = useRuntimeConfig()
       const base = normalizeApiBase(config.public.apiBase as string)
-      const res = await $fetch<{ user: User; access: string; refresh: string }>(`${base}/auth/social`, {
+      const res = await $fetch<{ user: User; access: string }>(`${base}/auth/social`, {
         method: 'POST',
         body: {
           provider,
@@ -107,37 +102,36 @@ export const useAuthStore = defineStore('auth', {
           accepted_privacy: legalConsent.acceptedPrivacy,
           accepted_ai_usage: legalConsent.acceptedAiUsage,
         },
+        credentials: 'include',
       })
       this.setUser(res.user)
-      this.setTokens(res.access, res.refresh)
+      this.setTokens(res.access)
       await this.trackFrontendEvent('user_activated', { auth_method: provider })
     },
-    logout() {
+    async logout() {
+      try {
+        const config = useRuntimeConfig()
+        const base = normalizeApiBase(config.public.apiBase as string)
+        await $fetch(`${base}/auth/logout`, { method: 'POST', credentials: 'include' })
+      } catch {
+        // Local cleanup should still run even if logout API is unavailable.
+      }
+
       this.user = null
       this.accessToken = null
-      this.refreshToken = null
       if (import.meta.client) {
-        localStorage.removeItem('doisense_access')
-        localStorage.removeItem('doisense_refresh')
         localStorage.removeItem('doisense_user')
       }
     },
     hydrate() {
       if (import.meta.client) {
-        const access = localStorage.getItem('doisense_access')
-        const refresh = localStorage.getItem('doisense_refresh')
         const userStr = localStorage.getItem('doisense_user')
-        if (access && refresh) {
-          this.accessToken = access
-          this.refreshToken = refresh
-          if (userStr) {
-            try {
-              this.user = JSON.parse(userStr) as User
-            } catch {
-              // Keep tokens so user can be rehydrated from /me via refresh flow.
-              this.user = null
-              localStorage.removeItem('doisense_user')
-            }
+        if (userStr) {
+          try {
+            this.user = JSON.parse(userStr) as User
+          } catch {
+            this.user = null
+            localStorage.removeItem('doisense_user')
           }
         }
       }

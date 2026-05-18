@@ -59,22 +59,15 @@ export function useApi() {
 
   async function refreshAccessToken(): Promise<string | null> {
     await authStore.hydrate()
-    const refresh = authStore.refreshToken
-    if (!refresh) {
-      return null
-    }
 
     try {
       const res = await $fetch<{ access: string }>('/auth/refresh', {
         baseURL: base,
         method: 'POST',
-        body: { refresh },
+        credentials: 'include',
       })
       if (res?.access) {
         authStore.accessToken = res.access
-        if (import.meta.client) {
-          localStorage.setItem('doisense_access', res.access)
-        }
         return res.access
       }
     } catch (error) {
@@ -106,6 +99,7 @@ export function useApi() {
 
       const requestConfig = {
         baseURL: base,
+        credentials: 'include',
         ...(options as Record<string, unknown>),
         headers: { ...headers, ...options.headers },
         body: isFormData
@@ -120,7 +114,7 @@ export function useApi() {
     try {
       return await requestWithToken(initialToken)
     } catch (error) {
-      if (!isUnauthorized(error) || !initialToken) {
+      if (!isUnauthorized(error)) {
         throw error
       }
 

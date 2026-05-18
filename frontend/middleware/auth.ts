@@ -31,7 +31,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     const bridged = await fetchApi<SessionBridgeResponse>('/auth/session-bridge')
     if (bridged?.access && bridged?.refresh && bridged?.user) {
       authStore.setUser(bridged.user)
-      authStore.setTokens(bridged.access, bridged.refresh)
+      authStore.setTokens(bridged.access)
       return
     }
   } catch {

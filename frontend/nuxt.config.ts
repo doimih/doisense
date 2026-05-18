@@ -1,9 +1,51 @@
 import { defineNuxtConfig } from "nuxt/config";
 
+const normalizeAppBaseUrl = (value?: string) => {
+  const normalized = (value || "/doisense/").trim();
+  if (!normalized || normalized === "/") {
+    return "/";
+  }
+
+  return `/${normalized.replace(/^\/+|\/+$/g, "")}/`;
+};
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const appBaseUrl = normalizeAppBaseUrl(process.env.NUXT_PUBLIC_APP_BASE_URL);
+const appBasePath = appBaseUrl === "/" ? "" : appBaseUrl.replace(/\/$/, "");
+const withBase = (path: string) => `${appBasePath}${path.startsWith("/") ? path : `/${path}`}` || "/";
+const adminBasePath = withBase("/ro/admin");
+const routeRules = {
+  "/**": {
+    headers: {
+      "cache-control": "no-store",
+    },
+  },
+  "/_nuxt/**": {
+    headers: {
+      "cache-control": "public, max-age=31536000, immutable",
+    },
+  },
+  ...(appBasePath
+    ? {
+        [`${appBasePath}/**`]: {
+          headers: {
+            "cache-control": "no-store",
+          },
+        },
+        [`${appBasePath}/_nuxt/**`]: {
+          headers: {
+            "cache-control": "public, max-age=31536000, immutable",
+          },
+        },
+      }
+    : {}),
+};
+
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   app: {
-    baseURL: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense/",
+    baseURL: appBaseUrl,
     head: {
       title: "Doisense",
       meta: [
@@ -15,12 +57,12 @@ export default defineNuxtConfig({
         { name: "mobile-web-app-capable", content: "yes" },
       ],
       link: [
-        { rel: "apple-touch-icon", href: "/doisense/apple-touch-icon.png" },
+        { rel: "apple-touch-icon", href: withBase("/apple-touch-icon.png") },
       ],
       script: [
         {
           key: "chunk-recovery",
-          src: "/doisense/chunk-recovery.js",
+          src: withBase("/chunk-recovery.js"),
           defer: true,
         },
       ],
@@ -29,7 +71,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || "https://projects.doimih.net",
-      appBaseUrl: process.env.NUXT_PUBLIC_APP_BASE_URL || "/doisense/",
+      appBaseUrl,
       apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000/api",
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",
       appleClientId: process.env.NUXT_PUBLIC_APPLE_CLIENT_ID || "",
@@ -42,28 +84,7 @@ export default defineNuxtConfig({
   },
   nitro: {
     compressPublicAssets: true,
-    routeRules: {
-      "/**": {
-        headers: {
-          "cache-control": "no-store",
-        },
-      },
-      "/doisense/**": {
-        headers: {
-          "cache-control": "no-store",
-        },
-      },
-      "/_nuxt/**": {
-        headers: {
-          "cache-control": "public, max-age=31536000, immutable",
-        },
-      },
-      "/doisense/_nuxt/**": {
-        headers: {
-          "cache-control": "public, max-age=31536000, immutable",
-        },
-      },
-    },
+    routeRules,
   },
   sourcemap: {
     client: process.env.NODE_ENV !== "production",
@@ -74,25 +95,25 @@ export default defineNuxtConfig({
     disable: false,
     registerType: "autoUpdate",
     manifest: {
-      id: "/doisense/",
+      id: appBaseUrl,
       name: "Doisense",
       short_name: "Doisense",
       description: "Your wellbeing companion. Journal, chat with AI, and follow guided programs.",
       theme_color: "#0f766e",
       background_color: "#f3f5f8",
       display: "standalone",
-      start_url: "/doisense/",
-      scope: "/doisense/",
+      start_url: appBaseUrl,
+      scope: appBaseUrl,
       lang: "en",
       icons: [
         {
-            src: "/doisense/pwa-192x192.png",
+            src: withBase("/pwa-192x192.png"),
           sizes: "192x192",
             type: "image/png",
           purpose: "any maskable",
         },
         {
-            src: "/doisense/pwa-512x512.png",
+            src: withBase("/pwa-512x512.png"),
           sizes: "512x512",
             type: "image/png",
           purpose: "any maskable",
@@ -100,9 +121,9 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/doisense/",
+      navigateFallback: appBaseUrl,
       navigateFallbackDenylist: [
-        /^\/doisense\/(?:[a-z]{2}\/)?admin(?:\/|$)/,
+        new RegExp(`^${escapeRegExp(adminBasePath)}(?:/|$)`),
       ],
       globPatterns: ["**/*.{js,css,html,ico,png,svg,json,txt,woff2}"],
     },

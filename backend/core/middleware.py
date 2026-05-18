@@ -1,4 +1,9 @@
+import ipaddress
+
+from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
+
+from .system_config import get_qa_allowed_source_ips
 
 from .models import SystemErrorEvent
 
@@ -44,3 +49,64 @@ class SystemErrorLoggingMiddleware(MiddlewareMixin):
             return None
 
         return None
+
+
+class QAIPAllowlistMiddleware(MiddlewareMixin):
+    """Restrict API access to configured source IPs/CIDRs for QA environments."""
+
+    _EXEMPT_PATHS = {
+        "/api/health",
+        "/api/health/",
+    }
+
+    def _client_ip(self, request) -> str:
+        xff = (request.META.get("HTTP_X_FORWARDED_FOR", "") or "").strip()
+        if xff:
+            # Left-most IP is the original client according to X-Forwarded-For convention.
+            return xff.split(",")[0].strip()
+
+        x_real_ip = (request.META.get("HTTP_X_REAL_IP", "") or "").strip()
+        if x_real_ip:
+            return x_real_ip
+
+        return (request.META.get("REMOTE_ADDR", "") or "").strip()
+
+    def _is_allowed(self, client_ip: str, allowed_entries: list[str]) -> bool:
+        try:
+            ip_obj = ipaddress.ip_address(client_ip)
+        except ValueError:
+            return False
+
+        for raw in allowed_entries:
+            try:
+                net = ipaddress.ip_network(raw, strict=False)
+            except ValueError:
+                continue
+            if ip_obj in net:
+                return True
+
+        return False
+
+    def process_request(self, request):
+        path = (request.path or "")
+        if not path.startswith("/api/"):
+            return None
+
+        if path in self._EXEMPT_PATHS:
+            return None
+
+        allowed_entries = get_qa_allowed_source_ips()
+        if not allowed_entries:
+            return None
+
+        client_ip = self._client_ip(request)
+        if self._is_allowed(client_ip, allowed_entries):
+            return None
+
+        return JsonResponse(
+            {
+                "detail": "Forbidden: source IP is not allowlisted.",
+                "code": "ip_not_allowed",
+            },
+            status=403,
+        )

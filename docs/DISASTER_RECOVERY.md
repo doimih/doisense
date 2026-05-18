@@ -8,6 +8,16 @@ Acest document descrie pașii minimi pentru backup, validare restore și restore
 - Serviciul db pornit
 - Configurație backup activă în admin (System Configuration -> Backup)
 - Credențiale WAL-G valide în configurarea platformei
+- Storage intern pentru backup pornit (serviciul `minio` din compose)
+
+Configurare recomandată pentru storage intern (MinIO):
+- Endpoint S3: `http://minio:9000`
+- Bucket: valoarea `MINIO_BACKUP_BUCKET` (implicit `doisense-backup`)
+- Region: `eu-central` (sau valoare consistentă în admin)
+- Force path style: activat
+
+Notă:
+- Serviciul `minio-init` creează idempotent bucket-ul la pornirea stack-ului.
 
 ## 2. Daily Backup
 

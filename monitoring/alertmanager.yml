@@ -16,22 +16,14 @@ route:
 receivers:
   - name: ops-default
     email_configs:
-      - to: ${ALERTS_EMAIL_TO:-ops@doisense.eu}
-        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.eu}
-        smarthost: ${ALERTS_SMARTHOST:-smtp.gmail.com:587}
-        auth_username: ${ALERTS_SMTP_USERNAME:-}
-        auth_password: ${ALERTS_SMTP_PASSWORD:-}
+      - to: ops@doisense.eu
+        from: alerts@doisense.eu
+        smarthost: smtp.gmail.com:587
         require_tls: true
 
   - name: ops-critical
     email_configs:
-      - to: ${ALERTS_EMAIL_TO:-ops@doisense.eu}
-        from: ${ALERTS_EMAIL_FROM:-alerts@doisense.eu}
-        smarthost: ${ALERTS_SMARTHOST:-smtp.gmail.com:587}
-        auth_username: ${ALERTS_SMTP_USERNAME:-}
-        auth_password: ${ALERTS_SMTP_PASSWORD:-}
+      - to: ops@doisense.eu
+        from: alerts@doisense.eu
+        smarthost: smtp.gmail.com:587
         require_tls: true
-    slack_configs:
-      - api_url: ${ALERTS_SLACK_WEBHOOK_URL:-}
-        channel: ${ALERTS_SLACK_CHANNEL:-#ops-alerts}
-        send_resolved: true

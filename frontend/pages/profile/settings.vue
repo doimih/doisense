@@ -20,6 +20,20 @@
     </div>
 
     <template v-else>
+      <!-- Submenu links -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <NuxtLink
+          :to="localePath('/profile/qa-ips')"
+          class="flex items-start gap-3 rounded-xl border border-sky-200 bg-white p-4 shadow-sm transition hover:border-sky-400 hover:bg-sky-50"
+        >
+          <span class="mt-0.5 text-2xl">🛡️</span>
+          <div>
+            <p class="font-semibold text-slate-900">{{ text.qaIpsTitle }}</p>
+            <p class="mt-0.5 text-xs text-slate-500">{{ text.qaIpsSubtitle }}</p>
+          </div>
+        </NuxtLink>
+      </div>
+
       <div class="rounded-xl border border-sky-200 bg-white p-4 shadow-sm">
         <form class="space-y-3" @submit.prevent="uploadImage">
           <div>
@@ -125,6 +139,8 @@ const text = computed(() => {
       uploadFailed: 'Incarcarea a esuat.',
       copied: 'URL copiat in clipboard.',
       copyFailed: 'Nu am putut copia URL-ul. Copiaza manual din browser.',
+      qaIpsTitle: 'Whitelist IP pentru QA',
+      qaIpsSubtitle: 'Gestioneaza IP-urile care au voie sa acceseze API-ul in modul QA.',
     },
     en: {
       title: 'Image Settings',
@@ -145,6 +161,8 @@ const text = computed(() => {
       uploadFailed: 'Upload failed.',
       copied: 'URL copied to clipboard.',
       copyFailed: 'Could not copy URL. Copy manually from browser.',
+      qaIpsTitle: 'QA IP Whitelist',
+      qaIpsSubtitle: 'Manage IP addresses allowed to access the API in QA mode.',
     },
     de: {
       title: 'Bildeinstellungen',
@@ -165,6 +183,8 @@ const text = computed(() => {
       uploadFailed: 'Upload fehlgeschlagen.',
       copied: 'URL in die Zwischenablage kopiert.',
       copyFailed: 'URL konnte nicht kopiert werden. Bitte manuell kopieren.',
+      qaIpsTitle: 'QA IP-Whitelist',
+      qaIpsSubtitle: 'Verwaltung der IP-Adressen fuer den QA-API-Zugang.',
     },
     fr: {
       title: 'Parametres images',
@@ -185,6 +205,8 @@ const text = computed(() => {
       uploadFailed: 'Echec du telechargement.',
       copied: 'URL copiee dans le presse-papiers.',
       copyFailed: 'Impossible de copier l\'URL. Copiez-la manuellement.',
+      qaIpsTitle: 'Liste blanche IP QA',
+      qaIpsSubtitle: 'Gerez les adresses IP autorisees a acceder a l\'API en mode QA.',
     },
     it: {
       title: 'Impostazioni immagini',
@@ -205,6 +227,8 @@ const text = computed(() => {
       uploadFailed: 'Caricamento fallito.',
       copied: 'URL copiato negli appunti.',
       copyFailed: 'Impossibile copiare URL. Copia manualmente dal browser.',
+      qaIpsTitle: 'Whitelist IP per QA',
+      qaIpsSubtitle: 'Gestisci gli indirizzi IP autorizzati ad accedere all\'API in modalita QA.',
     },
     es: {
       title: 'Ajustes de imagenes',
@@ -225,6 +249,8 @@ const text = computed(() => {
       uploadFailed: 'La subida fallo.',
       copied: 'URL copiada al portapapeles.',
       copyFailed: 'No se pudo copiar la URL. Copia manualmente desde el navegador.',
+      qaIpsTitle: 'Lista blanca IP para QA',
+      qaIpsSubtitle: 'Gestiona las direcciones IP autorizadas a acceder a la API en modo QA.',
     },
     pl: {
       title: 'Ustawienia obrazow',
@@ -245,6 +271,8 @@ const text = computed(() => {
       uploadFailed: 'Przesylanie nie powiodlo sie.',
       copied: 'URL skopiowany do schowka.',
       copyFailed: 'Nie mozna skopiowac URL. Skopiuj recznie z przegladarki.',
+      qaIpsTitle: 'Whitelist IP dla QA',
+      qaIpsSubtitle: 'Zarzadzaj adresami IP uprawnionymi do dostepu do API w trybie QA.',
     },
   }[localeCode.value] || {
     title: 'Image Settings',
@@ -265,6 +293,8 @@ const text = computed(() => {
     uploadFailed: 'Upload failed.',
     copied: 'URL copied to clipboard.',
     copyFailed: 'Could not copy URL. Copy manually from browser.',
+    qaIpsTitle: 'QA IP Whitelist',
+    qaIpsSubtitle: 'Manage IP addresses allowed to access the API in QA mode.',
   }
 })
 

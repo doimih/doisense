@@ -9,6 +9,7 @@ urlpatterns = [
     path("session-bridge", views.SessionBridgeLoginView.as_view(), name="auth-session-bridge"),
     path("social", views.SocialLoginView.as_view(), name="auth-social-login"),
     path("refresh", views.RefreshView.as_view(), name="auth-refresh"),
+    path("logout", views.LogoutView.as_view(), name="auth-logout"),
     path("recover", views.PasswordRecoveryRequestView.as_view(), name="auth-recover"),
     path("recover/confirm", views.PasswordResetConfirmView.as_view(), name="auth-recover-confirm"),
 ]

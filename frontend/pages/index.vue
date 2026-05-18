@@ -187,6 +187,7 @@ const authStore = useAuthStore()
 const isHydrated = ref(false)
 const { locale, t } = useI18n()
 const { cmsPage } = useCmsStaticPage('home')
+const { toAbsolutePublicUrl } = usePublicSiteContext()
 type HomeCard = { title: string; description: string }
 
 function stripHtml(value: string) {
@@ -260,10 +261,57 @@ const quickLinks = computed(() => [
 
 const seoTitle = computed(() => t('home.seoTitle'))
 const seoDescription = computed(() => t('home.seoDesc'))
+const homeStructuredData = computed(() => {
+  const homeUrl = toAbsolutePublicUrl('/')
+  const organizationId = `${homeUrl}#organization`
+  const websiteId = `${homeUrl}#website`
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': organizationId,
+        name: 'Doisense',
+        url: homeUrl,
+        logo: {
+          '@type': 'ImageObject',
+          url: toAbsolutePublicUrl('/apple-touch-icon.png'),
+        },
+        description: seoDescription.value,
+      },
+      {
+        '@type': 'WebSite',
+        '@id': websiteId,
+        url: homeUrl,
+        name: 'Doisense',
+        description: seoDescription.value,
+        inLanguage: locale.value || 'en',
+        publisher: {
+          '@id': organizationId,
+        },
+      },
+      {
+        '@type': 'WebPage',
+        '@id': `${homeUrl}#webpage`,
+        url: homeUrl,
+        name: seoTitle.value,
+        description: seoDescription.value,
+        isPartOf: {
+          '@id': websiteId,
+        },
+        about: {
+          '@id': organizationId,
+        },
+      },
+    ],
+  }
+})
 
 usePublicSeo({
   title: seoTitle,
   description: seoDescription,
+  structuredData: homeStructuredData,
 })
 
 onMounted(() => {

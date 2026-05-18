@@ -111,6 +111,7 @@
 const localePath = useLocalePath()
 const { fetchApi } = useApi()
 const { locale } = useI18n()
+const { toAbsolutePublicUrl } = usePublicSiteContext()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
   return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
@@ -457,9 +458,53 @@ onMounted(async () => {
 
 const seoTitle = computed(() => text.value.seoTitle)
 const seoDescription = computed(() => text.value.seoDescription)
+const contactStructuredData = computed(() => {
+  const contactUrl = toAbsolutePublicUrl('/contact')
+  const homeUrl = toAbsolutePublicUrl('/')
+  const organizationId = `${homeUrl}#organization`
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': organizationId,
+        name: 'Doisense',
+        url: homeUrl,
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            email: 'support@doisense.eu',
+            availableLanguage: [localeCode.value],
+            url: contactUrl,
+          },
+          {
+            '@type': 'ContactPoint',
+            contactType: 'privacy support',
+            email: 'privacy@doisense.eu',
+            availableLanguage: [localeCode.value],
+            url: contactUrl,
+          },
+        ],
+      },
+      {
+        '@type': 'ContactPage',
+        '@id': `${contactUrl}#contact-page`,
+        url: contactUrl,
+        name: seoTitle.value,
+        description: seoDescription.value,
+        about: {
+          '@id': organizationId,
+        },
+      },
+    ],
+  }
+})
 
 usePublicSeo({
   title: seoTitle,
   description: seoDescription,
+  structuredData: contactStructuredData,
 })
 </script>

@@ -57,7 +57,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     privacy_accepted_at = models.DateTimeField(null=True, blank=True)
     ai_usage_accepted_at = models.DateTimeField(null=True, blank=True)
     legal_consent_language = models.CharField(max_length=2, blank=True, default="")
-    onboarding_completed = models.BooleanField(default=True)
+    onboarding_completed = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

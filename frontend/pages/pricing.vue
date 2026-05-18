@@ -165,6 +165,7 @@ const localePath = useLocalePath()
 const { locale } = useI18n()
 const authStore = useAuthStore()
 const { fetchApi } = useApi()
+const { toAbsolutePublicUrl } = usePublicSiteContext()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const loadingPlan = ref<string | null>(null)
@@ -890,9 +891,52 @@ const pricingCopy: Record<string, {
 const text = computed(() => pricingCopy[localeCode.value] || pricingCopy.ro)
 const seoTitle = computed(() => text.value.seoTitle)
 const seoDescription = computed(() => text.value.seoDescription)
+const pricingStructuredData = computed(() => {
+  const pricingUrl = toAbsolutePublicUrl('/pricing')
+  const homeUrl = toAbsolutePublicUrl('/')
+  const organizationId = `${homeUrl}#organization`
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': organizationId,
+        name: 'Doisense',
+        url: homeUrl,
+      },
+      {
+        '@type': 'WebPage',
+        '@id': `${pricingUrl}#webpage`,
+        url: pricingUrl,
+        name: seoTitle.value,
+        description: seoDescription.value,
+      },
+      ...text.value.plans.map((plan) => ({
+        '@type': 'Offer',
+        '@id': `${pricingUrl}#offer-${plan.key}`,
+        url: pricingUrl,
+        priceCurrency: 'EUR',
+        price: Number(plan.price.replace(/[^\d.]/g, '')),
+        availability: 'https://schema.org/InStock',
+        category: 'Wellbeing subscription',
+        eligibleRegion: 'EU',
+        itemOffered: {
+          '@type': 'Service',
+          name: plan.title,
+          description: plan.description,
+          provider: {
+            '@id': organizationId,
+          },
+        },
+      })),
+    ],
+  }
+})
 
 usePublicSeo({
   title: seoTitle,
   description: seoDescription,
+  structuredData: pricingStructuredData,
 })
 </script>

@@ -1,9 +1,12 @@
 """Notification templates and sending logic."""
 
+import re
+
 from django.conf import settings
 from django.core.mail import EmailMessage, get_connection
 from django.utils import timezone
 
+from core.email_templates import render_basic_email_html
 from core.i18n import get_user_language
 from core.localized_notifications import render_notification
 from core.models import InAppNotification, NotificationDelivery
@@ -32,6 +35,33 @@ def _get_from_email():
         or config.email_host_user
         or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@doisense.eu")
     )
+
+
+def _extract_action_label(body: str) -> str | None:
+    match = re.search(r"===\s*(.+?)\s*===", body)
+    if not match:
+        return None
+    label = match.group(1).strip()
+    return label or None
+
+
+def _send_notification_email(user, payload: dict, *, action_url: str | None = None) -> None:
+    html_body = render_basic_email_html(
+        title=payload["subject"],
+        body_text=payload["body"],
+        action_url=action_url,
+        action_label=_extract_action_label(payload["body"]),
+    )
+    connection = _get_mail_connection()
+    message = EmailMessage(
+        subject=payload["subject"],
+        body=html_body,
+        from_email=_get_from_email(),
+        to=[user.email],
+        connection=connection,
+    )
+    message.content_subtype = "html"
+    message.send()
 
 
 def was_notification_sent(user, notification_type: str, *, date=None, context_key: str = "") -> bool:
@@ -101,15 +131,7 @@ def send_trial_expiration_warning(user, days_left: int) -> None:
         url=f"{frontend_base}/{language}/pricing",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/pricing")
 
 
 def send_inactivity_reminder(user, days_inactive: int) -> None:
@@ -124,15 +146,7 @@ def send_inactivity_reminder(user, days_inactive: int) -> None:
         url=f"{frontend_base}/{language}/chat",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/chat")
 
 
 def send_journal_reminder(user) -> None:
@@ -146,15 +160,7 @@ def send_journal_reminder(user) -> None:
         url=f"{frontend_base}/{language}/journal",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/journal")
 
 
 def send_daily_plan_reminder(user) -> None:
@@ -168,15 +174,7 @@ def send_daily_plan_reminder(user) -> None:
         url=f"{frontend_base}/{language}/chat?module=coaching",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/chat?module=coaching")
 
 
 def send_wellbeing_checkin_reminder(user) -> None:
@@ -190,15 +188,7 @@ def send_wellbeing_checkin_reminder(user) -> None:
         url=f"{frontend_base}/{language}/chat",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/chat")
 
 
 def send_upgrade_recommendation(user, reason: str) -> None:
@@ -219,15 +209,7 @@ def send_upgrade_recommendation(user, reason: str) -> None:
         url=f"{frontend_base}/{language}/pricing",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/pricing")
 
 
 def send_goal_reminder(user, goals: list[str], days_since_focus: int) -> None:
@@ -245,15 +227,7 @@ def send_goal_reminder(user, goals: list[str], days_since_focus: int) -> None:
         url=f"{frontend_base}/{language}/chat?module=coaching",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/chat?module=coaching")
 
 
 def send_payment_failed_notification(user) -> None:
@@ -266,15 +240,7 @@ def send_payment_failed_notification(user) -> None:
         url=f"{frontend_base}/{language}/profile",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/profile")
 
 
 def send_payment_expiring_notification(user, period_end) -> None:
@@ -289,15 +255,7 @@ def send_payment_expiring_notification(user, period_end) -> None:
         url=f"{frontend_base}/{language}/profile",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/profile")
 
 
 def send_payment_invalid_method_notification(user) -> None:
@@ -310,12 +268,4 @@ def send_payment_invalid_method_notification(user) -> None:
         url=f"{frontend_base}/{language}/profile",
     )
 
-    connection = _get_mail_connection()
-    message = EmailMessage(
-        subject=payload["subject"],
-        body=payload["body"],
-        from_email=_get_from_email(),
-        to=[user.email],
-        connection=connection,
-    )
-    message.send()
+    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/profile")

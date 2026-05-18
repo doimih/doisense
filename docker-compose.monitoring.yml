@@ -1,6 +1,11 @@
 services:
   prometheus:
     image: prom/prometheus:v2.54.1
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=15d
@@ -16,9 +21,13 @@ services:
 
   alertmanager:
     image: prom/alertmanager:v0.27.0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
-      - --config.expand-env
     volumes:
       - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     expose:
@@ -29,6 +38,11 @@ services:
 
   grafana:
     image: grafana/grafana:11.2.0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-this-grafana-password}
@@ -47,6 +61,9 @@ services:
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
     expose:
       - "8080"
     networks:
@@ -60,6 +77,11 @@ services:
 
   node-exporter:
     image: prom/node-exporter:v1.8.2
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
     expose:
       - "9100"
     networks:
@@ -68,22 +90,34 @@ services:
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.16.0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
     environment:
       DATA_SOURCE_NAME: postgresql://doisense:${POSTGRES_PASSWORD:-change-me-db-password}@db:5432/doisense?sslmode=disable
     expose:
       - "9187"
     networks:
       - monitoring_internal
+      - app_internal
     restart: unless-stopped
 
   redis-exporter:
     image: oliver006/redis_exporter:v1.62.0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
     environment:
       REDIS_ADDR: redis://redis:6379
     expose:
       - "9121"
     networks:
       - monitoring_internal
+      - app_internal
     restart: unless-stopped
 
 volumes:
@@ -93,3 +127,6 @@ volumes:
 networks:
   monitoring_internal:
     internal: true
+  app_internal:
+    external: true
+    name: ${APP_INTERNAL_NETWORK:-doisense_app_internal}

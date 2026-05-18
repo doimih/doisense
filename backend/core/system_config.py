@@ -140,3 +140,13 @@ def get_ai_max_tokens() -> int:
 def get_ai_request_timeout_seconds() -> int:
     config = get_system_config()
     return int(config.ai_request_timeout_seconds or 45)
+
+
+def get_qa_allowed_source_ips() -> list[str]:
+    config = get_system_config()
+    raw = (config.qa_allowed_source_ips or "").strip()
+    if not raw:
+        return []
+
+    normalized = raw.replace("\n", ",")
+    return [item.strip() for item in normalized.split(",") if item.strip()]

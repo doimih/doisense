@@ -1,14 +1,18 @@
-// @ts-nocheck
 import { computed, ref, watch } from 'vue'
 import { useI18n } from '#imports'
 import { useApi } from '~/composables/useApi'
 
-export function useCmsStaticPage(baseSlug, prefix = '') {
+type CmsStaticPage = {
+  title: string
+  content: string
+}
+
+export function useCmsStaticPage(baseSlug: string, prefix = '') {
   const { fetchApi } = useApi()
-  const cmsPageCache = useState('cmsPageCache', () => new Map())
+  const cmsPageCache = useState<Map<string, CmsStaticPage | null>>('cmsPageCache', () => new Map())
   const { locale } = useI18n()
 
-  const cmsPage = ref(null)
+  const cmsPage = ref<CmsStaticPage | null>(null)
 
   const localeCode = computed(() => (locale.value || 'en').slice(0, 2).toLowerCase())
 
@@ -26,7 +30,7 @@ export function useCmsStaticPage(baseSlug, prefix = '') {
     }
 
     try {
-      const page = await fetchApi(
+      const page = await fetchApi<CmsStaticPage>(
         `/cms/public/${normalizedBaseSlug.value}?language=${localeCode.value}`,
       )
       if (page?.content?.trim()) {

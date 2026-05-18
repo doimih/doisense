@@ -93,6 +93,7 @@
 
 <script setup lang="ts">
 const { locale } = useI18n()
+const { toAbsolutePublicUrl } = usePublicSiteContext()
 const localeCode = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
   return ['ro', 'en', 'de', 'fr', 'it', 'es', 'pl'].includes(code) ? code : 'en'
@@ -232,9 +233,38 @@ const aboutCopy: Record<string, {
 const text = computed(() => aboutCopy[localeCode.value] || aboutCopy.en)
 const seoTitle = computed(() => text.value.seoTitle)
 const seoDescription = computed(() => text.value.seoDescription)
+const aboutStructuredData = computed(() => {
+  const aboutUrl = toAbsolutePublicUrl('/about')
+  const homeUrl = toAbsolutePublicUrl('/')
+  const organizationId = `${homeUrl}#organization`
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': organizationId,
+        name: 'Doisense',
+        url: homeUrl,
+        description: seoDescription.value,
+      },
+      {
+        '@type': 'AboutPage',
+        '@id': `${aboutUrl}#about-page`,
+        url: aboutUrl,
+        name: seoTitle.value,
+        description: seoDescription.value,
+        about: {
+          '@id': organizationId,
+        },
+      },
+    ],
+  }
+})
 
 usePublicSeo({
   title: seoTitle,
   description: seoDescription,
+  structuredData: aboutStructuredData,
 })
 </script>

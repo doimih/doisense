@@ -2,9 +2,9 @@ name: Security Scan
 
 on:
   push:
-    branches: [main]
+    branches: [main, prod]
   pull_request:
-    branches: [main]
+    branches: [main, prod]
   schedule:
     # Run daily at 2 AM UTC
     - cron: "0 2 * * *"
@@ -80,7 +80,7 @@ jobs:
           tags: ${{ matrix.dockerfile.image-name }}:latest
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: ${{ matrix.dockerfile.image-name }}:latest
           format: sarif
@@ -142,7 +142,7 @@ jobs:
           fetch-depth: 0
 
       - name: Truffelhog Secret Scan
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.94.1
         with:
           path: ./
           base: ${{ github.event.repository.default_branch }}

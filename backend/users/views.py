@@ -19,6 +19,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 import jwt
 from core.analytics import track_event
+from core.email_templates import render_basic_email_html
 from core.i18n import get_request_language, get_user_language, translate
 from core.system_config import get_apple_client_id, get_google_client_id, get_system_config
 
@@ -288,6 +289,41 @@ def _auth_text(language: str, key: str, **kwargs) -> str:
     return template.format(**kwargs) if kwargs else template
 
 
+def _auth_cookie_secure() -> bool:
+    return bool(getattr(settings, "SESSION_COOKIE_SECURE", True))
+
+
+def _set_auth_cookies(response: Response, refresh_token: str, access_token: str) -> None:
+    access_lifetime = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
+    refresh_lifetime = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
+    samesite = getattr(settings, "JWT_COOKIE_SAMESITE", "Lax")
+    secure = _auth_cookie_secure()
+
+    response.set_cookie(
+        getattr(settings, "JWT_ACCESS_COOKIE_NAME", "doisense_access"),
+        access_token,
+        max_age=access_lifetime,
+        httponly=True,
+        secure=secure,
+        samesite=samesite,
+        path="/",
+    )
+    response.set_cookie(
+        getattr(settings, "JWT_REFRESH_COOKIE_NAME", "doisense_refresh"),
+        refresh_token,
+        max_age=refresh_lifetime,
+        httponly=True,
+        secure=secure,
+        samesite=samesite,
+        path="/",
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    response.delete_cookie(getattr(settings, "JWT_ACCESS_COOKIE_NAME", "doisense_access"), path="/")
+    response.delete_cookie(getattr(settings, "JWT_REFRESH_COOKIE_NAME", "doisense_refresh"), path="/")
+
+
 def _send_activation_email(user) -> None:
     config = get_system_config()
     uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -312,13 +348,21 @@ def _send_activation_email(user) -> None:
         fail_silently=False,
     )
 
+    subject = _auth_text(language, "activation_email_subject")
+    text_body = _auth_text(language, "activation_email_body", activation_url=activation_url)
     message = EmailMessage(
-        subject=_auth_text(language, "activation_email_subject"),
-        body=_auth_text(language, "activation_email_body", activation_url=activation_url),
+        subject=subject,
+        body=render_basic_email_html(
+            title=subject,
+            body_text=text_body,
+            action_url=activation_url,
+            action_label="Activate account",
+        ),
         from_email=from_email,
         to=[user.email],
         connection=connection,
     )
+    message.content_subtype = "html"
     message.send()
 
 
@@ -424,13 +468,16 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         refresh = RefreshToken.for_user(user)
-        return Response(
+        access = str(refresh.access_token)
+        refresh_token = str(refresh)
+        response = Response(
             {
                 "user": UserSerializer(user).data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
+                "access": access,
             }
         )
+        _set_auth_cookies(response, refresh_token=refresh_token, access_token=access)
+        return response
 
 
 class RefreshView(APIView):
@@ -440,7 +487,9 @@ class RefreshView(APIView):
 
     def post(self, request):
         language = get_request_language(request, default="en")
-        refresh_token = request.data.get("refresh")
+        refresh_token = request.COOKIES.get(
+            getattr(settings, "JWT_REFRESH_COOKIE_NAME", "doisense_refresh")
+        ) or request.data.get("refresh")
         if not refresh_token:
             return Response(
                 {"detail": _auth_text(language, "refresh_required")},
@@ -449,12 +498,16 @@ class RefreshView(APIView):
         try:
             token = RefreshToken(refresh_token)
             access = str(token.access_token)
-            return Response({"access": access})
+            response = Response({"access": access})
+            _set_auth_cookies(response, refresh_token=refresh_token, access_token=access)
+            return response
         except Exception:
-            return Response(
+            response = Response(
                 {"detail": _auth_text(language, "token_invalid")},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+            _clear_auth_cookies(response)
+            return response
 
 
 class SessionBridgeLoginView(APIView):
@@ -472,14 +525,26 @@ class SessionBridgeLoginView(APIView):
             )
 
         refresh = RefreshToken.for_user(user)
-        return Response(
+        access = str(refresh.access_token)
+        refresh_token = str(refresh)
+        response = Response(
             {
                 "user": UserSerializer(user).data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
+                "access": access,
             },
             status=status.HTTP_200_OK,
         )
+        _set_auth_cookies(response, refresh_token=refresh_token, access_token=access)
+        return response
+
+
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        response = Response({"detail": "Logged out."}, status=status.HTTP_200_OK)
+        _clear_auth_cookies(response)
+        return response
 
 
 class MeView(APIView):
@@ -761,13 +826,16 @@ class SocialLoginView(APIView):
             )
 
         refresh = RefreshToken.for_user(user)
-        return Response(
+        access = str(refresh.access_token)
+        refresh_token = str(refresh)
+        response = Response(
             {
                 "user": UserSerializer(user).data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
+                "access": access,
             }
         )
+        _set_auth_cookies(response, refresh_token=refresh_token, access_token=access)
+        return response
 
 
 class PasswordRecoveryRequestView(APIView):
@@ -807,13 +875,21 @@ class PasswordRecoveryRequestView(APIView):
                     use_ssl=config.email_use_ssl,
                     fail_silently=False,
                 )
+                subject = _auth_text(language, "recovery_email_subject")
+                text_body = _auth_text(language, "recovery_email_body", reset_url=reset_url)
                 message = EmailMessage(
-                    subject=_auth_text(language, "recovery_email_subject"),
-                    body=_auth_text(language, "recovery_email_body", reset_url=reset_url),
+                    subject=subject,
+                    body=render_basic_email_html(
+                        title=subject,
+                        body_text=text_body,
+                        action_url=reset_url,
+                        action_label="Reset password",
+                    ),
                     from_email=from_email,
                     to=to_email,
                     connection=connection,
                 )
+                message.content_subtype = "html"
                 message.send()
             except Exception:
                 # Return generic success response to avoid account enumeration.
