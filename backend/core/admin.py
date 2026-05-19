@@ -108,9 +108,7 @@ class SystemConfigAdminForm(forms.ModelForm):
                 entries.append(value)
 
         if invalid_entries:
-            raise forms.ValidationError(
-                "Invalid IP/CIDR entries: " + ", ".join(invalid_entries)
-            )
+            raise forms.ValidationError("Invalid IP/CIDR entries: " + ", ".join(invalid_entries))
 
         return "\n".join(entries)
 
@@ -165,13 +163,8 @@ class SystemConfigAdmin(ModelAdmin):
         ),
         (
             "QA Access",
-            {
-                "fields": (
-                    "qa_allowed_source_ips",
-                )
-            },
+            {"fields": ("qa_allowed_source_ips",)},
         ),
-
     )
 
     def get_urls(self):
@@ -238,9 +231,7 @@ class SystemConfigAdmin(ModelAdmin):
             aws_secret_access_key=config.backup_secret_access_key,
             region_name=config.backup_region or None,
             config=Config(
-                s3={
-                    "addressing_style": "path" if config.backup_force_path_style else "auto"
-                }
+                s3={"addressing_style": "path" if config.backup_force_path_style else "auto"}
             ),
         )
 
@@ -277,7 +268,9 @@ class SystemConfigAdmin(ModelAdmin):
 
                     detected = imghdr.what(uploaded)
                     if detected not in _MEDIA_LIBRARY_ALLOWED_TYPES:
-                        errors.append(f"{uploaded.name}: file content does not match an allowed image type.")
+                        errors.append(
+                            f"{uploaded.name}: file content does not match an allowed image type."
+                        )
                         continue
 
                     uploaded.seek(0)
@@ -295,10 +288,14 @@ class SystemConfigAdmin(ModelAdmin):
                     uploaded_names.append(os.path.basename(dest))
 
                 if uploaded_names:
-                    success = f"Uploaded {len(uploaded_names)} image(s): {', '.join(uploaded_names)}"
+                    success = (
+                        f"Uploaded {len(uploaded_names)} image(s): {', '.join(uploaded_names)}"
+                    )
 
             if is_ajax:
-                status_code = 201 if uploaded_names and not errors else (207 if uploaded_names else 400)
+                status_code = (
+                    201 if uploaded_names and not errors else (207 if uploaded_names else 400)
+                )
                 return JsonResponse(
                     {
                         "uploaded": uploaded_names,
@@ -627,7 +624,14 @@ class PlatformScheduledJobAdmin(ModelAdmin):
     list_filter = ("enabled", "schedule_type", "last_run_status")
     search_fields = ("label", "command_name", "code")
     ordering = ("label",)
-    readonly_fields = ("code", "command_name", "last_run_at", "last_run_status", "last_error", "last_duration_ms")
+    readonly_fields = (
+        "code",
+        "command_name",
+        "last_run_at",
+        "last_run_status",
+        "last_error",
+        "last_duration_ms",
+    )
     actions = ["run_selected_jobs_now"]
 
     fieldsets = (
@@ -710,7 +714,15 @@ class AnalyticsEventAdmin(ModelAdmin):
     list_filter = ("event_name", "source")
     search_fields = ("event_name", "user__email", "session_id")
     ordering = ("-created_at",)
-    readonly_fields = ("event_name", "source", "schema_version", "user", "session_id", "properties", "created_at")
+    readonly_fields = (
+        "event_name",
+        "source",
+        "schema_version",
+        "user",
+        "session_id",
+        "properties",
+        "created_at",
+    )
 
     def has_add_permission(self, request):
         return False
@@ -722,7 +734,14 @@ class UserQuotaUsageAdmin(ModelAdmin):
     list_filter = ("metric_key", "period_type", "period_start")
     search_fields = ("user__email", "metric_key")
     ordering = ("-updated_at",)
-    readonly_fields = ("user", "metric_key", "period_type", "period_start", "created_at", "updated_at")
+    readonly_fields = (
+        "user",
+        "metric_key",
+        "period_type",
+        "period_start",
+        "created_at",
+        "updated_at",
+    )
 
     def has_add_permission(self, request):
         return False
@@ -853,11 +872,7 @@ class OAuthConfigAdmin(SingletonProxyConfigAdmin):
     fieldsets = (
         (
             "OAuth",
-            {
-                "fields": (
-                    "google_client_id",
-                )
-            },
+            {"fields": ("google_client_id",)},
         ),
     )
 
@@ -869,11 +884,7 @@ class StripeConfigAdmin(SingletonProxyConfigAdmin):
     fieldsets = (
         (
             "API Keys (Environment only)",
-            {
-                "fields": (
-                    "stripe_keys_env_only_notice",
-                )
-            },
+            {"fields": ("stripe_keys_env_only_notice",)},
         ),
         (
             "Price IDs (Legacy - for subscriptions)",
@@ -1019,4 +1030,3 @@ class BackupVerificationLogAdmin(ModelAdmin):
 
     def has_add_permission(self, request):
         return False
-

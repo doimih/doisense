@@ -93,15 +93,17 @@ def update_task_stats(task: Task) -> TaskStat:
     stat.best_streak = best_streak
     stat.completion_rate = completion_rate
     stat.last_completed_at = last_completed_at
-    stat.save(update_fields=[
-        "completed_days",
-        "total_days",
-        "current_streak",
-        "best_streak",
-        "completion_rate",
-        "last_completed_at",
-        "last_calculated_at",
-    ])
+    stat.save(
+        update_fields=[
+            "completed_days",
+            "total_days",
+            "current_streak",
+            "best_streak",
+            "completion_rate",
+            "last_completed_at",
+            "last_calculated_at",
+        ]
+    )
     return stat
 
 
@@ -197,7 +199,9 @@ def build_stats_response(user, *, advanced: bool) -> dict:
     progress_rows = TaskProgress.objects.filter(user=user)
     completed_total = progress_rows.filter(is_completed=True).count()
     completed_week = progress_rows.filter(is_completed=True, progress_date__gte=week_start).count()
-    completed_month = progress_rows.filter(is_completed=True, progress_date__gte=month_start).count()
+    completed_month = progress_rows.filter(
+        is_completed=True, progress_date__gte=month_start
+    ).count()
 
     simple = {
         "total_tasks": total_tasks,
@@ -239,8 +243,12 @@ def build_stats_response(user, *, advanced: bool) -> dict:
     }
 
 
-def upsert_progress(task: Task, user, progress_day: date, completed: bool, note: str = "") -> TaskProgress:
-    row, _ = TaskProgress.objects.get_or_create(task=task, progress_date=progress_day, defaults={"user": user})
+def upsert_progress(
+    task: Task, user, progress_day: date, completed: bool, note: str = ""
+) -> TaskProgress:
+    row, _ = TaskProgress.objects.get_or_create(
+        task=task, progress_date=progress_day, defaults={"user": user}
+    )
     row.user = user
     row.is_completed = completed
     row.completed_at = timezone.now() if completed else None

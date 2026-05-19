@@ -20,7 +20,9 @@ def test_chat_prompt_for_trial_mentions_preview_limits(user):
     user.trial_ends_at = timezone.now() + timezone.timedelta(days=1)
     user.save(update_fields=["plan_tier", "is_premium", "trial_started_at", "trial_ends_at"])
 
-    prompt = get_chat_system_prompt(user, "en", current_message="Can you diagnose me?", conversation_count=9)
+    prompt = get_chat_system_prompt(
+        user, "en", current_message="Can you diagnose me?", conversation_count=9
+    )
 
     assert "User tier: TRIAL." in prompt
     assert "weekly or monthly reports" in prompt
@@ -33,7 +35,9 @@ def test_chat_prompt_for_basic_contains_light_upsell(user):
     user.is_premium = True
     user.save(update_fields=["plan_tier", "is_premium"])
 
-    prompt = get_chat_system_prompt(user, "en", current_message="Can you build a long-term report?", conversation_count=1)
+    prompt = get_chat_system_prompt(
+        user, "en", current_message="Can you build a long-term report?", conversation_count=1
+    )
 
     assert "User tier: BASIC." in prompt
     assert "avoid formal plans, reports, or typology updates" in prompt
@@ -45,7 +49,9 @@ def test_chat_prompt_for_premium_allows_weekly_but_not_typology(user):
     user.is_premium = True
     user.save(update_fields=["plan_tier", "is_premium"])
 
-    prompt = get_chat_system_prompt(user, "en", current_message="Give me a summary.", conversation_count=2)
+    prompt = get_chat_system_prompt(
+        user, "en", current_message="Give me a summary.", conversation_count=2
+    )
 
     assert "User tier: PREMIUM." in prompt
     assert "daily or weekly-style summaries" in prompt
@@ -57,7 +63,9 @@ def test_chat_prompt_for_vip_enables_typology_without_upsell(user):
     user.is_premium = True
     user.save(update_fields=["plan_tier", "is_premium"])
 
-    prompt = get_chat_system_prompt(user, "en", current_message="Map my longer-term patterns.", conversation_count=5)
+    prompt = get_chat_system_prompt(
+        user, "en", current_message="Map my longer-term patterns.", conversation_count=5
+    )
 
     assert "User tier: VIP." in prompt
     assert "monthly-style reflections" in prompt

@@ -52,9 +52,7 @@ class UserAdmin(BaseUserAdmin):
         ),
         ("Permissions", {"fields": ("is_staff", "is_active", "is_superuser")}),
     )
-    add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2")}),
-    )
+    add_fieldsets = ((None, {"classes": ("wide",), "fields": ("email", "password1", "password2")}),)
 
     # ── display helpers ──────────────────────────────────────────────────────
 
@@ -73,7 +71,10 @@ class UserAdmin(BaseUserAdmin):
             ' rounded-full text-xs font-bold {} {}">{}</span>'
             '<span class="font-medium text-sm">{}</span>'
             "</div>",
-            bg, fg, initials, name,
+            bg,
+            fg,
+            initials,
+            name,
         )
 
     user_display.short_description = "Utilizator"
@@ -112,9 +113,7 @@ class UserAdmin(BaseUserAdmin):
 
     def status_display(self, obj):
         if obj.is_active:
-            return format_html(
-                '<span class="text-xs font-semibold text-emerald-600">Activ</span>'
-            )
+            return format_html('<span class="text-xs font-semibold text-emerald-600">Activ</span>')
         return format_html(
             '<span class="inline-flex rounded-full bg-stone-100 px-2 py-0.5 text-xs font-semibold text-stone-500">Inactiv</span>'
         )

@@ -99,7 +99,9 @@ def test_translate_draft_returns_translated_text(authenticated_client, user, mon
 
 
 @pytest.mark.django_db
-def test_translate_draft_falls_back_to_original_text_on_provider_error(authenticated_client, user, monkeypatch):
+def test_translate_draft_falls_back_to_original_text_on_provider_error(
+    authenticated_client, user, monkeypatch
+):
     user.plan_tier = User.PLAN_PREMIUM
     user.is_premium = True
     user.save(update_fields=["plan_tier", "is_premium"])
@@ -119,7 +121,9 @@ def test_translate_draft_falls_back_to_original_text_on_provider_error(authentic
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("target_language", ["ro", "en", "de", "fr", "it", "es", "pl"])
-def test_translate_draft_supports_all_site_languages(authenticated_client, user, monkeypatch, target_language):
+def test_translate_draft_supports_all_site_languages(
+    authenticated_client, user, monkeypatch, target_language
+):
     user.plan_tier = User.PLAN_PREMIUM
     user.is_premium = True
     user.save(update_fields=["plan_tier", "is_premium"])

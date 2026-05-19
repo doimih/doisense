@@ -8,6 +8,7 @@ plan_tier='free' so backend state stays consistent with effective_plan_tier().
 Run on a cron: e.g. every hour.
     python manage.py expire_trials
 """
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -40,5 +41,7 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(
-            self.style.SUCCESS(f"Expired {count} trial account(s) → plan_tier=free, is_premium=False.")
+            self.style.SUCCESS(
+                f"Expired {count} trial account(s) → plan_tier=free, is_premium=False."
+            )
         )

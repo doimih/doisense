@@ -23,12 +23,12 @@ def test_trial_warning_email_romanian(user):
     user.plan_tier = User.PLAN_TRIAL
     user.trial_ends_at = timezone.now() + timedelta(days=5)
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         send_trial_expiration_warning(user, 5)
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert "5 zile" in call_args.kwargs['subject'] or "5 zile" in call_args.kwargs['body']
+        assert "5 zile" in call_args.kwargs["subject"] or "5 zile" in call_args.kwargs["body"]
 
 
 @pytest.mark.django_db
@@ -38,12 +38,12 @@ def test_trial_warning_email_english(user):
     user.plan_tier = User.PLAN_TRIAL
     user.trial_ends_at = timezone.now() + timedelta(days=7)
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         send_trial_expiration_warning(user, 7)
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert "7 days" in call_args.kwargs['subject'] or "7 days" in call_args.kwargs['body']
+        assert "7 days" in call_args.kwargs["subject"] or "7 days" in call_args.kwargs["body"]
 
 
 @pytest.mark.django_db
@@ -51,7 +51,7 @@ def test_inactivity_reminder_not_sent_to_active_users(user):
     """Inactivity reminder should not trigger for recently active users."""
     user.plan_tier = User.PLAN_PREMIUM
     user.save()
-    
+
     # Create recent conversation
     Conversation.objects.create(
         user=user,
@@ -60,9 +60,9 @@ def test_inactivity_reminder_not_sent_to_active_users(user):
         module="wellness",
         plan_tier="premium",
     )
-    
+
     # Should not trigger inactivity
-    with patch('core.notifications.EmailMessage'):
+    with patch("core.notifications.EmailMessage"):
         # Would need to directly check in command logic
         # This test ensures recent activity is checked
         assert Conversation.objects.filter(user=user).exists()
@@ -74,14 +74,16 @@ def test_journal_reminder_sent_when_no_entry_today(user):
     user.plan_tier = User.PLAN_PREMIUM
     user.language = "en"
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         send_journal_reminder(user)
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert ("journal" in call_args.kwargs['subject'].lower() or 
-                "reflection" in call_args.kwargs['subject'].lower())
-        assert user.email in call_args.kwargs['to']
+        assert (
+            "journal" in call_args.kwargs["subject"].lower()
+            or "reflection" in call_args.kwargs["subject"].lower()
+        )
+        assert user.email in call_args.kwargs["to"]
 
 
 @pytest.mark.django_db
@@ -90,12 +92,12 @@ def test_daily_plan_reminder_text_includes_cta(user):
     user.plan_tier = User.PLAN_BASIC
     user.language = "ro"
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         send_daily_plan_reminder(user)
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert "/chat" in call_args.kwargs['body']
+        assert "/chat" in call_args.kwargs["body"]
 
 
 @pytest.mark.django_db
@@ -104,12 +106,15 @@ def test_wellbeing_checkin_reminder_romanian(user):
     user.plan_tier = User.PLAN_PREMIUM
     user.language = "ro"
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         send_wellbeing_checkin_reminder(user)
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert "Check-in" in call_args.kwargs['subject'] or "check-in" in call_args.kwargs['body'].lower()
+        assert (
+            "Check-in" in call_args.kwargs["subject"]
+            or "check-in" in call_args.kwargs["body"].lower()
+        )
 
 
 @pytest.mark.django_db
@@ -118,13 +123,17 @@ def test_upgrade_recommendation_journal_limit(user):
     user.plan_tier = User.PLAN_TRIAL
     user.language = "en"
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         from core.notifications import send_upgrade_recommendation
+
         send_upgrade_recommendation(user, "journal_limit")
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert "journal" in call_args.kwargs['subject'].lower() or "journal" in call_args.kwargs['body'].lower()
+        assert (
+            "journal" in call_args.kwargs["subject"].lower()
+            or "journal" in call_args.kwargs["body"].lower()
+        )
 
 
 @pytest.mark.django_db
@@ -133,13 +142,17 @@ def test_upgrade_recommendation_report_limit(user):
     user.plan_tier = User.PLAN_BASIC
     user.language = "en"
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         from core.notifications import send_upgrade_recommendation
+
         send_upgrade_recommendation(user, "report_limit")
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert "report" in call_args.kwargs['subject'].lower() or "report" in call_args.kwargs['body'].lower()
+        assert (
+            "report" in call_args.kwargs["subject"].lower()
+            or "report" in call_args.kwargs["body"].lower()
+        )
 
 
 @pytest.mark.django_db
@@ -149,12 +162,12 @@ def test_goal_reminder_includes_goal_titles(user):
     user.language = "en"
     user.save()
 
-    with patch('core.notifications.EmailMessage') as mock_email:
+    with patch("core.notifications.EmailMessage") as mock_email:
         send_goal_reminder(user, ["sleep better", "journal daily"], 3)
         mock_email.assert_called_once()
         call_args = mock_email.call_args
-        assert "sleep better" in call_args.kwargs['body'].lower()
-        assert "journal daily" in call_args.kwargs['body'].lower()
+        assert "sleep better" in call_args.kwargs["body"].lower()
+        assert "journal daily" in call_args.kwargs["body"].lower()
 
 
 @pytest.mark.django_db
@@ -162,14 +175,14 @@ def test_notification_email_uses_correct_from_address(user):
     """Notification emails should use configured from address."""
     user.language = "en"
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
-        with patch('core.notifications._get_from_email') as mock_from:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
+        with patch("core.notifications._get_from_email") as mock_from:
             mock_from.return_value = "noreply@doisense.eu"
             send_trial_expiration_warning(user, 5)
-            
+
             call_args = mock_email.call_args
-            assert call_args.kwargs['from_email'] == "noreply@doisense.eu"
+            assert call_args.kwargs["from_email"] == "noreply@doisense.eu"
 
 
 @pytest.mark.django_db
@@ -177,8 +190,8 @@ def test_notification_email_recipient_is_user_email(user):
     """Notification should be sent to user's email address."""
     user.plan_tier = User.PLAN_TRIAL
     user.save()
-    
-    with patch('core.notifications.EmailMessage') as mock_email:
+
+    with patch("core.notifications.EmailMessage") as mock_email:
         send_trial_expiration_warning(user, 5)
         call_args = mock_email.call_args
-        assert user.email in call_args.kwargs['to']
+        assert user.email in call_args.kwargs["to"]

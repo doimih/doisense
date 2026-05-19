@@ -21,6 +21,7 @@ def prefixed_path(*segments: str) -> str:
 def prefixed_absolute_path(*segments: str) -> str:
     return "/" + prefixed_path(*segments)
 
+
 urlpatterns = [
     path(
         prefixed_path("admin"),

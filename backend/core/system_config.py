@@ -62,12 +62,16 @@ def get_stripe_price_id_premium() -> str:
 
 def get_stripe_price_id_basic() -> str:
     config = get_system_config()
-    return (config.stripe_price_id_basic or getattr(settings, "STRIPE_PRICE_ID_BASIC", "") or "").strip()
+    return (
+        config.stripe_price_id_basic or getattr(settings, "STRIPE_PRICE_ID_BASIC", "") or ""
+    ).strip()
 
 
 def get_stripe_price_id_vip() -> str:
     config = get_system_config()
-    return (config.stripe_price_id_vip or getattr(settings, "STRIPE_PRICE_ID_VIP", "") or "").strip()
+    return (
+        config.stripe_price_id_vip or getattr(settings, "STRIPE_PRICE_ID_VIP", "") or ""
+    ).strip()
 
 
 def get_stripe_price_id_basic_yearly() -> str:
@@ -84,17 +88,23 @@ def get_stripe_price_id_vip_yearly() -> str:
 
 def get_stripe_product_id_basic() -> str:
     config = get_system_config()
-    return (config.stripe_product_id_basic or getattr(settings, "STRIPE_PRODUCT_ID_BASIC", "") or "").strip()
+    return (
+        config.stripe_product_id_basic or getattr(settings, "STRIPE_PRODUCT_ID_BASIC", "") or ""
+    ).strip()
 
 
 def get_stripe_product_id_premium() -> str:
     config = get_system_config()
-    return (config.stripe_product_id_premium or getattr(settings, "STRIPE_PRODUCT_ID_PREMIUM", "") or "").strip()
+    return (
+        config.stripe_product_id_premium or getattr(settings, "STRIPE_PRODUCT_ID_PREMIUM", "") or ""
+    ).strip()
 
 
 def get_stripe_product_id_vip() -> str:
     config = get_system_config()
-    return (config.stripe_product_id_vip or getattr(settings, "STRIPE_PRODUCT_ID_VIP", "") or "").strip()
+    return (
+        config.stripe_product_id_vip or getattr(settings, "STRIPE_PRODUCT_ID_VIP", "") or ""
+    ).strip()
 
 
 def get_stripe_price_id_for_tier(plan_tier: str, billing_cycle: str = "monthly") -> str:
@@ -134,7 +144,10 @@ def plan_tier_from_stripe_price_id(price_id: str) -> str:
         return "basic"
     if price_id and price_id in {get_stripe_price_id_vip(), get_stripe_price_id_vip_yearly()}:
         return "vip"
-    if price_id and price_id in {get_stripe_price_id_premium(), get_stripe_price_id_premium_yearly()}:
+    if price_id and price_id in {
+        get_stripe_price_id_premium(),
+        get_stripe_price_id_premium_yearly(),
+    }:
         return "premium"
     return "premium"  # Default fallback
 

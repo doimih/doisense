@@ -1,6 +1,5 @@
 """Management command: send segmented reactivation campaign reminders."""
 
-
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -45,7 +44,9 @@ class Command(BaseCommand):
         skipped = 0
 
         for user in candidates:
-            last_conversation = Conversation.objects.filter(user=user).order_by("-created_at").first()
+            last_conversation = (
+                Conversation.objects.filter(user=user).order_by("-created_at").first()
+            )
             if not last_conversation:
                 skipped += 1
                 continue

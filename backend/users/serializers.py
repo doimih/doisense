@@ -53,9 +53,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if not attrs.get("accepted_terms"):
             raise serializers.ValidationError({"accepted_terms": "Terms must be accepted."})
         if not attrs.get("accepted_privacy"):
-            raise serializers.ValidationError({"accepted_privacy": "Privacy policy must be accepted."})
+            raise serializers.ValidationError(
+                {"accepted_privacy": "Privacy policy must be accepted."}
+            )
         if not attrs.get("accepted_ai_usage"):
-            raise serializers.ValidationError({"accepted_ai_usage": "AI usage policy must be accepted."})
+            raise serializers.ValidationError(
+                {"accepted_ai_usage": "AI usage policy must be accepted."}
+            )
         return attrs
 
     def create(self, validated_data):
@@ -64,7 +68,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         accepted_ai_usage = validated_data.pop("accepted_ai_usage", False)
         language = validated_data.get("language") or "en"
 
-        user = User.objects.create_user(is_active=False, onboarding_completed=False, **validated_data)
+        user = User.objects.create_user(
+            is_active=False, onboarding_completed=False, **validated_data
+        )
         now = timezone.now()
         updates = []
         if accepted_terms:
@@ -110,7 +116,9 @@ class PasswordChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError("Authentication required.")
 
         if not user.check_password(attrs["current_password"]):
-            raise serializers.ValidationError({"current_password": "Current password is incorrect."})
+            raise serializers.ValidationError(
+                {"current_password": "Current password is incorrect."}
+            )
 
         if attrs["new_password"] != attrs["new_password_confirm"]:
             raise serializers.ValidationError(
@@ -177,7 +185,11 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_membership_tier(self, obj):
-        return "premium" if obj.effective_plan_tier() in (User.PLAN_PREMIUM, User.PLAN_VIP) else "normal"
+        return (
+            "premium"
+            if obj.effective_plan_tier() in (User.PLAN_PREMIUM, User.PLAN_VIP)
+            else "normal"
+        )
 
     def get_manual_vip(self, obj):
         return bool(getattr(obj, "manual_vip", False))
@@ -186,4 +198,8 @@ class UserSerializer(serializers.ModelSerializer):
         return bool(getattr(obj, "early_discount_eligible", False))
 
     def get_has_saved_card(self, obj):
-        return obj.payments.exclude(stripe_customer_id="").exclude(stripe_customer_id__isnull=True).exists()
+        return (
+            obj.payments.exclude(stripe_customer_id="")
+            .exclude(stripe_customer_id__isnull=True)
+            .exists()
+        )

@@ -22,9 +22,7 @@ class JournalEntry(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="journal_entries"
     )
-    question = models.ForeignKey(
-        JournalQuestion, on_delete=models.CASCADE, related_name="entries"
-    )
+    question = models.ForeignKey(JournalQuestion, on_delete=models.CASCADE, related_name="entries")
     content = models.TextField()
     emotions = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

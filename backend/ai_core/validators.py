@@ -4,9 +4,7 @@ import unicodedata
 from django.core.exceptions import ValidationError
 
 
-ENGLISH_ONLY_ERROR = (
-    "Prompt content must be written in English. Other languages are not allowed."
-)
+ENGLISH_ONLY_ERROR = "Prompt content must be written in English. Other languages are not allowed."
 
 _ENGLISH_MARKERS = {
     "a",

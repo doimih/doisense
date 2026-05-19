@@ -23,7 +23,9 @@ class JournalQuestionAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk and isinstance(self.instance.tags, list):
-            self.fields["tags"].initial = ", ".join(str(item) for item in self.instance.tags if item)
+            self.fields["tags"].initial = ", ".join(
+                str(item) for item in self.instance.tags if item
+            )
 
     def clean_tags(self):
         raw_value = (self.cleaned_data.get("tags") or "").strip()

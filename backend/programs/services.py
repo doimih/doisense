@@ -102,10 +102,18 @@ def available_programs_for_user(user, *, category: str | None = None, language: 
     tier = user_program_tier(user)
     if not tier:
         return qs.none()
-    return qs.filter(plan_access__in=[code for code, weight in PLAN_ORDER.items() if weight <= PLAN_ORDER[tier]])
+    return qs.filter(
+        plan_access__in=[code for code, weight in PLAN_ORDER.items() if weight <= PLAN_ORDER[tier]]
+    )
 
 
-def serialize_program(program: GuidedProgram, user=None, *, include_days: bool = False, activation: UserProgramProgress | None = None) -> dict:
+def serialize_program(
+    program: GuidedProgram,
+    user=None,
+    *,
+    include_days: bool = False,
+    activation: UserProgramProgress | None = None,
+) -> dict:
     payload = {
         "id": program.id,
         "category": program.category,
@@ -124,7 +132,9 @@ def serialize_program(program: GuidedProgram, user=None, *, include_days: bool =
     if activation:
         payload["activation"] = serialize_activation(activation)
     if include_days:
-        payload["daily_steps"] = [serialize_day(step) for step in program.days.order_by("day_number")]
+        payload["daily_steps"] = [
+            serialize_day(step) for step in program.days.order_by("day_number")
+        ]
     return payload
 
 
@@ -176,7 +186,9 @@ def _program_task_description(step: GuidedProgramDay) -> str:
     return base
 
 
-def generate_calendar_tasks_for_activation(user, program: GuidedProgram, progress: UserProgramProgress) -> list[Task]:
+def generate_calendar_tasks_for_activation(
+    user, program: GuidedProgram, progress: UserProgramProgress
+) -> list[Task]:
     created: list[Task] = []
     Task.objects.filter(user=user, guided_program=program, source=Task.SOURCE_PROGRAM).delete()
     for step in program.days.order_by("day_number"):
@@ -208,7 +220,9 @@ def generate_calendar_tasks_for_activation(user, program: GuidedProgram, progres
     return created
 
 
-def build_vip_daily_message(user, program: GuidedProgram, step: GuidedProgramDay, progress: UserProgramProgress) -> str:
+def build_vip_daily_message(
+    user, program: GuidedProgram, step: GuidedProgramDay, progress: UserProgramProgress
+) -> str:
     context = (
         f"Program: {program.title}\n"
         f"Categorie: {program.category}\n"
@@ -243,7 +257,9 @@ def build_vip_daily_message(user, program: GuidedProgram, step: GuidedProgramDay
 
 
 @transaction.atomic
-def activate_program_for_user(user, program: GuidedProgram) -> tuple[UserProgramProgress, list[Task]]:
+def activate_program_for_user(
+    user, program: GuidedProgram
+) -> tuple[UserProgramProgress, list[Task]]:
     progress, _ = UserProgramProgress.objects.get_or_create(user=user, program=program)
     ensure_single_active_program(user, except_program_id=program.id)
     progress.reset_activation(start_date=timezone.localdate())
@@ -252,13 +268,19 @@ def activate_program_for_user(user, program: GuidedProgram) -> tuple[UserProgram
         "guided_program_activated",
         source="backend",
         user=user,
-        properties={"program_id": program.id, "category": program.category, "plan_access": program.plan_access},
+        properties={
+            "program_id": program.id,
+            "category": program.category,
+            "plan_access": program.plan_access,
+        },
     )
     return progress, tasks
 
 
 @transaction.atomic
-def complete_program_day_for_user(user, program: GuidedProgram, *, day_number: int | None = None) -> dict:
+def complete_program_day_for_user(
+    user, program: GuidedProgram, *, day_number: int | None = None
+) -> dict:
     progress = UserProgramProgress.objects.select_for_update().get(user=user, program=program)
     step_number = day_number or progress.current_day
     step = program.days.get(day_number=step_number)
@@ -271,7 +293,9 @@ def complete_program_day_for_user(user, program: GuidedProgram, *, day_number: i
         source=Task.SOURCE_PROGRAM,
     ).first()
     if task:
-        upsert_progress(task, user, scheduled_day, True, note=f"Completed from program day {step_number}")
+        upsert_progress(
+            task, user, scheduled_day, True, note=f"Completed from program day {step_number}"
+        )
         update_task_stats(task)
 
     progress.mark_day_complete(step_number)

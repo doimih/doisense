@@ -40,7 +40,9 @@ class CalendarUserPlan(models.Model):
         (SOURCE_PAYMENT, "Payment"),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calendar_user_plans")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calendar_user_plans"
+    )
     plan = models.ForeignKey(CalendarPlan, on_delete=models.PROTECT, related_name="user_links")
     source = models.CharField(max_length=16, choices=SOURCE_CHOICES, default=SOURCE_SYSTEM)
     started_at = models.DateTimeField(default=timezone.now)
@@ -94,7 +96,9 @@ class Task(models.Model):
         (FREQ_CUSTOM, "Custom"),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calendar_tasks")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calendar_tasks"
+    )
     title = models.CharField(max_length=180)
     description = models.TextField(blank=True, default="")
     duration_minutes = models.PositiveIntegerField(default=15)
@@ -105,7 +109,9 @@ class Task(models.Model):
     reminder_enabled = models.BooleanField(default=False)
     reminder_minutes_before = models.PositiveIntegerField(default=10)
     source = models.CharField(max_length=16, choices=SOURCE_CHOICES, default=SOURCE_MANUAL)
-    task_type = models.CharField(max_length=16, choices=TASK_TYPE_CHOICES, default=TASK_TYPE_CHECKIN)
+    task_type = models.CharField(
+        max_length=16, choices=TASK_TYPE_CHOICES, default=TASK_TYPE_CHECKIN
+    )
     advanced_options = models.JSONField(default=dict, blank=True)
     ai_generated = models.BooleanField(default=False)
     ai_metadata = models.JSONField(default=dict, blank=True)
@@ -135,7 +141,9 @@ class Task(models.Model):
 
 class TaskProgress(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="progress_entries")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="task_progress_entries")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="task_progress_entries"
+    )
     progress_date = models.DateField()
     is_completed = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -149,7 +157,9 @@ class TaskProgress(models.Model):
         db_table = "calendar_task_progress"
         ordering = ["-progress_date", "-created_at"]
         constraints = [
-            models.UniqueConstraint(fields=["task", "progress_date"], name="calendar_tp_task_day_uq"),
+            models.UniqueConstraint(
+                fields=["task", "progress_date"], name="calendar_tp_task_day_uq"
+            ),
         ]
         indexes = [
             models.Index(fields=["user", "progress_date"], name="calendar_tp_user_day_idx"),

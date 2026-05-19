@@ -97,7 +97,7 @@ def trim_prompt_text(text: str, max_chars: int) -> str:
 def _trim_history(history_turns: Iterable[tuple[str, str]] | None) -> str:
     if not history_turns:
         return ""
-    turns = list(history_turns)[-_max_history_turns():]
+    turns = list(history_turns)[-_max_history_turns() :]
     lines: list[str] = []
     for user_text, assistant_text in turns:
         user_line = trim_prompt_text(user_text or "", _max_context_chars() // 2)
@@ -134,8 +134,9 @@ def _load_skill_prompt(skill_name: str | None) -> list[str]:
         return cached
 
     values = list(
-        Prompt.objects.filter(type=Prompt.TYPE_SKILL, name=skill_name, language="en")
-        .values_list("content", flat=True)
+        Prompt.objects.filter(type=Prompt.TYPE_SKILL, name=skill_name, language="en").values_list(
+            "content", flat=True
+        )
     )
     cache.set(cache_key, values, timeout=_cache_ttl_seconds())
     return values
@@ -188,7 +189,9 @@ def build_final_prompt(
         )
 
     if dynamic_context:
-        sections.append(f"Runtime context:\n{trim_prompt_text(dynamic_context, _max_context_chars())}")
+        sections.append(
+            f"Runtime context:\n{trim_prompt_text(dynamic_context, _max_context_chars())}"
+        )
 
     history_block = _trim_history(conversation_history)
     if history_block:

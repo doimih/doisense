@@ -17,7 +17,11 @@ def _normalize_plan_tier(user) -> str:
 
 
 def _should_force_support_disclaimer(current_message: str, conversation_count: int | None) -> bool:
-    if conversation_count is not None and conversation_count >= 0 and (conversation_count + 1) % 10 == 0:
+    if (
+        conversation_count is not None
+        and conversation_count >= 0
+        and (conversation_count + 1) % 10 == 0
+    ):
         return True
 
     message = (current_message or "").lower()
@@ -85,7 +89,9 @@ def _get_chat_capability_instruction(plan_tier: str) -> str:
 
 def _get_chat_guardrails(plan_tier: str) -> str:
     if plan_tier == "vip":
-        upsell_instruction = "Do not upsell or compare plans unless the user explicitly asks about subscriptions."
+        upsell_instruction = (
+            "Do not upsell or compare plans unless the user explicitly asks about subscriptions."
+        )
     elif plan_tier == "premium":
         upsell_instruction = (
             "Use upsell sparingly. Mention VIP only if the user explicitly asks for deeper longitudinal pattern mapping, typology, "
@@ -139,7 +145,9 @@ def _load_ai_brain_prompts() -> tuple[str, str]:
         system_section  – TYPE_SYSTEM contents; replaces ConversationTemplate when present.
         extra_section   – TYPE_PERSONALITY + TYPE_RULES + TYPE_CONTEXT; always appended.
     """
-    from ai_core.models import Prompt as BrainPrompt  # local import – avoids circular at module load
+    from ai_core.models import (
+        Prompt as BrainPrompt,
+    )  # local import – avoids circular at module load
 
     system_contents = list(
         BrainPrompt.objects.filter(type=BrainPrompt.TYPE_SYSTEM)
@@ -201,9 +209,7 @@ def get_chat_system_prompt(
         parts.insert(0, ai_brain_system)
     else:
         # Fall back to ConversationTemplate or filesystem template
-        template = ConversationTemplate.objects.filter(
-            language=language, name="default"
-        ).first()
+        template = ConversationTemplate.objects.filter(language=language, name="default").first()
         if template:
             parts.insert(0, template.prompt)
         else:
@@ -234,20 +240,22 @@ def _get_chat_tier_instruction(plan_tier: str) -> str:
 
 def get_orchestrator_system_prompt(user, language: str = "en") -> str:
     """Build orchestrator system prompt with DB verification instructions.
-    
+
     This is the master orchestrator that coordinates all AI operations and
     explicitly manages what data gets saved to the database.
     """
     orchestrator_template = _load_orchestrator_prompt_template()
-    
+
     if not orchestrator_template:
         # Fallback if orchestrator not found
-        return "You are an AI Orchestrator for a wellness platform managing data with DB verification."
-    
+        return (
+            "You are an AI Orchestrator for a wellness platform managing data with DB verification."
+        )
+
     # Add user-specific package tier instruction
     package_tier = get_user_package_tier(user)
     package_instruction = f"\nCURENT PACHET UTILIZATOR: {package_tier}\n"
-    
+
     if package_tier == "TRIAL":
         package_instruction += (
             "Capacități trial: conversație ghidată, reflecție structurată și un mini-plan scurt. "
@@ -256,10 +264,12 @@ def get_orchestrator_system_prompt(user, language: str = "en") -> str:
     elif package_tier == "BASIC":
         package_instruction += "Restricții: Fără planuri, rapoarte și actualizări tipologie. Doar conversație și analiză simplă."
     elif package_tier == "PREMIUM":
-        package_instruction += "Capacități: Planuri zilnice, rapoarte zilnice/săptămânale, analize detaliate."
+        package_instruction += (
+            "Capacități: Planuri zilnice, rapoarte zilnice/săptămânale, analize detaliate."
+        )
     elif package_tier == "VIP":
         package_instruction += "Capacități maxime: Planuri complete, rapoarte lunare, actualizări tipologie, analiza profundă."
-    
+
     return orchestrator_template + package_instruction
 
 
@@ -277,135 +287,125 @@ def get_user_package_tier(user) -> str:
 
 def validate_save_to_db(user, response_json: Dict[str, Any]) -> Dict[str, Any]:
     """Validate and enforce save_to_db rules based on user package tier.
-    
+
     This function ensures that AI responses respect package limitations.
     For example: BASIC users cannot save daily_reports, weekly_reports, etc.
     """
     if "save_to_db" not in response_json:
         response_json["save_to_db"] = {}
-    
+
     save_to_db = response_json["save_to_db"]
     package_tier = get_user_package_tier(user)
-    
+
     if package_tier in {"TRIAL", "BASIC"}:
         save_to_db["daily_reports"] = False
         save_to_db["weekly_reports"] = False
         save_to_db["monthly_reports"] = False
         save_to_db["typology_update"] = False
-    
+
     elif package_tier == "PREMIUM":
         save_to_db["monthly_reports"] = False
         save_to_db["typology_update"] = False
-    
+
     return response_json
 
 
 def extract_save_to_db_fields(response_json: Dict[str, Any]) -> Dict[str, bool]:
     """Extract what needs to be saved to DB from AI response.
-    
+
     Returns a dict with boolean flags indicating what the AI recommends saving.
     Backend then handles actual database operations with error handling.
     """
     return response_json.get("save_to_db", {})
 
 
-def build_db_save_request(user_id: int, response_json: Dict[str, Any], 
-                         original_message: str = None) -> Dict[str, Any]:
+def build_db_save_request(
+    user_id: int, response_json: Dict[str, Any], original_message: str = None
+) -> Dict[str, Any]:
     """Build a database save request based on AI response and save_to_db flags.
-    
+
     This creates a structured request that the database layer can process
     with proper error handling and transaction management.
     """
     save_to_db = response_json.get("save_to_db", {})
-    
+
     save_request = {
         "user_id": user_id,
         "timestamp": None,  # Will be set by DB layer
-        "operations": []
+        "operations": [],
     }
-    
+
     # Conditional saves based on flags
     if save_to_db.get("conversations"):
-        save_request["operations"].append({
-            "type": "conversation",
-            "data": {
-                "message": original_message,
-                "response": response_json.get("response", ""),
-                "response_type": response_json.get("response_type", "response")
+        save_request["operations"].append(
+            {
+                "type": "conversation",
+                "data": {
+                    "message": original_message,
+                    "response": response_json.get("response", ""),
+                    "response_type": response_json.get("response_type", "response"),
+                },
             }
-        })
-    
+        )
+
     if save_to_db.get("emotional_tags"):
         analysis = response_json.get("analysis", {})
-        save_request["operations"].append({
-            "type": "emotional_tags",
-            "data": {
-                "dominant_emotion": analysis.get("emotie_dominanta"),
-                "secondary_emotions": analysis.get("emotii_secundare", [])
+        save_request["operations"].append(
+            {
+                "type": "emotional_tags",
+                "data": {
+                    "dominant_emotion": analysis.get("emotie_dominanta"),
+                    "secondary_emotions": analysis.get("emotii_secundare", []),
+                },
             }
-        })
-    
+        )
+
     if save_to_db.get("wellness_metrics"):
         analysis = response_json.get("analysis", {})
         scores = analysis.get("scoruri", {})
-        save_request["operations"].append({
-            "type": "wellness_metrics",
-            "data": {
-                "stress_score": scores.get("stres"),
-                "energy_score": scores.get("energie"),
-                "motivation_score": scores.get("motivatie")
+        save_request["operations"].append(
+            {
+                "type": "wellness_metrics",
+                "data": {
+                    "stress_score": scores.get("stres"),
+                    "energy_score": scores.get("energie"),
+                    "motivation_score": scores.get("motivatie"),
+                },
             }
-        })
-    
+        )
+
     if save_to_db.get("questions_generated"):
         questions = response_json.get("questions", [])
         if questions:
-            save_request["operations"].append({
-                "type": "questions_generated",
-                "data": {
-                    "questions": questions
-                }
-            })
-    
+            save_request["operations"].append(
+                {"type": "questions_generated", "data": {"questions": questions}}
+            )
+
     if save_to_db.get("analysis_summary"):
         analysis = response_json.get("analysis", {})
-        save_request["operations"].append({
-            "type": "analysis_summary",
-            "data": {
-                "analysis": analysis
-            }
-        })
-    
+        save_request["operations"].append(
+            {"type": "analysis_summary", "data": {"analysis": analysis}}
+        )
+
     if save_to_db.get("daily_reports"):
         reports = response_json.get("reports", {})
         if reports.get("daily"):
-            save_request["operations"].append({
-                "type": "daily_report",
-                "data": reports["daily"]
-            })
-    
+            save_request["operations"].append({"type": "daily_report", "data": reports["daily"]})
+
     if save_to_db.get("weekly_reports"):
         reports = response_json.get("reports", {})
         if reports.get("weekly"):
-            save_request["operations"].append({
-                "type": "weekly_report",
-                "data": reports["weekly"]
-            })
-    
+            save_request["operations"].append({"type": "weekly_report", "data": reports["weekly"]})
+
     if save_to_db.get("monthly_reports"):
         reports = response_json.get("reports", {})
         if reports.get("monthly"):
-            save_request["operations"].append({
-                "type": "monthly_report",
-                "data": reports["monthly"]
-            })
-    
+            save_request["operations"].append(
+                {"type": "monthly_report", "data": reports["monthly"]}
+            )
+
     if save_to_db.get("typology_update"):
         typology = response_json.get("typology", {})
-        save_request["operations"].append({
-            "type": "typology_update",
-            "data": typology
-        })
-    
-    return save_request
+        save_request["operations"].append({"type": "typology_update", "data": typology})
 
+    return save_request

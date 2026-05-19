@@ -53,9 +53,7 @@ class Command(BaseCommand):
                 aws_secret_access_key=config.backup_secret_access_key,
                 region_name=config.backup_region or None,
                 config=Config(
-                    s3={
-                        "addressing_style": "path" if config.backup_force_path_style else "auto"
-                    }
+                    s3={"addressing_style": "path" if config.backup_force_path_style else "auto"}
                 ),
             )
             client.head_bucket(Bucket=config.backup_s3_bucket)

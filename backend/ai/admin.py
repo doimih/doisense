@@ -41,7 +41,14 @@ class ConversationAdmin(admin.ModelAdmin):
 
 @admin.register(AIBudgetCredit)
 class AIBudgetCreditAdmin(admin.ModelAdmin):
-    list_display = ("provider", "amount_usd", "credited_at", "source_reference", "created_by", "created_at")
+    list_display = (
+        "provider",
+        "amount_usd",
+        "credited_at",
+        "source_reference",
+        "created_by",
+        "created_at",
+    )
     list_filter = ("provider", "credited_at", "created_at")
     search_fields = ("source_reference", "notes", "created_by__email")
     date_hierarchy = "credited_at"
@@ -73,7 +80,9 @@ class AIBudgetCreditAdmin(admin.ModelAdmin):
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "provider":
-            kwargs["widget"] = TextInput(attrs={"placeholder": "openai / anthropic / grok / gemini"})
+            kwargs["widget"] = TextInput(
+                attrs={"placeholder": "openai / anthropic / grok / gemini"}
+            )
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def get_urls(self):
@@ -201,7 +210,9 @@ class AIBudgetCreditAdmin(admin.ModelAdmin):
 
         monthly_targets = {
             (target.provider or "unknown").strip().lower(): target
-            for target in AIBudgetMonthlyTarget.objects.filter(year=current_year, month=current_month)
+            for target in AIBudgetMonthlyTarget.objects.filter(
+                year=current_year, month=current_month
+            )
         }
 
         current_month_spent_rows = (
@@ -230,7 +241,11 @@ class AIBudgetCreditAdmin(admin.ModelAdmin):
             spent = current_month_spent.get(provider, Decimal("0"))
             if target:
                 target_value = target.target_usd
-                progress_pct = min(Decimal("100.00"), (spent / target_value) * Decimal("100")) if target_value > 0 else Decimal("0")
+                progress_pct = (
+                    min(Decimal("100.00"), (spent / target_value) * Decimal("100"))
+                    if target_value > 0
+                    else Decimal("0")
+                )
                 monthly_progress[provider] = {
                     "target": target_value,
                     "spent": spent,
@@ -282,7 +297,9 @@ class AIBudgetCreditAdmin(admin.ModelAdmin):
                     }
                 )
 
-        recent_cost_events = AILog.objects.exclude(estimated_cost_usd__isnull=True).order_by("-created_at")[:25]
+        recent_cost_events = AILog.objects.exclude(estimated_cost_usd__isnull=True).order_by(
+            "-created_at"
+        )[:25]
         recent_credits = AIBudgetCredit.objects.order_by("-credited_at", "-created_at")[:25]
 
         context = {
@@ -301,7 +318,7 @@ class AIBudgetCreditAdmin(admin.ModelAdmin):
             "monthly_progress": monthly_progress,
             "low_remaining_alerts": low_remaining_alerts,
             "low_budget_alert_threshold": low_budget_alert_threshold,
-            "credits_admin_changelist_url": reverse('admin:ai_aibudgetcredit_changelist'),
+            "credits_admin_changelist_url": reverse("admin:ai_aibudgetcredit_changelist"),
             "credits_admin_add_url": reverse("admin:ai_aibudgetcredit_add"),
             "monthly_targets_changelist_url": reverse("admin:ai_aibudgetmonthlytarget_changelist"),
             "monthly_targets_add_url": reverse("admin:ai_aibudgetmonthlytarget_add"),
@@ -381,13 +398,16 @@ class AIBudgetMonthlyTargetAdmin(admin.ModelAdmin):
     list_filter = ("provider", "year", "month")
     search_fields = ("notes",)
     ordering = ("-year", "-month", "provider")
+
     def save_model(self, request, obj, form, change):
         obj.provider = (obj.provider or "").strip().lower()
         super().save_model(request, obj, form, change)
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "provider":
-            kwargs["widget"] = TextInput(attrs={"placeholder": "openai / anthropic / grok / gemini"})
+            kwargs["widget"] = TextInput(
+                attrs={"placeholder": "openai / anthropic / grok / gemini"}
+            )
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
@@ -407,16 +427,23 @@ class ConversationTemplateAdmin(admin.ModelAdmin):
         ),
         (
             "Prompt",
-            {
-                "fields": ("prompt",)
-            },
+            {"fields": ("prompt",)},
         ),
     )
 
 
 @admin.register(AILog)
 class AILogAdmin(admin.ModelAdmin):
-    list_display = ("id", "created_at", "provider", "model", "user", "input_tokens", "output_tokens", "estimated_cost_usd")
+    list_display = (
+        "id",
+        "created_at",
+        "provider",
+        "model",
+        "user",
+        "input_tokens",
+        "output_tokens",
+        "estimated_cost_usd",
+    )
     list_filter = ("provider", "model", "created_at")
     search_fields = ("user__email", "model", "provider", "prompt_hash")
     readonly_fields = (
@@ -443,7 +470,16 @@ class DailyReportAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "date", "updated_at")
     list_filter = ("date",)
     search_fields = ("user__email", "summary")
-    readonly_fields = ("user", "date", "summary", "highlights", "challenges", "recommendations", "created_at", "updated_at")
+    readonly_fields = (
+        "user",
+        "date",
+        "summary",
+        "highlights",
+        "challenges",
+        "recommendations",
+        "created_at",
+        "updated_at",
+    )
 
     def has_add_permission(self, request):
         return False
@@ -457,7 +493,16 @@ class WeeklyReportAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "week_start", "updated_at")
     list_filter = ("week_start",)
     search_fields = ("user__email", "summary")
-    readonly_fields = ("user", "week_start", "summary", "trends", "progress", "recommendations", "created_at", "updated_at")
+    readonly_fields = (
+        "user",
+        "week_start",
+        "summary",
+        "trends",
+        "progress",
+        "recommendations",
+        "created_at",
+        "updated_at",
+    )
 
     def has_add_permission(self, request):
         return False
@@ -471,7 +516,17 @@ class MonthlyReportAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "year", "month", "updated_at")
     list_filter = ("year", "month")
     search_fields = ("user__email", "summary")
-    readonly_fields = ("user", "year", "month", "summary", "trends", "insights", "recommendations", "created_at", "updated_at")
+    readonly_fields = (
+        "user",
+        "year",
+        "month",
+        "summary",
+        "trends",
+        "insights",
+        "recommendations",
+        "created_at",
+        "updated_at",
+    )
 
     def has_add_permission(self, request):
         return False

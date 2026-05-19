@@ -37,10 +37,11 @@ class UserProfileAdmin(admin.ModelAdmin):
             "Keywords",
             {
                 "fields": ("keywords",),
-                "description": "Use JSON format, for example: {\"goal\": \"focus\"}.",
+                "description": 'Use JSON format, for example: {"goal": "focus"}.',
             },
         ),
     )
+
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "sensitivities":
             kwargs["widget"] = forms.Textarea(attrs={"rows": 4})

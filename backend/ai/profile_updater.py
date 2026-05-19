@@ -3,6 +3,7 @@ AI Profile Updater: scanează textele scrise de clienți (jurnal, etc.),
 structurează informația cu AI și actualizează automat profilele utilizatorilor.
 Funcționează indiferent de limba/țara utilizatorului – AI analizează orice limbă.
 """
+
 import json
 import logging
 from typing import Any
@@ -116,10 +117,15 @@ def update_profile_from_ai(user_id: int, dry_run: bool = False) -> bool:
     profile.communication_style = profile_data["communication_style"]
     profile.emotional_baseline = profile_data["emotional_baseline"]
     profile.keywords = profile_data["keywords"]
-    profile.save(update_fields=[
-        "preferred_tone", "sensitivities", "communication_style",
-        "emotional_baseline", "keywords",
-    ])
+    profile.save(
+        update_fields=[
+            "preferred_tone",
+            "sensitivities",
+            "communication_style",
+            "emotional_baseline",
+            "keywords",
+        ]
+    )
     logger.info("Updated profile for user %s.", user_id)
     return True
 
@@ -129,10 +135,7 @@ def run_profile_updates_for_all_users(dry_run: bool = False, limit: int | None =
     Rulează actualizarea de profile pentru toți userii care au suficiente texte.
     Returnează dict cu: processed, updated, skipped, errors.
     """
-    user_ids = (
-        JournalEntry.objects.values_list("user_id", flat=True)
-        .distinct()
-    )
+    user_ids = JournalEntry.objects.values_list("user_id", flat=True).distinct()
     if limit:
         user_ids = list(user_ids)[:limit]
     else:

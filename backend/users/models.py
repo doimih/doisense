@@ -78,10 +78,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return bool(self.vip_manual_override)
 
     def expected_early_discount_eligibility(self) -> bool:
-        return bool(
-            self.id
-            and self.id <= EARLY_DISCOUNT_USER_LIMIT
-        )
+        return bool(self.id and self.id <= EARLY_DISCOUNT_USER_LIMIT)
 
     def is_in_trial(self) -> bool:
         if self.manual_vip:
@@ -101,7 +98,10 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.PLAN_VIP
         if self.plan_tier == self.PLAN_TRIAL and not self.is_in_trial():
             return self.PLAN_FREE
-        if self.plan_tier in (self.PLAN_BASIC, self.PLAN_PREMIUM, self.PLAN_VIP) and not self.is_premium:
+        if (
+            self.plan_tier in (self.PLAN_BASIC, self.PLAN_PREMIUM, self.PLAN_VIP)
+            and not self.is_premium
+        ):
             return self.PLAN_FREE
         return self.plan_tier
 

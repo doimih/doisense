@@ -79,7 +79,11 @@ class Command(BaseCommand):
             )
 
             last_focus_at = max(
-                [timestamp for timestamp in [last_conversation, last_journal] if timestamp is not None],
+                [
+                    timestamp
+                    for timestamp in [last_conversation, last_journal]
+                    if timestamp is not None
+                ],
                 default=None,
             )
             if last_focus_at is None or last_focus_at > cutoff_date:
@@ -93,9 +97,7 @@ class Command(BaseCommand):
                 sent_count += 1
             except Exception as exc:
                 self.stderr.write(
-                    self.style.ERROR(
-                        f"Failed to send goal reminder to {user.email}: {str(exc)}"
-                    )
+                    self.style.ERROR(f"Failed to send goal reminder to {user.email}: {str(exc)}")
                 )
 
         self.stdout.write(self.style.SUCCESS(f"Sent {sent_count} goal reminder(s)."))

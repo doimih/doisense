@@ -20,16 +20,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--skip-free',
-            action='store_true',
-            help='Skip free tier users',
+            "--skip-free",
+            action="store_true",
+            help="Skip free tier users",
         )
 
     def handle(self, *args, **options):
-        skip_free = options['skip_free']
+        skip_free = options["skip_free"]
         now = timezone.now()
         today = now.date()
-        
+
         # Filter users based on options
         query = User.objects.filter(is_active=True)
         if skip_free:
@@ -43,7 +43,7 @@ class Command(BaseCommand):
                     User.PLAN_VIP,
                 ]
             )
-        
+
         sent_count = 0
         for user in query:
             # Check if user has made an entry today
@@ -51,24 +51,20 @@ class Command(BaseCommand):
                 user=user,
                 created_at__date=today,
             ).exists()
-            
+
             if has_entry_today:
                 continue
 
             if was_notification_sent(user, "journal_reminder", date=today):
                 continue
-            
+
             try:
                 send_journal_reminder(user)
                 record_notification_delivery(user, "journal_reminder", date=today)
                 sent_count += 1
             except Exception as e:
                 self.stderr.write(
-                    self.style.ERROR(
-                        f"Failed to send journal reminder to {user.email}: {str(e)}"
-                    )
+                    self.style.ERROR(f"Failed to send journal reminder to {user.email}: {str(e)}")
                 )
-        
-        self.stdout.write(
-            self.style.SUCCESS(f"Sent {sent_count} journal reminder(s).")
-        )
+
+        self.stdout.write(self.style.SUCCESS(f"Sent {sent_count} journal reminder(s)."))

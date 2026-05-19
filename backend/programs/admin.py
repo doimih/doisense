@@ -22,7 +22,15 @@ class GuidedProgramDayInline(admin.TabularInline):
 
 @admin.register(GuidedProgram)
 class GuidedProgramAdmin(ModelAdmin):
-    list_display = ("title", "category", "plan_access", "duration_days", "language", "is_premium", "active")
+    list_display = (
+        "title",
+        "category",
+        "plan_access",
+        "duration_days",
+        "language",
+        "is_premium",
+        "active",
+    )
     list_filter = ("category", "plan_access", "language", "is_premium", "active")
     search_fields = ("title", "description")
     inlines = [GuidedProgramDayInline]
@@ -53,7 +61,16 @@ class GuidedProgramDayAdmin(ModelAdmin):
 
 @admin.register(UserProgramProgress)
 class UserProgramProgressAdmin(ModelAdmin):
-    list_display = ("user", "program", "current_day", "start_date", "is_paused", "completed_at", "dropout_marked_at", "last_active_at")
+    list_display = (
+        "user",
+        "program",
+        "current_day",
+        "start_date",
+        "is_paused",
+        "completed_at",
+        "dropout_marked_at",
+        "last_active_at",
+    )
     list_filter = ("program", "is_paused", "completed_at")
     search_fields = ("user__email", "program__title")
     readonly_fields = ("started_at", "last_active_at", "dropout_marked_at", "completed_at")

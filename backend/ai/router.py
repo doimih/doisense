@@ -2,6 +2,7 @@
 AI Router: chooses between GPT-5 Mini and Claude.
 Uses OpenAI and Anthropic clients; model names can be overridden via env.
 """
+
 import hashlib
 import os
 import re
@@ -187,7 +188,9 @@ def _get_provider_default_pricing(provider: str) -> tuple[Decimal, Decimal]:
     return Decimal("0"), Decimal("0")
 
 
-def _estimate_cost_usd(provider: str, model: str, input_tokens: int | None, output_tokens: int | None) -> Decimal | None:
+def _estimate_cost_usd(
+    provider: str, model: str, input_tokens: int | None, output_tokens: int | None
+) -> Decimal | None:
     if input_tokens is None and output_tokens is None:
         return None
 
@@ -219,7 +222,9 @@ def _log_call_with_usage(
     )
 
 
-def complete(prompt: str, system: str | None = None, user_id=None, max_tokens: int | None = None) -> str:
+def complete(
+    prompt: str, system: str | None = None, user_id=None, max_tokens: int | None = None
+) -> str:
     """
     Send prompt to AI and return reply text.
     Prefer OpenAI (GPT) if key is set, else Anthropic (Claude).
@@ -241,7 +246,9 @@ def complete(prompt: str, system: str | None = None, user_id=None, max_tokens: i
     if provider == "openai":
         if not openai_key:
             return "[AI not configured. Set OpenAI API key in Admin or OPENAI_API_KEY.]"
-        return _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens)
+        return _complete_openai(
+            prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens
+        )
     if provider == "anthropic":
         if not anthropic_key:
             return "[AI not configured. Set Anthropic API key in Admin or ANTHROPIC_API_KEY.]"
@@ -254,7 +261,9 @@ def complete(prompt: str, system: str | None = None, user_id=None, max_tokens: i
         )
 
     if openai_key:
-        openai_result = _complete_openai(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens)
+        openai_result = _complete_openai(
+            prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens
+        )
         # In auto mode, fall back to Anthropic if OpenAI is configured but currently failing (e.g., quota/outage).
         if not openai_result.startswith("[OpenAI error:"):
             return openai_result
@@ -276,7 +285,9 @@ def complete(prompt: str, system: str | None = None, user_id=None, max_tokens: i
     return "[AI not configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY.]"
 
 
-def complete_stream(prompt: str, system: str | None = None, user_id=None, max_tokens: int | None = None) -> Iterator[str]:
+def complete_stream(
+    prompt: str, system: str | None = None, user_id=None, max_tokens: int | None = None
+) -> Iterator[str]:
     """
     Stream AI reply tokens. Falls back safely to complete() if stream APIs fail.
     """
@@ -299,7 +310,9 @@ def complete_stream(prompt: str, system: str | None = None, user_id=None, max_to
             yield "[AI not configured. Set OpenAI API key in Admin or OPENAI_API_KEY.]"
             return
         openai_streamed = False
-        for token in _complete_openai_stream(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens):
+        for token in _complete_openai_stream(
+            prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens
+        ):
             openai_streamed = True
             yield token
         if openai_streamed:
@@ -338,7 +351,9 @@ def complete_stream(prompt: str, system: str | None = None, user_id=None, max_to
             return
         if openai_key:
             openai_streamed = False
-            for token in _complete_openai_stream(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens):
+            for token in _complete_openai_stream(
+                prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens
+            ):
                 openai_streamed = True
                 yield token
             if openai_streamed:
@@ -348,7 +363,9 @@ def complete_stream(prompt: str, system: str | None = None, user_id=None, max_to
 
     if openai_key:
         openai_streamed = False
-        for token in _complete_openai_stream(prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens):
+        for token in _complete_openai_stream(
+            prompt, system=system, user_id=user_id, api_key=openai_key, max_tokens=max_tokens
+        ):
             openai_streamed = True
             yield token
         if openai_streamed:
@@ -372,7 +389,13 @@ def complete_stream(prompt: str, system: str | None = None, user_id=None, max_to
     yield complete(prompt=prompt, system=system, user_id=user_id, max_tokens=max_tokens)
 
 
-def _complete_openai(prompt: str, system: str | None = None, user_id=None, api_key: str = "", max_tokens: int | None = None) -> str:
+def _complete_openai(
+    prompt: str,
+    system: str | None = None,
+    user_id=None,
+    api_key: str = "",
+    max_tokens: int | None = None,
+) -> str:
     started_at = time.perf_counter()
     model = "unknown"
     try:
@@ -428,7 +451,13 @@ def _complete_openai(prompt: str, system: str | None = None, user_id=None, api_k
         return _safe_provider_error("OpenAI", e)
 
 
-def _complete_anthropic(prompt: str, system: str | None = None, user_id=None, api_key: str = "", max_tokens: int | None = None) -> str:
+def _complete_anthropic(
+    prompt: str,
+    system: str | None = None,
+    user_id=None,
+    api_key: str = "",
+    max_tokens: int | None = None,
+) -> str:
     started_at = time.perf_counter()
     model = "unknown"
     try:

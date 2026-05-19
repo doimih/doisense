@@ -19,7 +19,9 @@ def call_ai_auditor(payload: dict) -> dict | None:
     name = payload.get("prompt_name", "")
     ptype = payload.get("prompt_type", "")
 
-    legacy_section = f"\n---LEGACY PROMPT---\n{legacy}\n" if legacy.strip() else "(no legacy prompt provided)"
+    legacy_section = (
+        f"\n---LEGACY PROMPT---\n{legacy}\n" if legacy.strip() else "(no legacy prompt provided)"
+    )
 
     system = (
         "You are a professional AI prompt auditor specializing in mental-health and wellness platforms. "
@@ -92,9 +94,13 @@ def _tone_mismatch(legacy_text: str, new_text: str) -> list[str]:
     legacy_lower = legacy_text.lower()
     new_lower = new_text.lower()
     if "empathetic" in legacy_lower and "empathetic" not in new_lower:
-        notes.append("Legacy prompt explicitly requires empathy but the new prompt does not mention it.")
+        notes.append(
+            "Legacy prompt explicitly requires empathy but the new prompt does not mention it."
+        )
     if "wellness" in legacy_lower and "wellness" not in new_lower:
-        notes.append("Legacy prompt is wellness-oriented while the new prompt does not reinforce that focus.")
+        notes.append(
+            "Legacy prompt is wellness-oriented while the new prompt does not reinforce that focus."
+        )
     return notes
 
 
@@ -119,11 +125,17 @@ def audit_prompt(prompt: Prompt, legacy_prompt_text: str | None = None) -> dict:
 
     recommended_changes = []
     if missing_rules:
-        recommended_changes.append("Reintroduce the missing operational rules that still matter for the AI behavior.")
+        recommended_changes.append(
+            "Reintroduce the missing operational rules that still matter for the AI behavior."
+        )
     if contradictions:
-        recommended_changes.append("Resolve contradictory instructions before promoting this prompt to production.")
+        recommended_changes.append(
+            "Resolve contradictory instructions before promoting this prompt to production."
+        )
     if not recommended_changes:
-        recommended_changes.append("Prompt is broadly consistent; validate it with a controlled staging test.")
+        recommended_changes.append(
+            "Prompt is broadly consistent; validate it with a controlled staging test."
+        )
 
     issue_lines = []
     if contradictions:
@@ -134,9 +146,13 @@ def audit_prompt(prompt: Prompt, legacy_prompt_text: str | None = None) -> dict:
         issue_lines.extend(tone_notes)
 
     if contradictions:
-        suggested_improvement = "Resolve contradictory instructions and keep only one behavioral rule per requirement."
+        suggested_improvement = (
+            "Resolve contradictory instructions and keep only one behavioral rule per requirement."
+        )
     elif missing_rules:
-        suggested_improvement = "Restore the missing legacy constraints that are still required in production behavior."
+        suggested_improvement = (
+            "Restore the missing legacy constraints that are still required in production behavior."
+        )
     else:
         suggested_improvement = "The prompt is structurally sound; focus on minor clarity improvements and staging validation."
 

@@ -219,7 +219,9 @@ class WeeklyReport(models.Model):
         db_table = "ai_weeklyreport"
         ordering = ["-week_start"]
         constraints = [
-            models.UniqueConstraint(fields=["user", "week_start"], name="ai_weeklyreport_user_week_uniq"),
+            models.UniqueConstraint(
+                fields=["user", "week_start"], name="ai_weeklyreport_user_week_uniq"
+            ),
         ]
 
 
@@ -242,5 +244,7 @@ class MonthlyReport(models.Model):
         db_table = "ai_monthlyreport"
         ordering = ["-year", "-month"]
         constraints = [
-            models.UniqueConstraint(fields=["user", "year", "month"], name="ai_monthlyreport_user_month_uniq"),
+            models.UniqueConstraint(
+                fields=["user", "year", "month"], name="ai_monthlyreport_user_month_uniq"
+            ),
         ]

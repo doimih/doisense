@@ -62,9 +62,7 @@ def _daily_user_conversion(days):
         .order_by("day")
     )
 
-    values_by_day = {
-        row["day"]: {"total": row["total"], "premium": row["premium"]} for row in rows
-    }
+    values_by_day = {row["day"]: {"total": row["total"], "premium": row["premium"]} for row in rows}
 
     labels = []
     rates = []
@@ -85,11 +83,7 @@ def _daily_user_conversion(days):
 
 
 def _tier_distribution():
-    rows = (
-        User.objects.values("plan_tier")
-        .annotate(total=Count("id"))
-        .order_by("-total")
-    )
+    rows = User.objects.values("plan_tier").annotate(total=Count("id")).order_by("-total")
     tier_order = ["vip", "premium", "basic", "trial", "free"]
     tier_colors = {
         "vip": "rgba(217, 119, 6, 0.85)",
@@ -104,12 +98,14 @@ def _tier_distribution():
     for tier in tier_order:
         n = counts_by_tier.get(tier, 0)
         pct = round((n / total) * 100) if total else 0
-        result.append({
-            "tier": tier.upper(),
-            "count": n,
-            "pct": pct,
-            "color": tier_colors.get(tier, "rgba(100,100,100,0.5)"),
-        })
+        result.append(
+            {
+                "tier": tier.upper(),
+                "count": n,
+                "pct": pct,
+                "color": tier_colors.get(tier, "rgba(100,100,100,0.5)"),
+            }
+        )
     return result, total
 
 
@@ -229,7 +225,9 @@ def dashboard_callback(request, context):
         event_name="program_reflection_submitted",
         created_at__gte=start_period,
     ).count()
-    support_ticket_created_period = SupportTicket.objects.filter(created_at__gte=start_period).count()
+    support_ticket_created_period = SupportTicket.objects.filter(
+        created_at__gte=start_period
+    ).count()
     support_ticket_open_total = SupportTicket.objects.filter(
         status__in=[SupportTicket.STATUS_OPEN, SupportTicket.STATUS_IN_PROGRESS]
     ).count()
@@ -238,7 +236,9 @@ def dashboard_callback(request, context):
         resolution_due_at__isnull=False,
         resolution_due_at__lt=now,
     ).count()
-    backup_restore_requested_period = BackupRestoreRequest.objects.filter(created_at__gte=start_period).count()
+    backup_restore_requested_period = BackupRestoreRequest.objects.filter(
+        created_at__gte=start_period
+    ).count()
     in_app_unread_total = InAppNotification.objects.filter(is_read=False).count()
     subscription_cancel_requested_period = AnalyticsEvent.objects.filter(
         event_name="subscription_cancel_requested",
@@ -291,14 +291,22 @@ def dashboard_callback(request, context):
         created_at__gte=start_period,
         properties__platform="ios",
     ).count()
-    pwa_install_rate = round((pwa_accepted_period / pwa_prompted_period) * 100, 1) if pwa_prompted_period else 0
-    system_errors_24h = SystemErrorEvent.objects.filter(created_at__gte=now - timedelta(hours=24)).count()
+    pwa_install_rate = (
+        round((pwa_accepted_period / pwa_prompted_period) * 100, 1) if pwa_prompted_period else 0
+    )
+    system_errors_24h = SystemErrorEvent.objects.filter(
+        created_at__gte=now - timedelta(hours=24)
+    ).count()
     system_errors_7d = SystemErrorEvent.objects.filter(created_at__gte=start_7d).count()
     critical_errors_7d = SystemErrorEvent.objects.filter(
         created_at__gte=start_7d,
         severity__in=[SystemErrorEvent.SEVERITY_HIGH, SystemErrorEvent.SEVERITY_CRITICAL],
     ).count()
-    latest_system_error = SystemErrorEvent.objects.order_by("-created_at").values_list("created_at", flat=True).first()
+    latest_system_error = (
+        SystemErrorEvent.objects.order_by("-created_at")
+        .values_list("created_at", flat=True)
+        .first()
+    )
     admin_audit_7d = AdminAuditLog.objects.filter(created_at__gte=start_7d).count()
     latest_backup = BackupVerificationLog.objects.order_by("-created_at").first()
     gdpr_delete_count = User.objects.filter(
@@ -432,7 +440,7 @@ def dashboard_callback(request, context):
                     "beginAtZero": True,
                     "grid": {"color": "rgba(120, 113, 108, 0.14)"},
                     "ticks": {"precision": 0, "color": "#57534e"},
-                }
+                },
             },
         }
     )

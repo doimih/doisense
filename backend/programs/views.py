@@ -24,11 +24,15 @@ from .services import (
 
 
 def _program_or_404(program_id: int) -> GuidedProgram:
-    return get_object_or_404(GuidedProgram.objects.prefetch_related("days"), id=program_id, active=True)
+    return get_object_or_404(
+        GuidedProgram.objects.prefetch_related("days"), id=program_id, active=True
+    )
 
 
 def _activation_or_404(user, program: GuidedProgram) -> UserProgramProgress:
-    return get_object_or_404(UserProgramProgress.objects.select_related("program"), user=user, program=program)
+    return get_object_or_404(
+        UserProgramProgress.objects.select_related("program"), user=user, program=program
+    )
 
 
 class ProgramListView(APIView):
@@ -41,7 +45,10 @@ class ProgramListView(APIView):
         programs = available_programs_for_user(request.user, category=category, language=language)
         return Response(
             {
-                "items": [serialize_program(program, request.user, include_days=False) for program in programs],
+                "items": [
+                    serialize_program(program, request.user, include_days=False)
+                    for program in programs
+                ],
                 "filters": {"category": category, "language": language},
             }
         )
@@ -63,7 +70,9 @@ class ProgramDetailView(APIView):
             )
 
         activation = UserProgramProgress.objects.filter(user=request.user, program=program).first()
-        return Response(serialize_program(program, request.user, include_days=True, activation=activation))
+        return Response(
+            serialize_program(program, request.user, include_days=True, activation=activation)
+        )
 
 
 class ProgramActivateView(APIView):
@@ -84,7 +93,9 @@ class ProgramActivateView(APIView):
         activation, tasks = activate_program_for_user(request.user, program)
         return Response(
             {
-                "program": serialize_program(program, request.user, include_days=True, activation=activation),
+                "program": serialize_program(
+                    program, request.user, include_days=True, activation=activation
+                ),
                 "activation": serialize_activation(activation),
                 "calendar_tasks_generated": len(tasks),
             },
@@ -106,7 +117,9 @@ class ProgramActiveView(APIView):
         return Response(
             {
                 "item": {
-                    "program": serialize_program(program, request.user, include_days=False, activation=activation),
+                    "program": serialize_program(
+                        program, request.user, include_days=False, activation=activation
+                    ),
                     "activation": serialize_activation(activation),
                     "current_step": serialize_day(current_step) if current_step else None,
                 }
@@ -123,9 +136,14 @@ class ProgramCompleteDayView(APIView):
         activation = _activation_or_404(request.user, program)
         day_number_raw = request.data.get("day_number")
         try:
-            day_number = int(day_number_raw) if day_number_raw not in (None, "") else activation.progress_day
+            day_number = (
+                int(day_number_raw) if day_number_raw not in (None, "") else activation.progress_day
+            )
         except (TypeError, ValueError):
-            return Response({"detail": "day_number trebuie sa fie un numar valid."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "day_number trebuie sa fie un numar valid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(complete_program_day_for_user(request.user, program, day_number=day_number))
 
 
@@ -137,14 +155,25 @@ class ProgramReflectionView(APIView):
         program = _program_or_404(program_id)
         day_number_raw = request.query_params.get("day_number")
         if not day_number_raw:
-            return Response({"detail": "Parametrul day_number este obligatoriu."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Parametrul day_number este obligatoriu."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             day_number = int(day_number_raw)
         except (TypeError, ValueError):
-            return Response({"detail": "day_number trebuie sa fie un numar valid."}, status=status.HTTP_400_BAD_REQUEST)
-        reflection = ProgramReflection.objects.filter(user=request.user, program=program, day_number=day_number).first()
+            return Response(
+                {"detail": "day_number trebuie sa fie un numar valid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        reflection = ProgramReflection.objects.filter(
+            user=request.user, program=program, day_number=day_number
+        ).first()
         if not reflection:
-            return Response({"detail": "Nu exista reflectie pentru ziua ceruta."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Nu exista reflectie pentru ziua ceruta."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         return Response(ProgramReflectionSerializer(reflection).data)
 
     @require_feature("programs_access")
@@ -153,10 +182,16 @@ class ProgramReflectionView(APIView):
         try:
             day_number = int(request.data.get("day_number") or 0)
         except (TypeError, ValueError):
-            return Response({"detail": "day_number trebuie sa fie un numar valid."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "day_number trebuie sa fie un numar valid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         reflection_text = str(request.data.get("reflection_text") or "").strip()
         if day_number < 1 or not reflection_text:
-            return Response({"detail": "day_number si reflection_text sunt obligatorii."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "day_number si reflection_text sunt obligatorii."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         reflection, _ = ProgramReflection.objects.update_or_create(
             user=request.user,
@@ -169,7 +204,9 @@ class ProgramReflectionView(APIView):
                 ),
             },
         )
-        return Response(ProgramReflectionSerializer(reflection).data, status=status.HTTP_201_CREATED)
+        return Response(
+            ProgramReflectionSerializer(reflection).data, status=status.HTTP_201_CREATED
+        )
 
 
 class ProgramProgressView(APIView):
@@ -216,6 +253,9 @@ class ProgramDayView(APIView):
     def get(self, request, program_id: int, day_number: int):
         program = _program_or_404(program_id)
         if not can_view_program(request.user, program):
-            return Response({"detail": "Program indisponibil pentru planul tau."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "Program indisponibil pentru planul tau."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         day = get_object_or_404(program.days, day_number=day_number)
         return Response(serialize_day(day))

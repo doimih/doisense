@@ -23,7 +23,9 @@ class CMSPage(models.Model):
         db_table = "core_cmspage"
         ordering = ["menu_order", "slug", "language"]
         constraints = [
-            models.UniqueConstraint(fields=["slug", "language"], name="core_cmspage_slug_language_uniq"),
+            models.UniqueConstraint(
+                fields=["slug", "language"], name="core_cmspage_slug_language_uniq"
+            ),
         ]
 
     def __str__(self):
@@ -225,7 +227,9 @@ class PlatformScheduledJob(models.Model):
     code = models.CharField(max_length=64, unique=True)
     label = models.CharField(max_length=120)
     command_name = models.CharField(max_length=120)
-    schedule_type = models.CharField(max_length=16, choices=SCHEDULE_CHOICES, default=SCHEDULE_DAILY)
+    schedule_type = models.CharField(
+        max_length=16, choices=SCHEDULE_CHOICES, default=SCHEDULE_DAILY
+    )
     minute_of_hour = models.PositiveSmallIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(59)],
@@ -243,7 +247,9 @@ class PlatformScheduledJob(models.Model):
     )
     enabled = models.BooleanField(default=True)
     last_run_at = models.DateTimeField(null=True, blank=True)
-    last_run_status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    last_run_status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
     last_error = models.TextField(blank=True, default="")
     last_duration_ms = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -288,7 +294,11 @@ class PlatformScheduledJob(models.Model):
                 current.hour,
             )
 
-        if self.hour_of_day is None or current.hour != self.hour_of_day or current.minute != self.minute_of_hour:
+        if (
+            self.hour_of_day is None
+            or current.hour != self.hour_of_day
+            or current.minute != self.minute_of_hour
+        ):
             return False
 
         if self.schedule_type == self.SCHEDULE_WEEKLY:

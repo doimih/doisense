@@ -20,22 +20,130 @@ class SchedulerTaskDefinition:
 
 
 DEFAULT_SCHEDULER_TASKS = [
-    SchedulerTaskDefinition("expire_trials", "Expire Trials", "expire_trials", PlatformScheduledJob.SCHEDULE_HOURLY, 0),
-    SchedulerTaskDefinition("send_trial_warnings", "Send Trial Warnings", "send_trial_warnings", PlatformScheduledJob.SCHEDULE_DAILY, 0, 5),
-    SchedulerTaskDefinition("send_daily_plan_reminders", "Send Daily Plan Reminders", "send_daily_plan_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 7),
-    SchedulerTaskDefinition("send_journal_reminders", "Send Journal Reminders", "send_journal_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 8),
-    SchedulerTaskDefinition("send_goal_reminders", "Send Goal Reminders", "send_goal_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 18),
-    SchedulerTaskDefinition("send_wellbeing_reminders", "Send Wellbeing Reminders", "send_wellbeing_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 10),
-    SchedulerTaskDefinition("send_upgrade_recommendations", "Send Upgrade Recommendations", "send_upgrade_recommendations", PlatformScheduledJob.SCHEDULE_DAILY, 0, 14),
-    SchedulerTaskDefinition("audit_manual_vip", "Audit Manual VIP", "audit_manual_vip", PlatformScheduledJob.SCHEDULE_WEEKLY, 0, 6, 0),
-    SchedulerTaskDefinition("send_inactivity_reminders", "Send Inactivity Reminders", "send_inactivity_reminders", PlatformScheduledJob.SCHEDULE_DAILY, 0, 9),
-    SchedulerTaskDefinition("send_reactivation_campaign", "Send Reactivation Campaign", "send_reactivation_campaign", PlatformScheduledJob.SCHEDULE_DAILY, 0, 11),
-    SchedulerTaskDefinition("ai_update_profiles", "Refresh AI Profiles", "ai_update_profiles", PlatformScheduledJob.SCHEDULE_DAILY, 0, 2),
-    SchedulerTaskDefinition("ai_generate_daily_reports", "Generate AI Daily Reports", "ai_generate_daily_reports", PlatformScheduledJob.SCHEDULE_DAILY, 10, 2),
-    SchedulerTaskDefinition("ai_generate_weekly_reports", "Generate AI Weekly Reports", "ai_generate_weekly_reports", PlatformScheduledJob.SCHEDULE_WEEKLY, 20, 2, 0),
-    SchedulerTaskDefinition("ai_generate_monthly_reports", "Generate AI Monthly Reports", "ai_generate_monthly_reports", PlatformScheduledJob.SCHEDULE_DAILY, 30, 2),
-    SchedulerTaskDefinition("verify_backup_flow", "Verify Backup Flow", "verify_backup_flow", PlatformScheduledJob.SCHEDULE_DAILY, 30, 3),
-    SchedulerTaskDefinition("sync_subscriptions_reconciliation", "Sync Stripe Subscriptions", "sync_subscriptions", PlatformScheduledJob.SCHEDULE_HOURLY, 15),
+    SchedulerTaskDefinition(
+        "expire_trials", "Expire Trials", "expire_trials", PlatformScheduledJob.SCHEDULE_HOURLY, 0
+    ),
+    SchedulerTaskDefinition(
+        "send_trial_warnings",
+        "Send Trial Warnings",
+        "send_trial_warnings",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        5,
+    ),
+    SchedulerTaskDefinition(
+        "send_daily_plan_reminders",
+        "Send Daily Plan Reminders",
+        "send_daily_plan_reminders",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        7,
+    ),
+    SchedulerTaskDefinition(
+        "send_journal_reminders",
+        "Send Journal Reminders",
+        "send_journal_reminders",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        8,
+    ),
+    SchedulerTaskDefinition(
+        "send_goal_reminders",
+        "Send Goal Reminders",
+        "send_goal_reminders",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        18,
+    ),
+    SchedulerTaskDefinition(
+        "send_wellbeing_reminders",
+        "Send Wellbeing Reminders",
+        "send_wellbeing_reminders",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        10,
+    ),
+    SchedulerTaskDefinition(
+        "send_upgrade_recommendations",
+        "Send Upgrade Recommendations",
+        "send_upgrade_recommendations",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        14,
+    ),
+    SchedulerTaskDefinition(
+        "audit_manual_vip",
+        "Audit Manual VIP",
+        "audit_manual_vip",
+        PlatformScheduledJob.SCHEDULE_WEEKLY,
+        0,
+        6,
+        0,
+    ),
+    SchedulerTaskDefinition(
+        "send_inactivity_reminders",
+        "Send Inactivity Reminders",
+        "send_inactivity_reminders",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        9,
+    ),
+    SchedulerTaskDefinition(
+        "send_reactivation_campaign",
+        "Send Reactivation Campaign",
+        "send_reactivation_campaign",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        11,
+    ),
+    SchedulerTaskDefinition(
+        "ai_update_profiles",
+        "Refresh AI Profiles",
+        "ai_update_profiles",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        0,
+        2,
+    ),
+    SchedulerTaskDefinition(
+        "ai_generate_daily_reports",
+        "Generate AI Daily Reports",
+        "ai_generate_daily_reports",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        10,
+        2,
+    ),
+    SchedulerTaskDefinition(
+        "ai_generate_weekly_reports",
+        "Generate AI Weekly Reports",
+        "ai_generate_weekly_reports",
+        PlatformScheduledJob.SCHEDULE_WEEKLY,
+        20,
+        2,
+        0,
+    ),
+    SchedulerTaskDefinition(
+        "ai_generate_monthly_reports",
+        "Generate AI Monthly Reports",
+        "ai_generate_monthly_reports",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        30,
+        2,
+    ),
+    SchedulerTaskDefinition(
+        "verify_backup_flow",
+        "Verify Backup Flow",
+        "verify_backup_flow",
+        PlatformScheduledJob.SCHEDULE_DAILY,
+        30,
+        3,
+    ),
+    SchedulerTaskDefinition(
+        "sync_subscriptions_reconciliation",
+        "Sync Stripe Subscriptions",
+        "sync_subscriptions",
+        PlatformScheduledJob.SCHEDULE_HOURLY,
+        15,
+    ),
 ]
 
 
@@ -62,7 +170,9 @@ def execute_scheduled_job(job: PlatformScheduledJob, *, now=None) -> tuple[bool,
     try:
         call_command(job.command_name, stdout=stdout, stderr=stderr)
         status = PlatformScheduledJob.STATUS_SUCCESS
-        combined_output = "\n".join(part for part in [stdout.getvalue().strip(), stderr.getvalue().strip()] if part).strip()
+        combined_output = "\n".join(
+            part for part in [stdout.getvalue().strip(), stderr.getvalue().strip()] if part
+        ).strip()
         job.last_error = combined_output[:5000]
         success = True
     except Exception as exc:
@@ -85,5 +195,13 @@ def execute_scheduled_job(job: PlatformScheduledJob, *, now=None) -> tuple[bool,
     job.last_run_at = executed_at
     job.last_run_status = status
     job.last_duration_ms = duration_ms
-    job.save(update_fields=["last_run_at", "last_run_status", "last_error", "last_duration_ms", "updated_at"])
+    job.save(
+        update_fields=[
+            "last_run_at",
+            "last_run_status",
+            "last_error",
+            "last_duration_ms",
+            "updated_at",
+        ]
+    )
     return success, job.last_error

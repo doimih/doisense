@@ -144,10 +144,7 @@ def _build_recent_context(user, plan_tier: str) -> str:
     if history_window <= 0:
         return ""
 
-    items = list(
-        Conversation.objects.filter(user=user)
-        .order_by("-created_at")[:history_window]
-    )
+    items = list(Conversation.objects.filter(user=user).order_by("-created_at")[:history_window])
     if not items:
         return ""
 
@@ -163,10 +160,7 @@ def _build_recent_history_turns(user, plan_tier: str) -> list[tuple[str, str]]:
     if history_window <= 0:
         return []
 
-    items = list(
-        Conversation.objects.filter(user=user)
-        .order_by("-created_at")[:history_window]
-    )
+    items = list(Conversation.objects.filter(user=user).order_by("-created_at")[:history_window])
     return [(item.user_message or "", item.ai_response or "") for item in reversed(items)]
 
 
@@ -205,7 +199,11 @@ def _prepare_chat_message(request):
             conversation_history=history_turns or None,
         )
     except Exception:
-        full_prompt = message if not recent_context else f"{recent_context}\n\nCurrent user message:\n{message}"
+        full_prompt = (
+            message
+            if not recent_context
+            else f"{recent_context}\n\nCurrent user message:\n{message}"
+        )
     return {
         "message": message,
         "plan_tier": plan_tier,
@@ -252,7 +250,9 @@ class SendChatView(APIView):
     def post(self, request):
         allowed, remaining, limit = check_and_consume(request.user, "chat_messages", amount=1)
         if not allowed:
-            base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+            base_url = getattr(
+                settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense"
+            )
             language = request.user.language or "en"
             return Response(
                 {
@@ -305,7 +305,9 @@ class SendChatStreamView(APIView):
     def post(self, request):
         allowed, remaining, limit = check_and_consume(request.user, "chat_messages", amount=1)
         if not allowed:
-            base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+            base_url = getattr(
+                settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense"
+            )
             language = request.user.language or "en"
             return Response(
                 {
@@ -366,11 +368,18 @@ class SendChatStreamView(APIView):
                     "chat_message_sent",
                     source="backend",
                     user=request.user,
-                    properties={"module": _extract_module(payload["message"]) or "general", "streaming": True},
+                    properties={
+                        "module": _extract_module(payload["message"]) or "general",
+                        "streaming": True,
+                    },
                 )
                 yield _sse("done", {"reply": reply})
             except Exception as exc:
-                detail = _chat_text(request.user, "stream_timeout") if "timeout" in str(exc).lower() else _chat_text(request.user, "stream_failed")
+                detail = (
+                    _chat_text(request.user, "stream_timeout")
+                    if "timeout" in str(exc).lower()
+                    else _chat_text(request.user, "stream_failed")
+                )
                 yield _sse("error", {"detail": detail})
 
         response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
@@ -473,8 +482,9 @@ class ChatHistoryView(APIView):
         history = {}
         for mod in _CHAT_MODULE_IDS:
             items = list(
-                Conversation.objects.filter(user=request.user, module=mod)
-                .order_by("-created_at")[:HISTORY_DISPLAY_PER_MODULE]
+                Conversation.objects.filter(user=request.user, module=mod).order_by("-created_at")[
+                    :HISTORY_DISPLAY_PER_MODULE
+                ]
             )
             if items:
                 history[mod] = [

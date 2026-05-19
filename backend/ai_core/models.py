@@ -50,9 +50,7 @@ class Prompt(models.Model):
         created = self.pk is None
         if self.pk:
             previous_state = (
-                Prompt.objects.filter(pk=self.pk)
-                .values("content", "type", "language")
-                .first()
+                Prompt.objects.filter(pk=self.pk).values("content", "type", "language").first()
             )
 
         changed = bool(
@@ -112,5 +110,3 @@ class PromptVersion(models.Model):
 
     def __str__(self):
         return f"{self.prompt.name} v{self.version_number}"
-
-

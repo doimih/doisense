@@ -80,7 +80,11 @@ class Command(BaseCommand):
         if payment_ids:
             qs = qs.filter(id__in=payment_ids)
 
-        subscription_ids = [str(item).strip() for item in (options.get("subscription_ids") or []) if str(item).strip()]
+        subscription_ids = [
+            str(item).strip()
+            for item in (options.get("subscription_ids") or [])
+            if str(item).strip()
+        ]
         if subscription_ids:
             qs = qs.filter(stripe_subscription_id__in=subscription_ids)
 
@@ -128,9 +132,7 @@ class Command(BaseCommand):
             except stripe.StripeError as exc:
                 failed += 1
                 self.stdout.write(
-                    self.style.WARNING(
-                        f"Failed subscription fetch for payment={payment.id}: {exc}"
-                    )
+                    self.style.WARNING(f"Failed subscription fetch for payment={payment.id}: {exc}")
                 )
                 continue
 

@@ -17,7 +17,9 @@ def test_platform_scheduler_runs_due_job_once(monkeypatch):
     fixed_now = timezone.now().replace(second=0, microsecond=0, minute=15)
     executed = []
 
-    monkeypatch.setattr("core.management.commands.run_platform_scheduler.timezone.now", lambda: fixed_now)
+    monkeypatch.setattr(
+        "core.management.commands.run_platform_scheduler.timezone.now", lambda: fixed_now
+    )
     monkeypatch.setattr(
         "core.scheduler.call_command",
         lambda command_name, stdout=None, stderr=None: executed.append(command_name),
@@ -48,7 +50,9 @@ def test_platform_scheduler_marks_failed_job(monkeypatch):
     )
     fixed_now = timezone.now().replace(second=0, microsecond=0, minute=30, hour=11)
 
-    monkeypatch.setattr("core.management.commands.run_platform_scheduler.timezone.now", lambda: fixed_now)
+    monkeypatch.setattr(
+        "core.management.commands.run_platform_scheduler.timezone.now", lambda: fixed_now
+    )
 
     def _raise(*args, **kwargs):
         raise RuntimeError("scheduler failure")

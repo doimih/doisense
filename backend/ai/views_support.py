@@ -7,6 +7,7 @@ GDPR rights, platform usage, and escalation routing.
 Separate from the wellness chat; no tier gating — all users can access support.
 Rate-limited separately (5 requests/min per user).
 """
+
 from django.core.cache import cache
 from django.utils import timezone
 from rest_framework import status
@@ -171,17 +172,65 @@ def _check_support_rate(user_id) -> bool:
 def _classify_intent(message: str) -> str:
     """Classify user support query into a category for routing."""
     msg = message.lower()
-    account_kw = ("cont", "email", "parola", "password", "account", "login",
-                  "profil", "profile", "stergere", "delete", "șterg", "datele mele")
-    billing_kw = ("abonament", "subscription", "plata", "payment", "factura",
-                  "invoice", "card", "stripe", "price", "cost", "prix", "pret",
-                  "basic", "premium", "vip", "trial", "expir")
-    gdpr_kw = ("gdpr", "date personale", "personal data", "ștergere date",
-               "delete data", "export date", "export data", "privacy",
-               "confidential", "intimitate", "right to be forgotten",
-               "drept uitat")
-    tech_kw = ("eroare", "bug", "nu functioneaza", "not working", "error",
-               "crash", "lent", "slow", "problema", "problem")
+    account_kw = (
+        "cont",
+        "email",
+        "parola",
+        "password",
+        "account",
+        "login",
+        "profil",
+        "profile",
+        "stergere",
+        "delete",
+        "șterg",
+        "datele mele",
+    )
+    billing_kw = (
+        "abonament",
+        "subscription",
+        "plata",
+        "payment",
+        "factura",
+        "invoice",
+        "card",
+        "stripe",
+        "price",
+        "cost",
+        "prix",
+        "pret",
+        "basic",
+        "premium",
+        "vip",
+        "trial",
+        "expir",
+    )
+    gdpr_kw = (
+        "gdpr",
+        "date personale",
+        "personal data",
+        "ștergere date",
+        "delete data",
+        "export date",
+        "export data",
+        "privacy",
+        "confidential",
+        "intimitate",
+        "right to be forgotten",
+        "drept uitat",
+    )
+    tech_kw = (
+        "eroare",
+        "bug",
+        "nu functioneaza",
+        "not working",
+        "error",
+        "crash",
+        "lent",
+        "slow",
+        "problema",
+        "problem",
+    )
 
     if any(k in msg for k in gdpr_kw):
         return "gdpr"
@@ -209,9 +258,7 @@ def _build_support_context(user) -> str:
         else "N/A"
     )
     cancel_flag = (
-        "yes (cancels at period end)"
-        if payment and payment.cancel_at_period_end
-        else "no"
+        "yes (cancels at period end)" if payment and payment.cancel_at_period_end else "no"
     )
 
     internal_subject_id = f"u-{user.id}"
@@ -279,7 +326,8 @@ _INTENT_INSTRUCTIONS = {
 def _build_support_system_prompt(user, intent: str) -> str:
     lang = get_user_language(user)
     lang_instruction = (
-        "Răspunde întotdeauna în română." if lang.startswith("ro")
+        "Răspunde întotdeauna în română."
+        if lang.startswith("ro")
         else f"Always reply in {LANGUAGE_NAMES.get(lang, 'English')}."
     )
 
@@ -324,7 +372,9 @@ def _should_open_support_ticket(message: str, intent: str) -> bool:
         "tiket",
         "tichet",
     )
-    return intent in {"account", "billing", "gdpr"} and any(keyword in msg for keyword in escalation_keywords)
+    return intent in {"account", "billing", "gdpr"} and any(
+        keyword in msg for keyword in escalation_keywords
+    )
 
 
 def _create_or_reuse_ticket(user, intent: str, message: str):
@@ -345,13 +395,17 @@ def _create_or_reuse_ticket(user, intent: str, message: str):
     snippet = " ".join((message or "").split())[:90]
     subject = subject_prefix if not snippet else f"{subject_prefix}: {snippet}"[:180]
     cutoff = timezone.now() - timezone.timedelta(minutes=_TICKET_REUSE_WINDOW_MINUTES)
-    ticket = SupportTicket.objects.filter(
-        user=user,
-        status__in=[SupportTicket.STATUS_OPEN, SupportTicket.STATUS_IN_PROGRESS],
-        subject=subject,
-        message=message,
-        created_at__gte=cutoff,
-    ).order_by("-created_at").first()
+    ticket = (
+        SupportTicket.objects.filter(
+            user=user,
+            status__in=[SupportTicket.STATUS_OPEN, SupportTicket.STATUS_IN_PROGRESS],
+            subject=subject,
+            message=message,
+            created_at__gte=cutoff,
+        )
+        .order_by("-created_at")
+        .first()
+    )
     if ticket:
         return ticket, False
 
@@ -375,6 +429,7 @@ def _create_or_reuse_ticket(user, intent: str, message: str):
     )
     return ticket, True
 
+
 def _ticket_response_note(user, ticket, created: bool) -> str:
     if not ticket:
         return ""
@@ -392,6 +447,7 @@ class SupportChatView(APIView):
 
     All authenticated users can access this (no tier gating).
     """
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
