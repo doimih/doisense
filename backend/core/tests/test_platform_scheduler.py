@@ -26,12 +26,14 @@ def test_platform_scheduler_runs_due_job_once(monkeypatch):
     call_command("run_platform_scheduler")
     job.refresh_from_db()
 
-    assert executed == ["send_trial_warnings"]
+    assert "send_trial_warnings" in executed
+    assert "sync_subscriptions" in executed
+    assert len(executed) == 2
     assert job.last_run_status == PlatformScheduledJob.STATUS_SUCCESS
     assert job.last_run_at == fixed_now
 
     call_command("run_platform_scheduler")
-    assert executed == ["send_trial_warnings"]
+    assert len(executed) == 2
 
 
 @pytest.mark.django_db

@@ -604,7 +604,6 @@ async function loginWithGoogle() {
     socialLoading.value = ''
   }
 }
-}
 
 async function submitLogin() {
   authError.value = ''

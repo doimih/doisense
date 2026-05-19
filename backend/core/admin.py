@@ -864,13 +864,14 @@ class OAuthConfigAdmin(SingletonProxyConfigAdmin):
 
 @admin.register(StripeConfig)
 class StripeConfigAdmin(SingletonProxyConfigAdmin):
+    readonly_fields = ("stripe_keys_env_only_notice",)
+
     fieldsets = (
         (
-            "API Keys",
+            "API Keys (Environment only)",
             {
                 "fields": (
-                    "stripe_secret_key",
-                    "stripe_webhook_secret",
+                    "stripe_keys_env_only_notice",
                 )
             },
         ),
@@ -895,6 +896,13 @@ class StripeConfigAdmin(SingletonProxyConfigAdmin):
             },
         ),
     )
+
+    @admin.display(description="Secret management")
+    def stripe_keys_env_only_notice(self, obj):
+        return (
+            "Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET via environment variables. "
+            "Database values are disabled in production."
+        )
 
 
 @admin.register(AIConfig)

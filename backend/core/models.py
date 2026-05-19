@@ -1,5 +1,6 @@
 from django.core.cache import cache
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -52,6 +53,7 @@ class SystemConfig(models.Model):
 
     # OAuth settings
     google_client_id = models.CharField(max_length=255, blank=True)
+    apple_client_id = models.CharField(max_length=255, blank=True, default="")
     google_client_secret = models.CharField(max_length=255, blank=True)
 
     # Stripe settings
@@ -136,6 +138,12 @@ class SystemConfig(models.Model):
     def save(self, *args, **kwargs):
         # Keep this as a singleton row for predictable runtime lookups.
         self.pk = 1
+        allow_db_stripe_secrets = bool(
+            getattr(settings, "ALLOW_DB_STRIPE_SECRETS", getattr(settings, "DEBUG", False))
+        )
+        if not allow_db_stripe_secrets:
+            self.stripe_secret_key = ""
+            self.stripe_webhook_secret = ""
         if not self.enabled_languages:
             self.enabled_languages = ["ro", "en", "de", "fr", "it", "es", "pl"]
         super().save(*args, **kwargs)

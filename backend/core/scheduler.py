@@ -35,6 +35,7 @@ DEFAULT_SCHEDULER_TASKS = [
     SchedulerTaskDefinition("ai_generate_weekly_reports", "Generate AI Weekly Reports", "ai_generate_weekly_reports", PlatformScheduledJob.SCHEDULE_WEEKLY, 20, 2, 0),
     SchedulerTaskDefinition("ai_generate_monthly_reports", "Generate AI Monthly Reports", "ai_generate_monthly_reports", PlatformScheduledJob.SCHEDULE_DAILY, 30, 2),
     SchedulerTaskDefinition("verify_backup_flow", "Verify Backup Flow", "verify_backup_flow", PlatformScheduledJob.SCHEDULE_DAILY, 30, 3),
+    SchedulerTaskDefinition("sync_subscriptions_reconciliation", "Sync Stripe Subscriptions", "sync_subscriptions", PlatformScheduledJob.SCHEDULE_HOURLY, 15),
 ]
 
 

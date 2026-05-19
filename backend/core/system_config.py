@@ -31,14 +31,28 @@ def get_ai_chat_rate_limit() -> int:
     return config.ai_chat_rate_limit or getattr(settings, "AI_CHAT_RATE_LIMIT", 20)
 
 
+def _allow_db_stripe_secrets() -> bool:
+    return bool(getattr(settings, "ALLOW_DB_STRIPE_SECRETS", getattr(settings, "DEBUG", False)))
+
+
 def get_stripe_secret_key() -> str:
-    config = get_system_config()
-    return (config.stripe_secret_key or settings.STRIPE_SECRET_KEY or "").strip()
+    env_value = (getattr(settings, "STRIPE_SECRET_KEY", "") or "").strip()
+    if env_value:
+        return env_value
+    if _allow_db_stripe_secrets():
+        config = get_system_config()
+        return (config.stripe_secret_key or "").strip()
+    return ""
 
 
 def get_stripe_webhook_secret() -> str:
-    config = get_system_config()
-    return (config.stripe_webhook_secret or settings.STRIPE_WEBHOOK_SECRET or "").strip()
+    env_value = (getattr(settings, "STRIPE_WEBHOOK_SECRET", "") or "").strip()
+    if env_value:
+        return env_value
+    if _allow_db_stripe_secrets():
+        config = get_system_config()
+        return (config.stripe_webhook_secret or "").strip()
+    return ""
 
 
 def get_stripe_price_id_premium() -> str:
@@ -56,6 +70,18 @@ def get_stripe_price_id_vip() -> str:
     return (config.stripe_price_id_vip or getattr(settings, "STRIPE_PRICE_ID_VIP", "") or "").strip()
 
 
+def get_stripe_price_id_basic_yearly() -> str:
+    return (getattr(settings, "STRIPE_PRICE_ID_BASIC_YEARLY", "") or "").strip()
+
+
+def get_stripe_price_id_premium_yearly() -> str:
+    return (getattr(settings, "STRIPE_PRICE_ID_PREMIUM_YEARLY", "") or "").strip()
+
+
+def get_stripe_price_id_vip_yearly() -> str:
+    return (getattr(settings, "STRIPE_PRICE_ID_VIP_YEARLY", "") or "").strip()
+
+
 def get_stripe_product_id_basic() -> str:
     config = get_system_config()
     return (config.stripe_product_id_basic or getattr(settings, "STRIPE_PRODUCT_ID_BASIC", "") or "").strip()
@@ -71,13 +97,24 @@ def get_stripe_product_id_vip() -> str:
     return (config.stripe_product_id_vip or getattr(settings, "STRIPE_PRODUCT_ID_VIP", "") or "").strip()
 
 
-def get_stripe_price_id_for_tier(plan_tier: str) -> str:
-    mapping = {
+def get_stripe_price_id_for_tier(plan_tier: str, billing_cycle: str = "monthly") -> str:
+    monthly_mapping = {
         "basic": get_stripe_price_id_basic,
         "premium": get_stripe_price_id_premium,
         "vip": get_stripe_price_id_vip,
     }
-    getter = mapping.get(plan_tier, get_stripe_price_id_premium)
+    yearly_mapping = {
+        "basic": get_stripe_price_id_basic_yearly,
+        "premium": get_stripe_price_id_premium_yearly,
+        "vip": get_stripe_price_id_vip_yearly,
+    }
+    if billing_cycle == "yearly":
+        getter = yearly_mapping.get(plan_tier, get_stripe_price_id_premium_yearly)
+        yearly_price_id = getter()
+        if yearly_price_id:
+            return yearly_price_id
+
+    getter = monthly_mapping.get(plan_tier, get_stripe_price_id_premium)
     return getter()
 
 
@@ -93,11 +130,11 @@ def get_stripe_product_id_for_tier(plan_tier: str) -> str:
 
 def plan_tier_from_stripe_price_id(price_id: str) -> str:
     """Reverse-map a Stripe price ID to an internal plan tier."""
-    if price_id and price_id == get_stripe_price_id_basic():
+    if price_id and price_id in {get_stripe_price_id_basic(), get_stripe_price_id_basic_yearly()}:
         return "basic"
-    if price_id and price_id == get_stripe_price_id_vip():
+    if price_id and price_id in {get_stripe_price_id_vip(), get_stripe_price_id_vip_yearly()}:
         return "vip"
-    if price_id and price_id == get_stripe_price_id_premium():
+    if price_id and price_id in {get_stripe_price_id_premium(), get_stripe_price_id_premium_yearly()}:
         return "premium"
     return "premium"  # Default fallback
 

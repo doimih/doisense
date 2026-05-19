@@ -93,14 +93,33 @@
           <p>{{ text.upgradeTo }}</p>
           <div class="profile-tags">
             <button
+              type="button"
+              class="profile-tag"
+              :class="billingCycle === 'monthly' ? 'profile-btn-primary' : ''"
+              @click="billingCycle = 'monthly'"
+            >
+              {{ billingText.monthly }}
+            </button>
+            <button
+              type="button"
+              class="profile-tag"
+              :class="billingCycle === 'yearly' ? 'profile-btn-primary' : ''"
+              @click="billingCycle = 'yearly'"
+            >
+              {{ billingText.yearly }}
+            </button>
+            <span class="profile-tag">{{ billingText.discountBadge }}</span>
+          </div>
+          <div class="profile-tags">
+            <button
               v-for="plan in upgradePlans"
               :key="plan.key"
               type="button"
               class="profile-tag"
-              :disabled="checkoutLoading === plan.key"
-              @click="createCheckout(plan.key)"
+              :disabled="isCheckoutLoading(plan.key)"
+              @click="createCheckout(plan.key, billingCycle)"
             >
-              {{ checkoutLoading === plan.key ? $t('common.loading') : plan.label }}
+              {{ isCheckoutLoading(plan.key) ? $t('common.loading') : plan.label }}
             </button>
           </div>
         </div>
@@ -484,6 +503,8 @@ const { fetchApi } = useApi()
 const { locale } = useI18n()
 const localePath = useLocalePath()
 const checkoutLoading = ref<string | null>(null)
+type BillingCycle = 'monthly' | 'yearly'
+const billingCycle = ref<BillingCycle>('monthly')
 const saveLoading = ref(false)
 const cardLoading = ref(false)
 const billingPortalLoading = ref(false)
@@ -541,16 +562,62 @@ const planTierLabel = computed(() => {
 })
 
 const UPGRADE_PLAN_LABELS: Record<string, { key: string; label: string }[]> = {
-  ro: [{ key: 'basic', label: 'BASIC – €12/lună' }, { key: 'premium', label: 'PREMIUM – €25/lună' }, { key: 'vip', label: 'VIP – €49/lună' }],
-  en: [{ key: 'basic', label: 'BASIC – €12/mo' }, { key: 'premium', label: 'PREMIUM – €25/mo' }, { key: 'vip', label: 'VIP – €49/mo' }],
-  de: [{ key: 'basic', label: 'BASIC – €12/Mo.' }, { key: 'premium', label: 'PREMIUM – €25/Mo.' }, { key: 'vip', label: 'VIP – €49/Mo.' }],
-  fr: [{ key: 'basic', label: 'BASIC – €12/mois' }, { key: 'premium', label: 'PREMIUM – €25/mois' }, { key: 'vip', label: 'VIP – €49/mois' }],
-  it: [{ key: 'basic', label: 'BASIC – €12/mese' }, { key: 'premium', label: 'PREMIUM – €25/mese' }, { key: 'vip', label: 'VIP – €49/mese' }],
-  es: [{ key: 'basic', label: 'BASIC – €12/mes' }, { key: 'premium', label: 'PREMIUM – €25/mes' }, { key: 'vip', label: 'VIP – €49/mes' }],
-  pl: [{ key: 'basic', label: 'BASIC – €12/mies.' }, { key: 'premium', label: 'PREMIUM – €25/mies.' }, { key: 'vip', label: 'VIP – €49/mies.' }],
+  ro: [{ key: 'basic', label: '/lună' }, { key: 'premium', label: '/lună' }, { key: 'vip', label: '/lună' }],
+  en: [{ key: 'basic', label: '/mo' }, { key: 'premium', label: '/mo' }, { key: 'vip', label: '/mo' }],
+  de: [{ key: 'basic', label: '/Mo.' }, { key: 'premium', label: '/Mo.' }, { key: 'vip', label: '/Mo.' }],
+  fr: [{ key: 'basic', label: '/mois' }, { key: 'premium', label: '/mois' }, { key: 'vip', label: '/mois' }],
+  it: [{ key: 'basic', label: '/mese' }, { key: 'premium', label: '/mese' }, { key: 'vip', label: '/mese' }],
+  es: [{ key: 'basic', label: '/mes' }, { key: 'premium', label: '/mes' }, { key: 'vip', label: '/mes' }],
+  pl: [{ key: 'basic', label: '/mies.' }, { key: 'premium', label: '/mies.' }, { key: 'vip', label: '/mies.' }],
 }
 
-const upgradePlans = computed(() => UPGRADE_PLAN_LABELS[localeCode.value] || UPGRADE_PLAN_LABELS.en)
+const BILLING_TEXT: Record<string, { monthly: string; yearly: string; discountBadge: string; yearlySuffix: string }> = {
+  ro: { monthly: 'Lunar', yearly: 'Anual', discountBadge: '-10% anual', yearlySuffix: '/an' },
+  en: { monthly: 'Monthly', yearly: 'Yearly', discountBadge: '-10% yearly', yearlySuffix: '/yr' },
+  de: { monthly: 'Monatlich', yearly: 'Jährlich', discountBadge: '-10% jährlich', yearlySuffix: '/Jahr' },
+  fr: { monthly: 'Mensuel', yearly: 'Annuel', discountBadge: '-10% annuel', yearlySuffix: '/an' },
+  it: { monthly: 'Mensile', yearly: 'Annuale', discountBadge: '-10% annuale', yearlySuffix: '/anno' },
+  es: { monthly: 'Mensual', yearly: 'Anual', discountBadge: '-10% anual', yearlySuffix: '/año' },
+  pl: { monthly: 'Miesięcznie', yearly: 'Rocznie', discountBadge: '-10% rocznie', yearlySuffix: '/rok' },
+}
+
+const PLAN_MONTHLY_PRICES: Record<string, number> = {
+  basic: 12,
+  premium: 25,
+  vip: 49,
+}
+
+const billingText = computed(() => BILLING_TEXT[localeCode.value] || BILLING_TEXT.en)
+
+function yearlyPrice(monthly: number): number {
+  return Number((monthly * 12 * 0.9).toFixed(2))
+}
+
+function formatPrice(value: number): string {
+  const hasDecimals = Math.round(value) !== value
+  return `€${hasDecimals ? value.toFixed(2) : value.toFixed(0)}`
+}
+
+function checkoutLoadingKey(planKey: string, cycle: BillingCycle): string {
+  return `${planKey}:${cycle}`
+}
+
+function isCheckoutLoading(planKey: string): boolean {
+  return checkoutLoading.value === checkoutLoadingKey(planKey, billingCycle.value)
+}
+
+const upgradePlans = computed(() => {
+  const labels = UPGRADE_PLAN_LABELS[localeCode.value] || UPGRADE_PLAN_LABELS.en
+  return labels.map((plan) => {
+    const monthly = PLAN_MONTHLY_PRICES[plan.key] || PLAN_MONTHLY_PRICES.premium
+    const value = billingCycle.value === 'yearly' ? yearlyPrice(monthly) : monthly
+    const suffix = billingCycle.value === 'yearly' ? billingText.value.yearlySuffix : plan.label
+    return {
+      key: plan.key,
+      label: `${plan.key.toUpperCase()} - ${formatPrice(value)}${suffix}`,
+    }
+  })
+})
 
 const profileCopy: Record<string, {
   membershipPremium: string
@@ -912,12 +979,12 @@ async function saveProfile() {
   }
 }
 
-async function createCheckout(planKey = 'premium') {
-  checkoutLoading.value = planKey
+async function createCheckout(planKey = 'premium', cycle: BillingCycle = billingCycle.value) {
+  checkoutLoading.value = checkoutLoadingKey(planKey, cycle)
   try {
     const res = await fetchApi<{ url: string }>('/payments/create-checkout-session', {
       method: 'POST',
-      body: { plan_tier: planKey },
+      body: { plan_tier: planKey, billing_cycle: cycle },
     })
     if (res?.url) window.location.href = res.url
   } finally {

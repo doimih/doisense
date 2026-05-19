@@ -4,6 +4,11 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+@pytest.fixture(autouse=True)
+def _disable_ssl_redirect_for_tests(settings):
+    settings.SECURE_SSL_REDIRECT = False
+
+
 @pytest.fixture
 def user(db):
     return User.objects.create_user(email="test@example.com", password="testpass123", language="en")

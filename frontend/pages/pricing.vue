@@ -17,6 +17,30 @@
     </header>
 
     <div class="mx-auto max-w-7xl space-y-0 px-4 py-10 sm:px-6 lg:px-8">
+    <section class="mt-8 mb-6 flex items-center justify-center">
+      <div class="inline-flex items-center rounded-full border border-[#d4e4e0] bg-[#fafbfa] p-1">
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="billingCycle === 'monthly' ? 'bg-[#2c3e35] text-white' : 'text-[#42524b] hover:bg-[#edf3ef]'"
+          @click="billingCycle = 'monthly'"
+        >
+          {{ billingText.monthly }}
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="billingCycle === 'yearly' ? 'bg-[#2c3e35] text-white' : 'text-[#42524b] hover:bg-[#edf3ef]'"
+          @click="billingCycle = 'yearly'"
+        >
+          {{ billingText.yearly }}
+        </button>
+      </div>
+      <span class="ml-3 inline-flex rounded-full border border-[#a8d5ba] bg-[#e8f1ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#4f8f75]">
+        {{ billingText.discountBadge }}
+      </span>
+    </section>
+
     <section class="mt-[100px] mb-[100px] grid gap-6 lg:grid-cols-3">
       <article
         v-for="plan in text.plans"
@@ -48,8 +72,8 @@
         <p class="mt-3 text-sm leading-6 text-[#5a6b63]">{{ plan.description }}</p>
 
         <div class="mt-5 flex items-end gap-2 border-b border-[#d4e4e0] pb-5">
-          <p class="text-5xl font-bold tracking-tight text-[#2c3e35]">{{ plan.price }}</p>
-          <p class="pb-1 text-sm font-medium text-[#5a6b63]">{{ plan.period }}</p>
+          <p class="text-5xl font-bold tracking-tight text-[#2c3e35]">{{ displayPlanPrice(plan.key) }}</p>
+          <p class="pb-1 text-sm font-medium text-[#5a6b63]">{{ displayPlanPeriod() }}</p>
         </div>
 
         <ul class="mt-5 space-y-2.5 text-sm leading-6 text-[#5a6b63]">
@@ -69,7 +93,7 @@
         <button
           v-if="isLoggedIn"
           type="button"
-          :disabled="loadingPlan === plan.key || currentPlanKey === plan.key"
+          :disabled="isPlanLoading(plan.key) || currentPlanKey === plan.key"
           :class="[
             'mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition disabled:opacity-60',
             currentPlanKey === plan.key
@@ -82,7 +106,7 @@
           ]"
           @click="handlePlanAction(plan.key)"
         >
-          {{ loadingPlan === plan.key ? loadingText : (currentPlanKey === plan.key ? text.currentPlan : plan.action) }}
+          {{ isPlanLoading(plan.key) ? loadingText : (currentPlanKey === plan.key ? text.currentPlan : plan.action) }}
         </button>
         <NuxtLink
           v-else
@@ -169,6 +193,57 @@ const { toAbsolutePublicUrl } = usePublicSiteContext()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const loadingPlan = ref<string | null>(null)
+type BillingCycle = 'monthly' | 'yearly'
+const billingCycle = ref<BillingCycle>('monthly')
+
+const PLAN_MONTHLY_PRICES: Record<'basic' | 'premium' | 'vip', number> = {
+  basic: 12,
+  premium: 25,
+  vip: 49,
+}
+
+const BILLING_TEXT: Record<string, { monthly: string; yearly: string; discountBadge: string; perMonth: string; perYear: string }> = {
+  ro: { monthly: 'Plată lunară', yearly: 'Plată anuală', discountBadge: '-10% anual', perMonth: '/ lună', perYear: '/ an' },
+  en: { monthly: 'Monthly billing', yearly: 'Yearly billing', discountBadge: '-10% yearly', perMonth: '/ month', perYear: '/ year' },
+  de: { monthly: 'Monatlich', yearly: 'Jährlich', discountBadge: '-10% jährlich', perMonth: '/ Monat', perYear: '/ Jahr' },
+  fr: { monthly: 'Mensuel', yearly: 'Annuel', discountBadge: '-10% annuel', perMonth: '/ mois', perYear: '/ an' },
+  it: { monthly: 'Mensile', yearly: 'Annuale', discountBadge: '-10% annuale', perMonth: '/ mese', perYear: '/ anno' },
+  es: { monthly: 'Mensual', yearly: 'Anual', discountBadge: '-10% anual', perMonth: '/ mes', perYear: '/ año' },
+  pl: { monthly: 'Miesięcznie', yearly: 'Rocznie', discountBadge: '-10% rocznie', perMonth: '/ miesiąc', perYear: '/ rok' },
+}
+
+const billingText = computed(() => BILLING_TEXT[localeCode.value] || BILLING_TEXT.en)
+
+function yearlyPrice(monthly: number): number {
+  return Number((monthly * 12 * 0.9).toFixed(2))
+}
+
+function getPlanPrice(planKey: string): number {
+  const monthly = PLAN_MONTHLY_PRICES[planKey as keyof typeof PLAN_MONTHLY_PRICES] || PLAN_MONTHLY_PRICES.premium
+  return billingCycle.value === 'yearly' ? yearlyPrice(monthly) : monthly
+}
+
+function formatPrice(value: number): string {
+  const hasDecimals = Math.round(value) !== value
+  return `€${hasDecimals ? value.toFixed(2) : value.toFixed(0)}`
+}
+
+function displayPlanPrice(planKey: string): string {
+  return formatPrice(getPlanPrice(planKey))
+}
+
+function displayPlanPeriod(): string {
+  return billingCycle.value === 'yearly' ? billingText.value.perYear : billingText.value.perMonth
+}
+
+function loadingKey(planKey: string, cycle: BillingCycle): string {
+  return `${planKey}:${cycle}`
+}
+
+function isPlanLoading(planKey: string): boolean {
+  return loadingPlan.value === loadingKey(planKey, billingCycle.value)
+}
+
 const loadingText = computed(() => {
   const code = localeCode.value
   const labels: Record<string, string> = { ro: 'Se procesează...', en: 'Processing...', de: 'Verarbeitung...', fr: 'En cours...', it: 'In elaborazione...', es: 'Procesando...', pl: 'Przetwarzanie...' }
@@ -183,12 +258,12 @@ const currentPlanKey = computed(() => {
   return tier
 })
 
-async function startCheckout(planKey: string) {
-  loadingPlan.value = planKey
+async function startCheckout(planKey: string, cycle: BillingCycle) {
+  loadingPlan.value = loadingKey(planKey, cycle)
   try {
     const res = await fetchApi<{ url: string }>('/payments/create-checkout-session', {
       method: 'POST',
-      body: { plan_tier: planKey },
+      body: { plan_tier: planKey, billing_cycle: cycle },
     })
     if (res?.url) window.location.href = res.url
   } finally {
@@ -196,12 +271,12 @@ async function startCheckout(planKey: string) {
   }
 }
 
-async function upgradeSubscription(planKey: string) {
-  loadingPlan.value = planKey
+async function upgradeSubscription(planKey: string, cycle: BillingCycle) {
+  loadingPlan.value = loadingKey(planKey, cycle)
   try {
     await fetchApi('/payments/upgrade', {
       method: 'POST',
-      body: { plan_tier: planKey },
+      body: { plan_tier: planKey, billing_cycle: cycle },
     })
     const updated = await fetchApi<Record<string, unknown>>('/me')
     if (updated && authStore.user) {
@@ -215,9 +290,9 @@ async function upgradeSubscription(planKey: string) {
 async function handlePlanAction(planKey: string) {
   if (planKey === currentPlanKey.value) return
   if (currentPlanKey.value) {
-    await upgradeSubscription(planKey)
+    await upgradeSubscription(planKey, billingCycle.value)
   } else {
-    await startCheckout(planKey)
+    await startCheckout(planKey, billingCycle.value)
   }
 }
 

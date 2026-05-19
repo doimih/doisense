@@ -10,6 +10,30 @@
       <p class="mx-auto max-w-md text-base leading-7 text-stone-600">{{ text.subtitle }}</p>
     </div>
 
+    <div class="flex items-center justify-center">
+      <div class="inline-flex items-center rounded-full border border-stone-300 bg-white p-1">
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="billingCycle === 'monthly' ? 'bg-stone-900 text-white' : 'text-stone-700 hover:bg-stone-100'"
+          @click="billingCycle = 'monthly'"
+        >
+          {{ billingText.monthly }}
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="billingCycle === 'yearly' ? 'bg-stone-900 text-white' : 'text-stone-700 hover:bg-stone-100'"
+          @click="billingCycle = 'yearly'"
+        >
+          {{ billingText.yearly }}
+        </button>
+      </div>
+      <span class="ml-3 inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-700">
+        {{ billingText.discountBadge }}
+      </span>
+    </div>
+
     <div class="grid gap-4 sm:grid-cols-3">
       <article
         v-for="plan in text.plans"
@@ -25,10 +49,10 @@
       >
         <p class="text-xs font-semibold uppercase tracking-wider text-stone-500">{{ plan.tone }}</p>
         <h2 class="mt-1 text-lg font-bold text-stone-900">{{ plan.title }}</h2>
-        <p class="mt-2 text-2xl font-bold tracking-tight text-stone-900">{{ plan.price }}<span class="ml-1 text-sm font-medium text-stone-500">{{ plan.period }}</span></p>
+        <p class="mt-2 text-2xl font-bold tracking-tight text-stone-900">{{ displayPlanPrice(plan.key) }}<span class="ml-1 text-sm font-medium text-stone-500">{{ displayPlanPeriod() }}</span></p>
         <button
           type="button"
-          :disabled="loadingPlan === plan.key"
+          :disabled="isPlanLoading(plan.key)"
           :class="[
             'mt-4 inline-flex w-full items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50',
             plan.key === 'premium'
@@ -37,9 +61,9 @@
                 ? 'bg-stone-900 text-white hover:bg-black'
                 : 'border border-stone-300 bg-white text-stone-900 hover:bg-stone-50',
           ]"
-          @click="startCheckout(plan.key)"
+          @click="startCheckout(plan.key, billingCycle)"
         >
-          {{ loadingPlan === plan.key ? text.loading : plan.action }}
+          {{ isPlanLoading(plan.key) ? text.loading : plan.action }}
         </button>
       </article>
     </div>
@@ -58,6 +82,56 @@ const localePath = useLocalePath()
 const { locale } = useI18n()
 const { fetchApi } = useApi()
 const loadingPlan = ref<string | null>(null)
+type BillingCycle = 'monthly' | 'yearly'
+const billingCycle = ref<BillingCycle>('monthly')
+
+const PLAN_MONTHLY_PRICES: Record<'basic' | 'premium' | 'vip', number> = {
+  basic: 12,
+  premium: 25,
+  vip: 49,
+}
+
+const BILLING_TEXT: Record<string, { monthly: string; yearly: string; discountBadge: string; perMonth: string; perYear: string }> = {
+  ro: { monthly: 'Lunar', yearly: 'Anual', discountBadge: '-10% anual', perMonth: '/ lună', perYear: '/ an' },
+  en: { monthly: 'Monthly', yearly: 'Yearly', discountBadge: '-10% yearly', perMonth: '/ month', perYear: '/ year' },
+  de: { monthly: 'Monatlich', yearly: 'Jährlich', discountBadge: '-10% jährlich', perMonth: '/ Monat', perYear: '/ Jahr' },
+  fr: { monthly: 'Mensuel', yearly: 'Annuel', discountBadge: '-10% annuel', perMonth: '/ mois', perYear: '/ an' },
+  it: { monthly: 'Mensile', yearly: 'Annuale', discountBadge: '-10% annuale', perMonth: '/ mese', perYear: '/ anno' },
+  es: { monthly: 'Mensual', yearly: 'Anual', discountBadge: '-10% anual', perMonth: '/ mes', perYear: '/ año' },
+  pl: { monthly: 'Miesięcznie', yearly: 'Rocznie', discountBadge: '-10% rocznie', perMonth: '/ miesiąc', perYear: '/ rok' },
+}
+
+const billingText = computed(() => BILLING_TEXT[localeCode.value] || BILLING_TEXT.en)
+
+function yearlyPrice(monthly: number): number {
+  return Number((monthly * 12 * 0.9).toFixed(2))
+}
+
+function getPlanPrice(planKey: string): number {
+  const monthly = PLAN_MONTHLY_PRICES[planKey as keyof typeof PLAN_MONTHLY_PRICES] || PLAN_MONTHLY_PRICES.premium
+  return billingCycle.value === 'yearly' ? yearlyPrice(monthly) : monthly
+}
+
+function formatPrice(value: number): string {
+  const hasDecimals = Math.round(value) !== value
+  return `€${hasDecimals ? value.toFixed(2) : value.toFixed(0)}`
+}
+
+function displayPlanPrice(planKey: string): string {
+  return formatPrice(getPlanPrice(planKey))
+}
+
+function displayPlanPeriod(): string {
+  return billingCycle.value === 'yearly' ? billingText.value.perYear : billingText.value.perMonth
+}
+
+function loadingKey(planKey: string, cycle: BillingCycle): string {
+  return `${planKey}:${cycle}`
+}
+
+function isPlanLoading(planKey: string): boolean {
+  return loadingPlan.value === loadingKey(planKey, billingCycle.value)
+}
 
 const localeCode = computed(() => {
   const code = (locale.value || 'ro').slice(0, 2).toLowerCase()
@@ -163,12 +237,12 @@ usePublicSeo({
   noindex: true,
 })
 
-async function startCheckout(planKey: string) {
-  loadingPlan.value = planKey
+async function startCheckout(planKey: string, cycle: BillingCycle) {
+  loadingPlan.value = loadingKey(planKey, cycle)
   try {
     const res = await fetchApi<{ url: string }>('/payments/create-checkout-session', {
       method: 'POST',
-      body: { plan_tier: planKey },
+      body: { plan_tier: planKey, billing_cycle: cycle },
     })
     if (res?.url) window.location.href = res.url
   } finally {

@@ -27,7 +27,6 @@
     "recoverBack": "Powrot do logowania",
     "recoverSent": "Jesli email istnieje, wyslalismy link odzyskiwania.",
     "recoverError": "Nie mozemy teraz przetworzyc zadania.",
-    "recoverDone": "Haslo zaktualizowane. Mozesz sie zalogowac.",
     "recoverInvalid": "Link niewazny/wygasl lub haslo niepoprawne.",
     "noAccount": "Nie masz konta? Zarejestruj się",
     "accountTitle": "Twoje konto",
