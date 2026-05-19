@@ -4,8 +4,12 @@
   var reloadKey = 'doisense_chunk_recovery_once';
   var recoveredKey = 'doisense_chunk_recovery_ok';
 
+  function getBasePrefix(pathname) {
+    return /^\/doisense(\/|$)/i.test(String(pathname || '')) ? '/doisense' : '';
+  }
+
   function toLanguage(pathname) {
-    var match = String(pathname || '').match(/^\/doisense\/(ro|en|de|fr|it|es|pl)(\/|$)/i);
+    var match = String(pathname || '').match(/^\/(?:doisense\/)?(ro|en|de|fr|it|es|pl)(\/|$)/i);
     return match ? match[1].toLowerCase() : 'en';
   }
 
@@ -16,12 +20,13 @@
         source: 'frontend',
         properties: properties || {},
       });
+      var basePrefix = getBasePrefix(window.location.pathname);
       if (navigator.sendBeacon) {
         var blob = new Blob([payload], { type: 'application/json' });
-        navigator.sendBeacon('/doisense/api/analytics/track', blob);
+        navigator.sendBeacon(basePrefix + '/api/analytics/track', blob);
         return;
       }
-      fetch('/doisense/api/analytics/track', {
+      fetch(basePrefix + '/api/analytics/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: payload,
@@ -43,9 +48,10 @@
   }
 
   function hardRedirect() {
+    var basePrefix = getBasePrefix(window.location.pathname);
     var lang = toLanguage(window.location.pathname);
     var next = encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
-    window.location.assign('/doisense/' + lang + '/auth/login?reason=client_recovery&next=' + next);
+    window.location.assign(basePrefix + '/' + lang + '/auth/login?reason=client_recovery&next=' + next);
   }
 
   function recoverOnce(reason) {

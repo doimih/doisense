@@ -1,7 +1,7 @@
 import { defineNuxtConfig } from "nuxt/config";
 
 const normalizeAppBaseUrl = (value?: string) => {
-  const normalized = (value || "/doisense/").trim();
+  const normalized = (value || "/").trim();
   if (!normalized || normalized === "/") {
     return "/";
   }
@@ -70,7 +70,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || "https://projects.doimih.net",
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || "https://www.doisense.eu",
       appBaseUrl,
       apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000/api",
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",

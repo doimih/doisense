@@ -1,0 +1,229 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  .settings-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 18px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  .settings-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.1;
+    text-decoration: none;
+    transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .settings-tab:hover {
+    transform: translateY(-1px);
+    border-color: #94a3b8;
+  }
+
+  .settings-tab.is-active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+  }
+
+  .settings-tab-group {
+    margin: 0 0 16px;
+  }
+
+  .settings-section-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 16px;
+  }
+
+  .settings-section-tab {
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1f2937;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .settings-section-tab.is-active {
+    background: #111827;
+    color: #ffffff;
+    border-color: #111827;
+  }
+</style>
+{% endblock %}
+
+{% block field_sets %}
+<div class="settings-tabs settings-tab-group">
+  <a class="settings-tab{% if opts.model_name == 'systemconfig' %} is-active{% endif %}" href="{% url 'admin:core_systemconfig_change' original.pk %}">Email</a>
+  <a class="settings-tab{% if opts.model_name == 'oauthconfig' %} is-active{% endif %}" href="{% url 'admin:core_oauthconfig_changelist' %}">OAuth</a>
+  <a class="settings-tab{% if opts.model_name == 'stripeconfig' %} is-active{% endif %}" href="{% url 'admin:core_stripeconfig_changelist' %}">Stripe</a>
+  <a class="settings-tab{% if opts.model_name == 'aiconfig' %} is-active{% endif %}" href="{% url 'admin:core_aiconfig_changelist' %}">AI</a>
+  <a class="settings-tab{% if opts.model_name == 'recaptchaconfig' %} is-active{% endif %}" href="{% url 'admin:core_recaptchaconfig_changelist' %}">reCAPTCHA</a>
+  <a class="settings-tab{% if opts.model_name == 'backupconfig' %} is-active{% endif %}" href="{% url 'admin:core_backupconfig_changelist' %}">Storage</a>
+</div>
+
+{% if opts.model_name == 'systemconfig' %}
+<div class="settings-section-tabs settings-tab-group">
+  <button type="button" class="settings-section-tab is-active" data-target="settings-tab-localization">Localization</button>
+  <button type="button" class="settings-section-tab" data-target="settings-tab-contact-email">Contact & Email</button>
+  <button type="button" class="settings-section-tab" data-target="settings-tab-storage">Storage</button>
+  <button type="button" class="settings-section-tab" data-target="settings-tab-oauth">OAuth</button>
+  <button type="button" class="settings-section-tab" data-target="settings-tab-stripe">Stripe</button>
+  <button type="button" class="settings-section-tab" data-target="settings-tab-ai">AI</button>
+  <button type="button" class="settings-section-tab" data-target="settings-tab-qa-access">QA Access</button>
+</div>
+{% endif %}
+
+{{ block.super }}
+
+{% if opts.model_name == 'systemconfig' %}
+{% if request.GET.scope != 'email' %}
+{% trans 'Test backup flow' as title %}
+{% url 'admin:core_systemconfig_test_backup_flow' as link %}
+{% include "unfold/helpers/tab_action.html" with title=title link=link icon="sync" %}
+{% trans 'Test storage' as title %}
+{% url 'admin:core_systemconfig_test_storage' as link %}
+{% include "unfold/helpers/tab_action.html" with title=title link=link icon="inventory_2" %}
+{% endif %}
+{% if request.GET.scope != 'storage' %}
+{% trans 'Send test email' as title %}
+{% url 'admin:core_systemconfig_test_email' as link %}
+{% include "unfold/helpers/tab_action.html" with title=title link=link icon="mail" %}
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script>
+(() => {
+  const form = document.querySelector('form')
+  if (!form) return
+
+  const page = '{{ opts.model_name }}'
+  const params = new URLSearchParams(window.location.search)
+  const requestedTab = params.get('tab')
+
+  if (page !== 'systemconfig') return
+
+  const expectedLabels = [
+    'Localization',
+    'Contact & Email',
+    'Storage',
+    'OAuth',
+    'Stripe',
+    'AI',
+    'QA Access',
+  ]
+
+  const fieldsets = Array.from(form.querySelectorAll('fieldset')).filter((fieldset) => {
+    const heading = fieldset.querySelector('h2, legend')
+    const label = heading?.textContent?.trim()
+    return Boolean(label && expectedLabels.includes(label))
+  })
+  if (fieldsets.length < 2) return
+
+  const labelToId = {
+    'Contact & Email': 'contact-email',
+    'Storage': 'storage',
+    'Localization': 'localization',
+    'OAuth': 'oauth',
+    'Stripe': 'stripe',
+    'AI': 'ai',
+    'QA Access': 'qa-access',
+  }
+
+  const tabs = document.createElement('div')
+  tabs.className = 'settings-section-tabs'
+
+  const byLabel = new Map()
+  fieldsets.forEach((fieldset) => {
+    const heading = fieldset.querySelector('h2, legend')
+    const label = heading?.textContent?.trim()
+    if (!label) return
+    byLabel.set(label, fieldset)
+    const fieldsetId = labelToId[label]
+    if (fieldsetId) {
+      fieldset.id = `settings-tab-${fieldsetId}`
+      fieldset.dataset.scope = fieldsetId
+    }
+  })
+
+  const orderedFieldsets = expectedLabels
+    .map((label) => ({ label, fieldset: byLabel.get(label) }))
+    .filter((item) => Boolean(item.fieldset))
+
+  const items = orderedFieldsets.map(({ label, fieldset }, index) => {
+    const id = fieldset.id || `settings-tab-${index}`
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'settings-section-tab'
+    button.textContent = label
+    button.dataset.target = id
+    fieldset.id = id
+    tabs.appendChild(button)
+    return { fieldset, button, id }
+  })
+
+  if (items.length < 2) return
+
+  form.insertBefore(tabs, items[0].fieldset)
+
+  function setActive(id) {
+    items.forEach(({ fieldset, button, id: itemId }) => {
+      const active = itemId === id
+      fieldset.style.display = active ? '' : 'none'
+      button.classList.toggle('is-active', active)
+    })
+    try {
+      localStorage.setItem('doisense-system-config-tab', id)
+    } catch {
+      // Ignore storage errors.
+    }
+  }
+
+  let initial = items[0].id
+  if (requestedTab) {
+    const requestedItem = items.find(({ button }) => button.textContent?.trim() === requestedTab)
+    if (requestedItem) {
+      initial = requestedItem.id
+    }
+  }
+  try {
+    const remembered = localStorage.getItem('doisense-system-config-tab')
+    if (!requestedTab && remembered && items.some((item) => item.id === remembered)) {
+      initial = remembered
+    }
+  } catch {
+    // Ignore storage errors.
+  }
+
+  items.forEach(({ button, id }) => {
+    button.addEventListener('click', () => setActive(id))
+  })
+
+  setActive(initial)
+})()
+</script>
+{% endblock %}

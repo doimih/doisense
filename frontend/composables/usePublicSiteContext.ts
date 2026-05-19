@@ -2,7 +2,7 @@ export function usePublicSiteContext() {
   const runtime = useRuntimeConfig()
 
   const siteUrl = computed(() => {
-    const raw = ((runtime.public.siteUrl as string) || 'https://projects.doimih.net').trim()
+    const raw = ((runtime.public.siteUrl as string) || 'https://www.doisense.eu').trim()
     return raw.replace(/\/+$/, '')
   })
 

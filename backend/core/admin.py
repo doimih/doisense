@@ -119,7 +119,7 @@ class SystemConfigAdminForm(forms.ModelForm):
 @admin.register(SystemConfig)
 class SystemConfigAdmin(ModelAdmin):
     form = SystemConfigAdminForm
-    change_form_template = "admin/core/systemconfig/change_form.html"
+    change_form_template = "admin/core/settings_change_form.html"
 
     fieldsets = (
         (
@@ -217,7 +217,7 @@ class SystemConfigAdmin(ModelAdmin):
 
     def storage_settings_view(self, request):
         url = reverse("admin:core_systemconfig_changelist")
-        return HttpResponseRedirect(f"{url}?tab=Storage&scope=storage")
+        return HttpResponseRedirect(f"{url}?tab=Storage")
 
     def _validate_backup_storage_config(self, config):
         missing_fields = []
@@ -799,7 +799,7 @@ class BackupConfigAdmin(ModelAdmin):
 
 
 class SingletonProxyConfigAdmin(ModelAdmin):
-    change_form_template = "admin/change_form.html"
+    change_form_template = "admin/core/settings_change_form.html"
 
     _masked_fields = (
         "google_client_id",
@@ -858,6 +858,7 @@ class OAuthConfigAdmin(SingletonProxyConfigAdmin):
             {
                 "fields": (
                     "google_client_id",
+                    "google_client_secret",
                     "apple_client_id",
                 )
             },

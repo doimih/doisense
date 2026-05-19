@@ -34,10 +34,10 @@ def _perm(permission_codename: str):
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / ".env")
 
-PUBLIC_PATH_PREFIX = _normalize_public_path_prefix(env("PUBLIC_PATH_PREFIX", default="/doisense"))
+PUBLIC_PATH_PREFIX = _normalize_public_path_prefix(env("PUBLIC_PATH_PREFIX", default=""))
 DEFAULT_FRONTEND_BASE_URL = env(
     "DEFAULT_FRONTEND_BASE_URL",
-    default=f"https://projects.doimih.net{PUBLIC_PATH_PREFIX}" if PUBLIC_PATH_PREFIX else "https://projects.doimih.net",
+    default=f"https://www.doisense.eu{PUBLIC_PATH_PREFIX}" if PUBLIC_PATH_PREFIX else "https://www.doisense.eu",
 )
 ADMIN_SITE_URL = env("ADMIN_SITE_URL", default=DEFAULT_FRONTEND_BASE_URL)
 FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default=DEFAULT_FRONTEND_BASE_URL)
@@ -645,11 +645,12 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
-    default=["https://projects.doimih.net", "http://localhost:3000"],
+    default=["https://www.doisense.eu", "https://doisense.eu", "http://localhost:3000"],
 )
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
-    default=["https://projects.doimih.net", "http://localhost:3000"],
+    default=["https://www.doisense.eu", "https://doisense.eu", "http://localhost:3000"],
 )
 
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
@@ -688,4 +689,5 @@ SUPPORTED_LANGUAGES = ["ro", "en", "de", "fr", "it", "es", "pl"]
 
 # Social login
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")
+GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET", default="")
 APPLE_CLIENT_ID = env("APPLE_CLIENT_ID", default="")

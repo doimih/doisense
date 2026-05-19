@@ -3,7 +3,7 @@
 # Nu modificați configurația globală Traefik a serverului.
 #
 # IMPORTANT: Ca Traefik să vadă containerele, frontend și backend trebuie pe același
-# network cu Traefik. Setează TRAEFIK_NETWORK în .env (ex: traefik_default).
+# network cu Traefik. Setează TRAEFIK_NETWORK în .env (ex: dokploy-network).
 
 services:
   db:
@@ -78,12 +78,12 @@ services:
       DATABASE_URL: postgres://doisense:${POSTGRES_PASSWORD:-change-me-db-password}@db:5432/doisense
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production-with-at-least-32-characters}
-      PUBLIC_PATH_PREFIX: ${PUBLIC_PATH_PREFIX:-/doisense}
-      ADMIN_SITE_URL: ${ADMIN_SITE_URL:-https://projects.doimih.net/doisense}
-      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://projects.doimih.net/doisense}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,backend,projects.doimih.net}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://projects.doimih.net}
-      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://projects.doimih.net}
+      PUBLIC_PATH_PREFIX: ${PUBLIC_PATH_PREFIX:-}
+      ADMIN_SITE_URL: ${ADMIN_SITE_URL:-https://www.doisense.eu}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://www.doisense.eu}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend,www.doisense.eu,doisense.eu}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://www.doisense.eu,https://doisense.eu}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://www.doisense.eu,https://doisense.eu}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       STRIPE_PRODUCT_ID_BASIC: ${STRIPE_PRODUCT_ID_BASIC:-}
@@ -93,6 +93,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
     depends_on:
       db: { condition: service_healthy }
@@ -100,25 +101,28 @@ services:
     labels:
       # Rute Traefik doar pentru doisense – nu afectează alte proiecte
       - "traefik.enable=true"
-      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik_public}"
-      - "traefik.http.routers.doisense-api.rule=${TRAEFIK_API_RULE:-Host(`projects.doimih.net`)&&PathPrefix(`/doisense/api`)}"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-dokploy-network}"
+      - "traefik.http.routers.doisense-api.rule=${TRAEFIK_API_RULE:-(Host(`www.doisense.eu`) || Host(`doisense.eu`))&&PathPrefix(`/api`)}"
       - "traefik.http.routers.doisense-api.entrypoints=websecure"
       - "traefik.http.routers.doisense-api.tls=true"
+      - "traefik.http.routers.doisense-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.doisense-api.priority=220"
       - "traefik.http.routers.doisense-api.service=doisense-api"
-      - "traefik.http.routers.doisense-admin.rule=${TRAEFIK_ADMIN_RULE:-Host(`projects.doimih.net`)&&(PathPrefix(`/doisense/admin`)||PathPrefix(`/doisense/ro/admin`))}"
+      - "traefik.http.routers.doisense-admin.rule=${TRAEFIK_ADMIN_RULE:-(Host(`www.doisense.eu`) || Host(`doisense.eu`))&&(PathPrefix(`/admin`) || PathPrefix(`/ro/admin`))}"
       - "traefik.http.routers.doisense-admin.entrypoints=websecure"
       - "traefik.http.routers.doisense-admin.tls=true"
+      - "traefik.http.routers.doisense-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.doisense-admin.priority=200"
       - "traefik.http.routers.doisense-admin.service=doisense-api"
-      - "traefik.http.routers.doisense-media.rule=${TRAEFIK_MEDIA_RULE:-Host(`projects.doimih.net`)&&PathPrefix(`/doisense/media`)}"
+      - "traefik.http.routers.doisense-media.rule=${TRAEFIK_MEDIA_RULE:-(Host(`www.doisense.eu`) || Host(`doisense.eu`))&&PathPrefix(`/media`)}"
       - "traefik.http.routers.doisense-media.entrypoints=websecure"
       - "traefik.http.routers.doisense-media.tls=true"
+      - "traefik.http.routers.doisense-media.tls.certresolver=letsencrypt"
       - "traefik.http.routers.doisense-media.priority=205"
       - "traefik.http.routers.doisense-media.service=doisense-api"
       - "traefik.http.services.doisense-api.loadbalancer.server.port=8000"
       # Strip prefix ca backend-ul să primească /api/...
-      - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=${TRAEFIK_API_STRIP_PREFIXES:-/doisense}"
+      - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=${TRAEFIK_API_STRIP_PREFIXES:-}"
       - "traefik.http.routers.doisense-api.middlewares=doisense-api-stripprefix@docker"
 
   frontend:
@@ -126,8 +130,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-/doisense/}
-        NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://projects.doimih.net}
+        NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-/}
+        NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://www.doisense.eu}
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -142,24 +146,37 @@ services:
       - app_internal
       - traefik
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000${FRONTEND_HEALTHCHECK_PATH:-/doisense/}').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))\" || exit 1"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000${FRONTEND_HEALTHCHECK_PATH:-/}').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))\" || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
     environment:
-      NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-/doisense/}
-      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://projects.doimih.net}
-      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-https://projects.doimih.net/doisense/api}
+      NUXT_PUBLIC_APP_BASE_URL: ${NUXT_PUBLIC_APP_BASE_URL:-/}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://www.doisense.eu}
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api}
       NUXT_PUBLIC_GOOGLE_CLIENT_ID: ${NUXT_PUBLIC_GOOGLE_CLIENT_ID:-}
       NUXT_PUBLIC_APPLE_CLIENT_ID: ${NUXT_PUBLIC_APPLE_CLIENT_ID:-}
       NUXT_PUBLIC_APPLE_REDIRECT_URI: ${NUXT_PUBLIC_APPLE_REDIRECT_URI:-}
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik_public}"
-      - "traefik.http.routers.doisense-web.rule=${TRAEFIK_WEB_RULE:-Host(`projects.doimih.net`)&&PathPrefix(`/doisense`)}"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-dokploy-network}"
+      - "traefik.http.middlewares.doisense-legacy-prefix.redirectregex.regex=^https?://([^/]+)/doisense/(.*)"
+      - "traefik.http.middlewares.doisense-legacy-prefix.redirectregex.replacement=https://$${1}/$${2}"
+      - "traefik.http.middlewares.doisense-legacy-prefix.redirectregex.permanent=true"
+      - "traefik.http.routers.doisense-legacy.rule=(Host(`www.doisense.eu`) || Host(`doisense.eu`))&&PathPrefix(`/doisense/`)"
+      - "traefik.http.routers.doisense-legacy.entrypoints=websecure"
+      - "traefik.http.routers.doisense-legacy.tls=true"
+      - "traefik.http.routers.doisense-legacy.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.doisense-legacy.priority=400"
+      - "traefik.http.routers.doisense-legacy.middlewares=doisense-legacy-prefix@docker"
+      - "traefik.http.routers.doisense-legacy.service=doisense-web"
+      - "traefik.http.routers.doisense-web.rule=${TRAEFIK_WEB_RULE:-(Host(`www.doisense.eu`) || Host(`doisense.eu`))}"
       - "traefik.http.routers.doisense-web.entrypoints=websecure"
       - "traefik.http.routers.doisense-web.tls=true"
+      - "traefik.http.routers.doisense-web.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.doisense-web.tls.domains[0].main=www.doisense.eu"
+      - "traefik.http.routers.doisense-web.tls.domains[0].sans=doisense.eu"
       - "traefik.http.routers.doisense-web.priority=150"
       - "traefik.http.routers.doisense-web.service=doisense-web"
       - "traefik.http.services.doisense-web.loadbalancer.server.port=3000"
@@ -225,7 +242,7 @@ networks:
     internal: true
   traefik:
     external: true
-    name: ${TRAEFIK_NETWORK:-traefik_public}
+    name: ${TRAEFIK_NETWORK:-dokploy-network}
 volumes:
   doisense_pgdata:
   doisense_media:

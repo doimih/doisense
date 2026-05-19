@@ -47,11 +47,11 @@ export const PRIVATE_ROUTE_ROOTS = [
 ]
 
 export function normalizeSiteUrl(value?: string): string {
-  return (value || 'https://projects.doimih.net').trim().replace(/\/+$/, '')
+  return (value || 'https://www.doisense.eu').trim().replace(/\/+$/, '')
 }
 
 export function normalizeAppBasePath(value?: string): string {
-  const normalized = (value || '/doisense/').trim()
+  const normalized = (value || '/').trim()
   if (!normalized || normalized === '/') {
     return ''
   }

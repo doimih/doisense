@@ -24,8 +24,8 @@ Componente runtime:
 
 Flux infrastructură:
 
-- https://projects.doimih.net/doisense -> frontend
-- https://projects.doimih.net/doisense/api -> backend
+- https://www.doisense.eu -> frontend
+- https://www.doisense.eu/api -> backend
 
 Notă: acest repo nu modifică configurația globală Traefik. Rulează doar labels/rute pentru stack-ul Doisense.
 
@@ -155,7 +155,7 @@ pnpm run dev
 
 Variabile minime utile:
 
-- NUXT_PUBLIC_APP_BASE_URL=/doisense
+- NUXT_PUBLIC_APP_BASE_URL=/
 - NUXT_PUBLIC_API_BASE=http://localhost:8000/api
 
 ## Deploy docker
@@ -199,13 +199,13 @@ cd frontend && pnpm run lint
 Smoke test API QA dedicat:
 
 ```bash
-API_BASE=https://qa-api.example.com/doisense/api ./scripts/qa_api_smoke.sh
+API_BASE=https://qa-api.example.com/api ./scripts/qa_api_smoke.sh
 ```
 
 Pentru validare auth end-to-end pe QA API:
 
 ```bash
-API_BASE=https://qa-api.example.com/doisense/api \
+API_BASE=https://qa-api.example.com/api \
 QA_EMAIL=qa.user@example.com \
 QA_PASSWORD='strong-password' \
 ./scripts/qa_api_smoke.sh
@@ -217,7 +217,7 @@ QA_PASSWORD='strong-password' \
 
 Check rapid:
 
-- frontend route valid: /doisense/ro/auth/login sau /doisense/auth/login
+- frontend route valid: /ro/auth/login sau /auth/login
 - backend auth endpoints active: /api/auth/login, /api/auth/refresh
 - endpoint profil: /api/me (nu /api/auth/me)
 
@@ -303,7 +303,7 @@ Stare curentă: PWA este dezactivat temporar pentru stabilitate.
 Check rapid:
 
 - confirmă că nu rulează service worker stale în browser
-- validează pagina /doisense/offline
+- validează pagina /offline
 
 Comenzi utile:
 
@@ -345,7 +345,7 @@ docker compose logs --tail=200 backend | grep -i -E "smtp|email|tls|ssl|wrong ve
 8. Flux GDPR complet: export date și ștergere/anonymizare cont
 9. Script operațional pentru cron bootstrap
 10. Extindere dashboard intern cu MRR, churn și engagement pe tier
-11. Clarificare și corecție routing API sub prefixul /doisense/api
+11. Clarificare și corecție routing API pe /api
 
 ## Documentație tehnică
 
@@ -361,4 +361,4 @@ docker compose logs --tail=200 backend | grep -i -E "smtp|email|tls|ssl|wrong ve
 
 ## URL verificare runtime
 
-- https://projects.doimih.net/doisense
+- https://www.doisense.eu

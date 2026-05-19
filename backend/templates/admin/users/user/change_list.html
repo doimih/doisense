@@ -1,0 +1,23 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block content_title %}
+  <h1 class="text-2xl font-bold text-stone-900 dark:text-white mb-0.5">Utilizatori</h1>
+  <p class="text-sm text-stone-500 dark:text-stone-400 mt-1 mb-4">
+    Gestionează conturile și permisiunile utilizatorilor platformei
+  </p>
+{% endblock %}
+
+{% block object-tools-items %}
+  {% if has_add_permission %}
+    <li>
+      <a
+        href="{% url opts|admin_urlname:'add' %}"
+        class="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black dark:bg-stone-700 dark:hover:bg-stone-600"
+      >
+        <span class="material-symbols-outlined" style="font-size:17px">person_add</span>
+        Invită utilizator
+      </a>
+    </li>
+  {% endif %}
+{% endblock %}

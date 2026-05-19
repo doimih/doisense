@@ -125,29 +125,29 @@ SECRET_KEY=<sir_aleatoriu_minim_50_caractere>
 # DJANGO — CONFIGURARE DOMENIU
 # =============================================
 PUBLIC_PATH_PREFIX=
-ADMIN_SITE_URL=https://doisense.eu
-FRONTEND_BASE_URL=https://doisense.eu
+ADMIN_SITE_URL=https://www.doisense.eu
+FRONTEND_BASE_URL=https://www.doisense.eu
 ALLOWED_HOSTS=doisense.eu,backend
-CORS_ALLOWED_ORIGINS=https://doisense.eu
-CSRF_TRUSTED_ORIGINS=https://doisense.eu
+CORS_ALLOWED_ORIGINS=https://www.doisense.eu,https://doisense.eu
+CSRF_TRUSTED_ORIGINS=https://www.doisense.eu,https://doisense.eu
 
 # =============================================
 # FRONTEND
 # =============================================
-NUXT_PUBLIC_SITE_URL=https://doisense.eu
+NUXT_PUBLIC_SITE_URL=https://www.doisense.eu
 NUXT_PUBLIC_APP_BASE_URL=/
-NUXT_PUBLIC_API_BASE=https://doisense.eu/api
+NUXT_PUBLIC_API_BASE=https://www.doisense.eu/api
 FRONTEND_HEALTHCHECK_PATH=/
 
 # =============================================
 # TRAEFIK — RUTARE
 # =============================================
 TRAEFIK_NETWORK=traefik
-TRAEFIK_HOST=doisense.eu
-TRAEFIK_WEB_RULE=Host(`doisense.eu`)
-TRAEFIK_API_RULE=Host(`doisense.eu`)&&PathPrefix(`/api`)
-TRAEFIK_ADMIN_RULE=Host(`doisense.eu`)&&(PathPrefix(`/admin`)||PathPrefix(`/ro/admin`))
-TRAEFIK_MEDIA_RULE=Host(`doisense.eu`)&&PathPrefix(`/media`)
+TRAEFIK_HOST=www.doisense.eu
+TRAEFIK_WEB_RULE=Host(`www.doisense.eu`)||Host(`doisense.eu`)
+TRAEFIK_API_RULE=(Host(`www.doisense.eu`)||Host(`doisense.eu`))&&PathPrefix(`/api`)
+TRAEFIK_ADMIN_RULE=(Host(`www.doisense.eu`)||Host(`doisense.eu`))&&(PathPrefix(`/admin`)||PathPrefix(`/ro/admin`))
+TRAEFIK_MEDIA_RULE=(Host(`www.doisense.eu`)||Host(`doisense.eu`))&&PathPrefix(`/media`)
 TRAEFIK_API_STRIP_PREFIXES=/api
 APP_INTERNAL_NETWORK=doisense_app_internal
 BACKUP_INTERNAL_NETWORK=doisense_backup_internal
@@ -179,6 +179,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 # LOGIN SOCIAL (lași gol dacă nu e configurat)
 # =============================================
 GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 NUXT_PUBLIC_GOOGLE_CLIENT_ID=
 APPLE_CLIENT_ID=
 NUXT_PUBLIC_APPLE_CLIENT_ID=
@@ -253,7 +254,7 @@ Te va întreba:
 - **Password**: o parolă puternică (nu se vede pe ecran când tastezi)
 - **Password (again)**: confirmi
 
-**Notează-le într-un loc sigur** — cu ele intri la `https://doisense.eu/ro/admin/`
+**Notează-le într-un loc sigur** — cu ele intri la `https://www.doisense.eu/ro/admin/`
 
 ---
 
@@ -275,9 +276,9 @@ Testezi în ordine, în browser:
 
 | Ce verifici | URL | Ce trebuie să apară |
 |---|---|---|
-| Frontend | `https://doisense.eu` | Pagina principală a aplicației |
-| API health | `https://doisense.eu/api/health` | `{"status": "ok", ...}` |
-| Admin login | `https://doisense.eu/ro/admin/` | Pagina de login Django (cu design) |
+| Frontend | `https://www.doisense.eu` | Pagina principală a aplicației |
+| API health | `https://www.doisense.eu/api/health` | `{"status": "ok", ...}` |
+| Admin login | `https://www.doisense.eu/ro/admin/` | Pagina de login Django (cu design) |
 | Admin acces | Te loghezi cu contul creat la pasul 5.3 | Dashboard admin |
 
 Dacă toate funcționează → producția este online.
@@ -329,5 +330,5 @@ Pentru **fiecare** environment (development și production separat), adaugi:
       python manage.py collectstatic --no-input
       python manage.py createsuperuser
 11. Creare serviciu Docker Compose → docker-compose.monitoring.yml (branch: prod) → Deploy
-12. Verifici https://doisense.eu
+12. Verifici https://www.doisense.eu
 ```
