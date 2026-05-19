@@ -81,9 +81,9 @@ services:
       PUBLIC_PATH_PREFIX: ${PUBLIC_PATH_PREFIX:-}
       ADMIN_SITE_URL: ${ADMIN_SITE_URL:-https://www.doisense.eu}
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://www.doisense.eu}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend,www.doisense.eu,doisense.eu}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://www.doisense.eu,https://doisense.eu}
-      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://www.doisense.eu,https://doisense.eu}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend,www.doisense.eu,doisense.eu,projects.doimih.net}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://www.doisense.eu,https://doisense.eu,https://projects.doimih.net}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-https://www.doisense.eu,https://doisense.eu,https://projects.doimih.net}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       ALLOW_DB_STRIPE_SECRETS: ${ALLOW_DB_STRIPE_SECRETS:-false}
@@ -129,6 +129,18 @@ services:
       # Strip prefix ca backend-ul să primească /api/...
       - "traefik.http.middlewares.doisense-api-stripprefix.stripprefix.prefixes=${TRAEFIK_API_STRIP_PREFIXES:-}"
       - "traefik.http.routers.doisense-api.middlewares=doisense-api-stripprefix@docker"
+      - "traefik.http.middlewares.doisense-projects-api-stripprefix.stripprefix.prefixes=/doisense"
+      - "traefik.http.routers.doisense-projects-api.rule=Host(`projects.doimih.net`) && PathPrefix(`/doisense/api`)"
+      - "traefik.http.routers.doisense-projects-api.entrypoints=websecure"
+      - "traefik.http.routers.doisense-projects-api.tls=true"
+      - "traefik.http.routers.doisense-projects-api.priority=260"
+      - "traefik.http.routers.doisense-projects-api.middlewares=doisense-projects-api-stripprefix@docker"
+      - "traefik.http.routers.doisense-projects-api.service=doisense-api"
+      - "traefik.http.routers.doisense-projects-admin.rule=Host(`projects.doimih.net`) && (PathPrefix(`/ro/admin`) || PathPrefix(`/admin`))"
+      - "traefik.http.routers.doisense-projects-admin.entrypoints=websecure"
+      - "traefik.http.routers.doisense-projects-admin.tls=true"
+      - "traefik.http.routers.doisense-projects-admin.priority=270"
+      - "traefik.http.routers.doisense-projects-admin.service=doisense-api"
 
   frontend:
     build:
@@ -184,6 +196,50 @@ services:
       - "traefik.http.routers.doisense-web.service=doisense-web"
       - "traefik.http.services.doisense-web.loadbalancer.server.port=3000"
       # Nu strip prefix – Nuxt servește cu baseURL /doisense
+
+  frontend_projects:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NUXT_PUBLIC_APP_BASE_URL: /doisense/
+        NUXT_PUBLIC_SITE_URL: https://projects.doimih.net/doisense
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    tmpfs:
+      - /tmp
+    expose:
+      - "3000"
+    networks:
+      - app_internal
+      - traefik
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/doisense/').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    environment:
+      NUXT_PUBLIC_APP_BASE_URL: /doisense/
+      NUXT_PUBLIC_SITE_URL: https://projects.doimih.net/doisense
+      NUXT_PUBLIC_API_BASE: /doisense/api
+      NUXT_PUBLIC_GOOGLE_CLIENT_ID: ${NUXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik_public}"
+      - "traefik.http.routers.doisense-projects-web.rule=Host(`projects.doimih.net`) && (Path(`/doisense`) || PathPrefix(`/doisense/`))"
+      - "traefik.http.routers.doisense-projects-web.entrypoints=websecure"
+      - "traefik.http.routers.doisense-projects-web.tls=true"
+      - "traefik.http.routers.doisense-projects-web.priority=250"
+      - "traefik.http.routers.doisense-projects-web.service=doisense-projects-web"
+      - "traefik.http.services.doisense-projects-web.loadbalancer.server.port=3000"
 
   minio:
     image: minio/minio:latest
