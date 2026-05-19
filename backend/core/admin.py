@@ -615,7 +615,7 @@ class BackupRestoreRequestAdmin(ModelAdmin):
 
 @admin.register(PlatformScheduledJob)
 class PlatformScheduledJobAdmin(ModelAdmin):
-    change_form_template = "admin/two_column_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
     list_display = (
         "label",
         "command_name",
@@ -799,7 +799,7 @@ class BackupConfigAdmin(ModelAdmin):
 
 
 class SingletonProxyConfigAdmin(ModelAdmin):
-    change_form_template = "admin/change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
 
     _masked_fields = (
         "google_client_id",

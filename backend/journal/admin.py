@@ -50,7 +50,7 @@ class JournalQuestionAdminForm(forms.ModelForm):
 @admin.register(JournalQuestion)
 class JournalQuestionAdmin(admin.ModelAdmin):
     form = JournalQuestionAdminForm
-    change_form_template = "admin/two_column_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
     list_display = ("id", "text", "category", "language", "active", "delete_link")
     list_filter = ("language", "active")
     actions_on_top = True

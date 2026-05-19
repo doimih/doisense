@@ -1,5 +1,4 @@
 from pathlib import Path
-import json
 from typing import Dict, Any
 
 from .models import ConversationTemplate

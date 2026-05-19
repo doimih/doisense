@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import EARLY_DISCOUNT_USER_LIMIT, User
+from .models import User
 from profiles.models import UserProfile
 
 

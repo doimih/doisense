@@ -26,11 +26,9 @@ from core.i18n import get_user_language, translate
 from core.models import SystemErrorEvent
 from core.system_config import (
     get_stripe_price_id_for_tier,
-    get_stripe_product_id_for_tier,
     get_stripe_secret_key,
     get_stripe_webhook_secret,
     plan_tier_from_stripe_price_id,
-    plan_tier_from_stripe_product_id,
 )
 from users.models import User
 

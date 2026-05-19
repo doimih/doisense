@@ -3,15 +3,12 @@
 import pytest
 from datetime import timedelta
 from django.utils import timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from users.models import User
 from ai.models import Conversation
-from journal.models import JournalEntry
-from core.models import UserWellbeingCheckin
 from core.notifications import (
     send_trial_expiration_warning,
-    send_inactivity_reminder,
     send_journal_reminder,
     send_daily_plan_reminder,
     send_goal_reminder,
@@ -65,7 +62,7 @@ def test_inactivity_reminder_not_sent_to_active_users(user):
     )
     
     # Should not trigger inactivity
-    with patch('core.notifications.EmailMessage') as mock_email:
+    with patch('core.notifications.EmailMessage'):
         # Would need to directly check in command logic
         # This test ensures recent activity is checked
         assert Conversation.objects.filter(user=user).exists()

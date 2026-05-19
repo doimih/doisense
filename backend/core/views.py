@@ -12,7 +12,6 @@ from urllib.request import urlopen, Request
 from urllib.parse import urlencode
 from pathlib import Path
 import imghdr
-import re
 import json
 import smtplib
 from django.core.validators import validate_email

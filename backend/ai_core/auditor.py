@@ -117,12 +117,6 @@ def audit_prompt(prompt: Prompt, legacy_prompt_text: str | None = None) -> dict:
     contradictions = _find_contradictions(legacy_prompt, prompt.content)
     tone_notes = _tone_mismatch(legacy_prompt, prompt.content)
 
-    potential_risks = [
-        *contradictions,
-        *tone_notes,
-        *(f"Missing legacy rule: {item}" for item in missing_rules[:5]),
-    ]
-
     recommended_changes = []
     if missing_rules:
         recommended_changes.append("Reintroduce the missing operational rules that still matter for the AI behavior.")

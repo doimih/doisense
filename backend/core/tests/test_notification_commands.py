@@ -9,7 +9,6 @@ from unittest.mock import patch
 
 from users.models import User
 from ai.models import Conversation
-from journal.models import JournalEntry
 from core.models import NotificationDelivery, UserWellbeingCheckin
 from profiles.models import UserProfile
 
@@ -17,7 +16,7 @@ from profiles.models import UserProfile
 @pytest.mark.django_db
 def test_send_trial_warnings_command_runs():
     """send_trial_warnings command should run without error."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="trial@example.com",
         password="testpass123",
         plan_tier=User.PLAN_TRIAL,
@@ -35,7 +34,7 @@ def test_send_trial_warnings_command_runs():
 @pytest.mark.django_db
 def test_send_trial_warnings_skips_old_trials():
     """send_trial_warnings should skip already-expired trials."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="expired@example.com",
         password="testpass123",
         plan_tier=User.PLAN_TRIAL,
@@ -96,7 +95,7 @@ def test_send_inactivity_reminders_respects_min_conversations():
 @pytest.mark.django_db
 def test_send_journal_reminders_command_runs():
     """send_journal_reminders command should run without error."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="journal@example.com",
         password="testpass123",
         plan_tier=User.PLAN_PREMIUM,
@@ -111,7 +110,7 @@ def test_send_journal_reminders_command_runs():
 @pytest.mark.django_db
 def test_send_journal_reminders_skips_users_with_entry_today():
     """send_journal_reminders should skip users who already entered journal today."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="journal2@example.com",
         password="testpass123",
         plan_tier=User.PLAN_PREMIUM,
@@ -121,7 +120,7 @@ def test_send_journal_reminders_skips_users_with_entry_today():
     # but the command logic checks for entries and would skip them
     # This test verifies the command accepts the skip flag without error
     
-    with patch('core.notifications.send_journal_reminder') as mock_send:
+    with patch('core.notifications.send_journal_reminder'):
         out = StringIO()
         call_command('send_journal_reminders', stdout=out)
         # Command should complete without error
@@ -131,7 +130,7 @@ def test_send_journal_reminders_skips_users_with_entry_today():
 @pytest.mark.django_db
 def test_send_daily_plan_reminders_skips_new_users():
     """send_daily_plan_reminders should skip users without prior conversations."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="newuser@example.com",
         password="testpass123",
         plan_tier=User.PLAN_TRIAL,
@@ -203,7 +202,7 @@ def test_send_daily_plan_reminders_is_deduplicated_per_day():
 @pytest.mark.django_db
 def test_send_wellbeing_reminders_sends_to_users_without_checkin_today():
     """send_wellbeing_reminders should send to users with no check-in today."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="wellbeing@example.com",
         password="testpass123",
         plan_tier=User.PLAN_PREMIUM,
@@ -260,7 +259,7 @@ def test_send_upgrade_recommendations_targets_engaged_trial_users():
     # But we can test with upgrade recommendations based on conversations
     # The logic checks min_journal_entries and min_conversations thresholds
     
-    with patch('core.notifications.send_upgrade_recommendation') as mock_send:
+    with patch('core.notifications.send_upgrade_recommendation'):
         out = StringIO()
         call_command('send_upgrade_recommendations', '--min-journal-entries', '0', stdout=out)
         # Command should complete without error

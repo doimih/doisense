@@ -18,7 +18,6 @@ All tests use monkeypatch to inject controlled failures without calling real API
 """
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 
 import pytest

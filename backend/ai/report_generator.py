@@ -5,7 +5,6 @@ from datetime import date, datetime, timedelta
 from typing import Any
 
 from django.contrib.auth import get_user_model
-from django.db.models import Count
 from django.utils import timezone
 
 from ai.models import Conversation, DailyReport, MonthlyReport, WeeklyReport

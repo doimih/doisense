@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
 
-from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated

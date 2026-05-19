@@ -13,7 +13,7 @@ from ai.models import Conversation
 @pytest.mark.django_db
 def test_send_trial_warnings_command_with_active_trial():
     """send_trial_warnings management command should handle active trial users."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="trial@example.com",
         password="testpass123",
         plan_tier=User.PLAN_TRIAL,
@@ -61,7 +61,7 @@ def test_send_inactivity_reminders_command_exists_and_runs():
 @pytest.mark.django_db
 def test_send_journal_reminders_command_with_premium_user():
     """send_journal_reminders management command should handle premium users."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="journal@example.com",
         password="testpass123",
         plan_tier=User.PLAN_PREMIUM,
@@ -110,7 +110,7 @@ def test_send_daily_plan_reminders_command_exists_and_runs():
 @pytest.mark.django_db
 def test_send_wellbeing_reminders_command_exists_and_runs():
     """send_wellbeing_reminders management command should exist and run."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="wellbeing@example.com",
         password="testpass123",
         plan_tier=User.PLAN_PREMIUM,
@@ -157,7 +157,7 @@ def test_send_upgrade_recommendations_command_with_trial_user():
 @pytest.mark.django_db
 def test_send_inactivity_reminders_respects_min_conversations():
     """send_inactivity_reminders should respect min-conversations parameter."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="new@example.com",
         password="testpass123",
         plan_tier=User.PLAN_BASIC,
@@ -175,7 +175,7 @@ def test_send_inactivity_reminders_respects_min_conversations():
 @pytest.mark.django_db
 def test_send_daily_plan_reminders_skip_free_option():
     """send_daily_plan_reminders should accept --skip-free option."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="free@example.com",
         password="testpass123",
         plan_tier=User.PLAN_FREE,
@@ -192,7 +192,7 @@ def test_send_daily_plan_reminders_skip_free_option():
 @pytest.mark.django_db
 def test_send_wellbeing_reminders_skip_free_option():
     """send_wellbeing_reminders should accept --skip-free option."""
-    user = User.objects.create_user(
+    User.objects.create_user(
         email="free2@example.com",
         password="testpass123",
         plan_tier=User.PLAN_FREE,

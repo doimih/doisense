@@ -7,7 +7,7 @@ and proper validation of save_to_db flags from AI responses.
 from django.db import transaction
 from django.utils import timezone
 from datetime import datetime, timedelta, date
-from typing import Dict, Any, List
+from typing import Dict, Any
 import logging
 
 from ai.models import Conversation, EmotionalAnalysis, WellnessMetric, Question

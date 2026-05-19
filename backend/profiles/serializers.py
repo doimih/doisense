@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from core.validators import validate_language
 from .models import UserProfile
 
 

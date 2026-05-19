@@ -1,4 +1,4 @@
-import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -628,8 +628,6 @@ REST_FRAMEWORK = {
     },
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
 }
-
-from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),

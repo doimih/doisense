@@ -9,7 +9,7 @@ from core.feature_access import require_feature
 from core.i18n import get_user_language, translate
 from core.quota import check_and_consume
 
-from .models import JournalQuestion, JournalEntry
+from .models import JournalQuestion
 from .serializers import JournalQuestionSerializer, JournalEntrySerializer
 
 

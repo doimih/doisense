@@ -393,7 +393,7 @@ class AIBudgetMonthlyTargetAdmin(admin.ModelAdmin):
 
 @admin.register(ConversationTemplate)
 class ConversationTemplateAdmin(admin.ModelAdmin):
-    change_form_template = "admin/two_column_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
     list_display = ("name", "language")
     fieldsets = (
         (
