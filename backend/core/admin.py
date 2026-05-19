@@ -213,7 +213,7 @@ class SystemConfigAdmin(ModelAdmin):
 
     def email_settings_view(self, request):
         url = reverse("admin:core_systemconfig_changelist")
-        return HttpResponseRedirect(f"{url}?tab=Contact%20%26%20Email&scope=email")
+        return HttpResponseRedirect(f"{url}?tab=Contact%20%26%20Email")
 
     def storage_settings_view(self, request):
         url = reverse("admin:core_systemconfig_changelist")

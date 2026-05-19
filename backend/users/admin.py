@@ -8,6 +8,7 @@ from .models import User
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
+    change_form_template = "admin/users/user/change_form.html"
     list_display = (
         "email",
         "language",
@@ -22,7 +23,7 @@ class UserAdmin(BaseUserAdmin):
     ordering = ("-created_at",)
     readonly_fields = ("early_discount_eligible",)
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        ("Account", {"fields": ("email", "password")}),
         (
             "Profile",
             {

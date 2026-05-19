@@ -1,0 +1,107 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  .user-admin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0 0 16px;
+  }
+
+  .user-admin-tab {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #4b5563;
+    padding: 0;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .user-admin-tab + .user-admin-tab::before {
+    content: '|';
+    color: #9ca3af;
+    margin: 0 10px;
+  }
+
+  .user-admin-tab.is-active {
+    color: #111827;
+  }
+</style>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script>
+(() => {
+  const key = 'doisense-user-admin-tab'
+  const form = document.getElementById('user_form') || document.querySelector('form[id$="_form"]')
+  if (!form) return
+
+  const fieldsets = Array.from(form.querySelectorAll('fieldset')).filter((fieldset) => {
+    const heading = fieldset.querySelector('h2, legend')
+    const label = heading?.textContent?.trim()
+    return Boolean(label)
+  })
+  if (fieldsets.length < 2) return
+
+  const tabs = document.createElement('div')
+  tabs.className = 'user-admin-tabs'
+
+  const items = fieldsets.map((fieldset, index) => {
+    const heading = fieldset.querySelector('h2, legend')
+    const label = heading?.textContent?.trim() || `Section ${index + 1}`
+    const id = fieldset.id || `user-admin-tab-${index}`
+
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'user-admin-tab'
+    button.textContent = label
+    button.dataset.target = id
+
+    fieldset.id = id
+    tabs.appendChild(button)
+
+    return { fieldset, button, id }
+  })
+
+  const tabsContainer = items[0].fieldset.parentNode
+  if (!tabsContainer) return
+
+  tabsContainer.insertBefore(tabs, items[0].fieldset)
+
+  function setActive(id) {
+    items.forEach(({ fieldset, button, id: itemId }) => {
+      const active = itemId === id
+      fieldset.style.display = active ? '' : 'none'
+      button.classList.toggle('is-active', active)
+    })
+    try {
+      localStorage.setItem(key, id)
+    } catch {
+      // Ignore storage errors.
+    }
+  }
+
+  let initial = items[0].id
+  try {
+    const remembered = localStorage.getItem(key)
+    if (remembered && items.some((item) => item.id === remembered)) {
+      initial = remembered
+    }
+  } catch {
+    // Ignore storage errors.
+  }
+
+  items.forEach(({ button, id }) => {
+    button.addEventListener('click', () => setActive(id))
+  })
+
+  setActive(initial)
+})()
+</script>
+{% endblock %}
