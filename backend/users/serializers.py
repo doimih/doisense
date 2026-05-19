@@ -122,7 +122,7 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 
 class SocialLoginSerializer(serializers.Serializer):
-    provider = serializers.ChoiceField(choices=["google", "apple"])
+    provider = serializers.ChoiceField(choices=["google"])
     id_token = serializers.CharField(write_only=True)
     language = serializers.CharField(max_length=2, default="en", required=False)
     accepted_terms = serializers.BooleanField(required=False, write_only=True)

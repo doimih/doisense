@@ -60,7 +60,6 @@ class SystemConfigAdminForm(forms.ModelForm):
         masked_fields = [
             "email_host_password",
             "google_client_id",
-            "apple_client_id",
             "stripe_secret_key",
             "stripe_webhook_secret",
             "stripe_price_id_premium",
@@ -803,7 +802,6 @@ class SingletonProxyConfigAdmin(ModelAdmin):
 
     _masked_fields = (
         "google_client_id",
-        "apple_client_id",
         "stripe_secret_key",
         "stripe_webhook_secret",
         "stripe_price_id_premium",
@@ -858,7 +856,6 @@ class OAuthConfigAdmin(SingletonProxyConfigAdmin):
             {
                 "fields": (
                     "google_client_id",
-                    "apple_client_id",
                 )
             },
         ),

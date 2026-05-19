@@ -688,4 +688,3 @@ SUPPORTED_LANGUAGES = ["ro", "en", "de", "fr", "it", "es", "pl"]
 # Social login
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")
 GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET", default="")
-APPLE_CLIENT_ID = env("APPLE_CLIENT_ID", default="")

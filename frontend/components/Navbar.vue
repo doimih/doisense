@@ -218,29 +218,17 @@
         </button>
       </div>
 
-      <div class="mb-4 grid grid-cols-2 gap-2">
+      <div class="mb-4">
         <button
           type="button"
           class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2 text-sm font-medium text-[#42524b] hover:bg-[#f0f4f1] disabled:opacity-50"
-          :disabled="authLoading || socialLoading === 'apple'"
+          :disabled="authLoading || socialLoading === 'google'"
           @click="loginWithGoogle"
           :aria-label="uiText.continueGoogle"
         >
           <span v-if="socialLoading === 'google'">...</span>
           <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5" aria-hidden="true">
             <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.1 14.6 2 12 2 6.5 2 2 6.5 2 12s4.5 10 10 10c5.8 0 9.6-4.1 9.6-9.8 0-.7-.1-1.2-.2-2H12z"/>
-          </svg>
-        </button>
-        <button
-          type="button"
-          class="w-full rounded-lg border border-[#c6d9d2] bg-[#fafbfa] px-3 py-2 text-sm font-medium text-[#42524b] hover:bg-[#f0f4f1] disabled:opacity-50"
-          :disabled="authLoading || socialLoading === 'google'"
-          @click="loginWithApple"
-          :aria-label="uiText.continueApple"
-        >
-          <span v-if="socialLoading === 'apple'">...</span>
-          <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5 fill-current" aria-hidden="true">
-            <path d="M16.9 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.6 2.3 2.8 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.7-2.2.9-1.3 1.2-2.6 1.2-2.7 0 0-2.3-.9-2.3-3.4zM14.6 5.8c.6-.8 1-1.9.9-3-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.9-1 3 .9.1 2-.5 2.7-1.4z"/>
           </svg>
         </button>
       </div>
@@ -424,7 +412,6 @@ const uiText = computed(() => {
     openLanguageMenu: string
     close: string
     continueGoogle: string
-    continueApple: string
   }> = {
     ro: {
       toggleNavigation: 'Comuta navigarea',
@@ -432,7 +419,6 @@ const uiText = computed(() => {
       openLanguageMenu: 'Deschide meniul de limba',
       close: 'Inchide',
       continueGoogle: 'Continua cu Google',
-      continueApple: 'Continua cu Apple',
     },
     en: {
       toggleNavigation: 'Toggle navigation',
@@ -440,7 +426,6 @@ const uiText = computed(() => {
       openLanguageMenu: 'Open language menu',
       close: 'Close',
       continueGoogle: 'Continue with Google',
-      continueApple: 'Continue with Apple',
     },
     de: {
       toggleNavigation: 'Navigation umschalten',
@@ -448,7 +433,6 @@ const uiText = computed(() => {
       openLanguageMenu: 'Sprachmenue oeffnen',
       close: 'Schliessen',
       continueGoogle: 'Mit Google fortfahren',
-      continueApple: 'Mit Apple fortfahren',
     },
     fr: {
       toggleNavigation: 'Basculer la navigation',
@@ -456,7 +440,6 @@ const uiText = computed(() => {
       openLanguageMenu: 'Ouvrir le menu de langue',
       close: 'Fermer',
       continueGoogle: 'Continuer avec Google',
-      continueApple: 'Continuer avec Apple',
     },
     it: {
       toggleNavigation: 'Attiva la navigazione',
@@ -464,7 +447,6 @@ const uiText = computed(() => {
       openLanguageMenu: 'Apri menu lingua',
       close: 'Chiudi',
       continueGoogle: 'Continua con Google',
-      continueApple: 'Continua con Apple',
     },
     es: {
       toggleNavigation: 'Cambiar navegacion',
@@ -472,7 +454,6 @@ const uiText = computed(() => {
       openLanguageMenu: 'Abrir menu de idioma',
       close: 'Cerrar',
       continueGoogle: 'Continuar con Google',
-      continueApple: 'Continuar con Apple',
     },
     pl: {
       toggleNavigation: 'Przelacz nawigacje',
@@ -480,7 +461,6 @@ const uiText = computed(() => {
       openLanguageMenu: 'Otworz menu jezyka',
       close: 'Zamknij',
       continueGoogle: 'Kontynuuj z Google',
-      continueApple: 'Kontynuuj z Apple',
     },
   }
   return labels[code]
@@ -527,7 +507,7 @@ const languageButtonClass = computed(() => [
 const showAuthModal = ref(false)
 const authTab = ref<'login' | 'register'>('login')
 const authLoading = ref(false)
-const socialLoading = ref<'' | 'google' | 'apple'>('')
+const socialLoading = ref<'' | 'google'>('')
 const authError = ref('')
 const authSuccess = ref('')
 
@@ -624,46 +604,6 @@ async function loginWithGoogle() {
     socialLoading.value = ''
   }
 }
-
-async function loginWithApple() {
-  const clientId = (runtimeConfig.public.appleClientId as string) || ''
-  if (!clientId) {
-    authError.value = t('auth.appleNotConfigured')
-    return
-  }
-
-  socialLoading.value = 'apple'
-  authError.value = ''
-  try {
-    await loadScript(
-      'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js',
-      'appleid-auth-script',
-    )
-
-    const w = window as unknown as Record<string, any>
-    const AppleID = w.AppleID
-    if (!AppleID?.auth) throw new Error('Apple SDK unavailable')
-
-    const redirectURI = (runtimeConfig.public.appleRedirectUri as string) || window.location.href
-    AppleID.auth.init({
-      clientId,
-      scope: 'name email',
-      redirectURI,
-      usePopup: true,
-    })
-
-    const response = await AppleID.auth.signIn()
-    const credential = response?.authorization?.id_token as string | undefined
-    if (!credential) throw new Error('Missing Apple credential')
-
-    await authStore.loginWithSocial('apple', credential, preferredLanguage())
-    closeAuthModal()
-    await router.push(getPostAuthPath())
-  } catch {
-    authError.value = t('auth.appleLoginFailed')
-  } finally {
-    socialLoading.value = ''
-  }
 }
 
 async function submitLogin() {

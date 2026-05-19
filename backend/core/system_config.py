@@ -26,11 +26,6 @@ def get_google_client_secret() -> str:
     return (config.google_client_secret or settings.GOOGLE_CLIENT_SECRET or "").strip()
 
 
-def get_apple_client_id() -> str:
-    config = get_system_config()
-    return (config.apple_client_id or settings.APPLE_CLIENT_ID or "").strip()
-
-
 def get_ai_chat_rate_limit() -> int:
     config = get_system_config()
     return config.ai_chat_rate_limit or getattr(settings, "AI_CHAT_RATE_LIMIT", 20)

@@ -94,7 +94,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -156,8 +155,6 @@ services:
       NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://www.doisense.eu}
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api}
       NUXT_PUBLIC_GOOGLE_CLIENT_ID: ${NUXT_PUBLIC_GOOGLE_CLIENT_ID:-}
-      NUXT_PUBLIC_APPLE_CLIENT_ID: ${NUXT_PUBLIC_APPLE_CLIENT_ID:-}
-      NUXT_PUBLIC_APPLE_REDIRECT_URI: ${NUXT_PUBLIC_APPLE_REDIRECT_URI:-}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK:-dokploy-network}"

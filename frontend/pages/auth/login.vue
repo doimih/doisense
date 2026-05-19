@@ -6,10 +6,10 @@
       {{ authNotice }}
     </div>
 
-    <div class="mb-5 grid grid-cols-2 gap-2">
+    <div class="mb-5">
       <button
         type="button"
-        class="rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-700 hover:bg-stone-50"
+        class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-700 hover:bg-stone-50"
         :disabled="socialLoading === 'google'"
         :aria-label="socialLabels.google"
         @click="loginWithGoogle"
@@ -17,19 +17,6 @@
         <span v-if="socialLoading === 'google'">...</span>
         <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5" aria-hidden="true">
           <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.1 14.6 2 12 2 6.5 2 2 6.5 2 12s4.5 10 10 10c5.8 0 9.6-4.1 9.6-9.8 0-.7-.1-1.2-.2-2H12z"/>
-        </svg>
-      </button>
-
-      <button
-        type="button"
-        class="rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-700 hover:bg-stone-50"
-        :disabled="socialLoading === 'apple'"
-        :aria-label="socialLabels.apple"
-        @click="loginWithApple"
-      >
-        <span v-if="socialLoading === 'apple'">...</span>
-        <svg v-else viewBox="0 0 24 24" class="mx-auto h-5 w-5 fill-current" aria-hidden="true">
-          <path d="M16.9 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.6 2.3 2.8 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.7-2.2.9-1.3 1.2-2.6 1.2-2.7 0 0-2.3-.9-2.3-3.4zM14.6 5.8c.6-.8 1-1.9.9-3-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.9-1 3 .9.1 2-.5 2.7-1.4z"/>
         </svg>
       </button>
     </div>
@@ -88,7 +75,7 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
-const socialLoading = ref<'' | 'google' | 'apple'>('')
+const socialLoading = ref<'' | 'google'>('')
 
 const authNotice = computed(() => {
   const reason = String(route.query.reason || '')
@@ -117,14 +104,16 @@ const nextAfterLogin = computed(() => {
 const socialLabels = computed(() => {
   const code = (locale.value || 'en').slice(0, 2).toLowerCase()
   return {
-    ro: { google: 'Continua cu Google', apple: 'Continua cu Apple' },
-    en: { google: 'Continue with Google', apple: 'Continue with Apple' },
-    de: { google: 'Mit Google fortfahren', apple: 'Mit Apple fortfahren' },
-    fr: { google: 'Continuer avec Google', apple: 'Continuer avec Apple' },
-    it: { google: 'Continua con Google', apple: 'Continua con Apple' },
-    es: { google: 'Continuar con Google', apple: 'Continuar con Apple' },
-    pl: { google: 'Kontynuuj z Google', apple: 'Kontynuuj z Apple' },
-  }[code] || { google: 'Continue with Google', apple: 'Continue with Apple' }
+    google: {
+      ro: 'Continua cu Google',
+      en: 'Continue with Google',
+      de: 'Mit Google fortfahren',
+      fr: 'Continuer avec Google',
+      it: 'Continua con Google',
+      es: 'Continuar con Google',
+      pl: 'Kontynuuj z Google',
+    }[code] || 'Continue with Google',
+  }
 })
 
 usePublicSeo({
@@ -188,46 +177,6 @@ async function loginWithGoogle() {
     await router.push(nextAfterLogin.value || getPostAuthPath())
   } catch {
     error.value = t('auth.googleLoginFailed')
-  } finally {
-    socialLoading.value = ''
-  }
-}
-
-async function loginWithApple() {
-  const clientId = (runtimeConfig.public.appleClientId as string) || ''
-  if (!clientId) {
-    error.value = t('auth.appleNotConfigured')
-    return
-  }
-
-  socialLoading.value = 'apple'
-  error.value = ''
-  try {
-    await loadScript(
-      'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js',
-      'appleid-auth-script-page',
-    )
-
-    const w = window as unknown as Record<string, any>
-    const AppleID = w.AppleID
-    if (!AppleID?.auth) throw new Error('Apple SDK unavailable')
-
-    const redirectURI = (runtimeConfig.public.appleRedirectUri as string) || window.location.href
-    AppleID.auth.init({
-      clientId,
-      scope: 'name email',
-      redirectURI,
-      usePopup: true,
-    })
-
-    const response = await AppleID.auth.signIn()
-    const credential = response?.authorization?.id_token as string | undefined
-    if (!credential) throw new Error('Missing Apple credential')
-
-    await authStore.loginWithSocial('apple', credential, preferredLanguage())
-    await router.push(nextAfterLogin.value || getPostAuthPath())
-  } catch {
-    error.value = t('auth.appleLoginFailed')
   } finally {
     socialLoading.value = ''
   }

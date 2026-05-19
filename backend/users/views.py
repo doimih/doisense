@@ -17,11 +17,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
-import jwt
+
 from core.analytics import track_event
 from core.email_templates import render_basic_email_html
 from core.i18n import get_request_language, get_user_language, translate
-from core.system_config import get_apple_client_id, get_google_client_id, get_system_config
+from core.system_config import get_google_client_id, get_system_config
 
 from .models import User
 from .serializers import (
@@ -730,21 +730,6 @@ class SocialLoginView(APIView):
             google_client_id,
         )
 
-    @staticmethod
-    def _verify_apple_token(raw_token: str):
-        apple_client_id = get_apple_client_id()
-        if not apple_client_id:
-            raise ValueError("Apple login is not configured")
-        jwk_client = jwt.PyJWKClient("https://appleid.apple.com/auth/keys")
-        signing_key = jwk_client.get_signing_key_from_jwt(raw_token)
-        return jwt.decode(
-            raw_token,
-            signing_key.key,
-            algorithms=["RS256"],
-            audience=apple_client_id,
-            issuer="https://appleid.apple.com",
-        )
-
     def post(self, request):
         language = get_request_language(request, default="en")
         serializer = SocialLoginSerializer(data=request.data)
@@ -755,10 +740,12 @@ class SocialLoginView(APIView):
         language = serializer.validated_data["language"]
 
         try:
-            if provider == "google":
-                claims = self._verify_google_token(raw_token)
-            else:
-                claims = self._verify_apple_token(raw_token)
+            if provider != "google":
+                return Response(
+                    {"detail": _auth_text(language, "invalid_social_token")},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            claims = self._verify_google_token(raw_token)
         except Exception:
             return Response(
                 {"detail": _auth_text(language, "invalid_social_token")},

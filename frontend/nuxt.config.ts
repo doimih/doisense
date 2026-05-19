@@ -74,8 +74,6 @@ export default defineNuxtConfig({
       appBaseUrl,
       apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000/api",
       googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-      appleClientId: process.env.NUXT_PUBLIC_APPLE_CLIENT_ID || "",
-      appleRedirectUri: process.env.NUXT_PUBLIC_APPLE_REDIRECT_URI || "",
     },
   },
   experimental: {

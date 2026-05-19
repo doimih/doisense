@@ -242,23 +242,6 @@ def test_social_login_requires_legal_acceptance_for_new_accounts(api_client, mon
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-@pytest.mark.django_db
-def test_social_login_apple_existing_user(api_client, user, monkeypatch):
-    url = reverse("auth-social-login")
-
-    def _mock_verify(_token):
-        return {"email": user.email}
-
-    monkeypatch.setattr(SocialLoginView, "_verify_apple_token", staticmethod(_mock_verify))
-    response = api_client.post(
-        url,
-        {"provider": "apple", "id_token": "dummy", "language": "en"},
-        format="json",
-    )
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["user"]["email"] == user.email
-
 
 @pytest.mark.django_db
 def test_social_login_invalid_token(api_client, monkeypatch):

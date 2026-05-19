@@ -35,8 +35,7 @@
     "lastName": "Apellido",
     "googleNotConfigured": "El inicio de sesión con Google no está configurado.",
     "googleLoginFailed": "No se pudo completar el inicio con Google.",
-    "appleNotConfigured": "El inicio de sesión con Apple no está configurado.",
-    "appleLoginFailed": "No se pudo completar el inicio con Apple.",
+
     "loginFailed": "Credenciales inválidas.",
     "registerSuccess": "Cuenta creada. Revisa tu correo para activar la cuenta.",
     "registerFailed": "No se pudo crear la cuenta. Verifica tus datos e inténtalo de nuevo.",

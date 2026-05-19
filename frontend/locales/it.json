@@ -35,8 +35,7 @@
     "lastName": "Cognome",
     "googleNotConfigured": "Accesso Google non configurato.",
     "googleLoginFailed": "Impossibile completare l'accesso con Google.",
-    "appleNotConfigured": "Accesso Apple non configurato.",
-    "appleLoginFailed": "Impossibile completare l'accesso con Apple.",
+
     "loginFailed": "Credenziali non valide.",
     "registerSuccess": "Account creato. Controlla la tua email per l'attivazione.",
     "registerFailed": "Impossibile creare l'account. Verifica i dati e riprova.",
