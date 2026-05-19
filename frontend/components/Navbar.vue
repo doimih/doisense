@@ -72,7 +72,7 @@
         <NuxtLink v-if="authStore.isLoggedIn" :to="localePath('/tickets')" :class="navLinkClass">
           {{ ticketsLabel }}
         </NuxtLink>
-        <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/doisense/ro/admin/" :class="navLinkClass">
+        <a v-if="authStore.isLoggedIn && authStore.user?.is_superuser" href="/ro/admin/" :class="navLinkClass">
           {{ $t('nav.admin') }}
         </a>
         <button

@@ -6,75 +6,28 @@
 <style>
   .syscfg-tabs {
     display: flex;
+    gap: 8px;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0;
-    margin: 0 0 18px;
-    padding: 10px 14px;
-    border: 1px solid rgba(14, 116, 144, 0.12);
-    border-radius: 14px;
-    background:
-      linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(239, 246, 255, 0.95) 50%, rgba(255, 247, 237, 0.95));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    margin: 0 0 16px;
   }
 
   .syscfg-tab {
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: #475569;
-    padding: 6px 0;
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1f2937;
+    padding: 8px 12px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 13px;
     line-height: 1.2;
-    transition: color 0.18s ease, transform 0.18s ease, text-shadow 0.18s ease;
-  }
-
-  .syscfg-tab:hover {
-    color: #0f766e;
-    transform: translateY(-1px);
-  }
-
-  .syscfg-tab + .syscfg-tab::before {
-    content: '|';
-    color: #94a3b8;
-    margin: 0 12px;
-    text-shadow: none;
-  }
-
-  .syscfg-tab__label {
-    display: inline-block;
   }
 
   .syscfg-tab.is-active {
-    color: #0f172a;
+    background: #111827;
+    color: #ffffff;
+    border-color: #111827;
   }
 
-  .syscfg-tab.is-active .syscfg-tab__label::after {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 3px;
-    margin-top: 6px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #0f766e, #0284c7, #f97316);
-  }
-
-  /* Hide email section when in storage scope */  {% if request.GET.scope == 'storage' %}
-  #syscfg-tab-contact-email,
-  #syscfg-tab-contact-email-label {
-    display: none !important;
-  }
-  {% endif %}
-
-  /* Hide storage section when in email scope */
-  {% if request.GET.scope == 'email' %}
-  #syscfg-tab-storage,
-  #syscfg-tab-storage-label {
-    display: none !important;
-  }
-  {% endif %}
 </style>
 {% endblock %}
 
@@ -102,23 +55,16 @@
   const key = 'doisense-system-config-tab'
   const params = new URLSearchParams(window.location.search)
   const requestedTab = params.get('tab')
-  const scope = params.get('scope')
   let expectedLabels = [
     'Localization',
     'Contact & Email',
     'Storage',
-    'QA Access',
     'OAuth',
     'Stripe',
     'AI',
+    'QA Access',
   ]
-  if (scope === 'email') {
-    expectedLabels = ['Contact & Email']
-  }
-  if (scope === 'storage') {
-    expectedLabels = ['Storage']
-  }
-  const form = document.getElementById('systemconfig_form') || document.querySelector('form[id$="_form"]')
+  const form = document.querySelector('form')
   if (!form) return
 
   const fieldsets = Array.from(form.querySelectorAll('fieldset')).filter((fieldset) => {
@@ -134,10 +80,10 @@
     'Contact & Email': 'contact-email',
     'Storage': 'storage',
     'Localization': 'localization',
-    'QA Access': 'qa-access',
     'OAuth': 'oauth',
     'Stripe': 'stripe',
     'AI': 'ai',
+    'QA Access': 'qa-access',
   }
 
   const tabs = document.createElement('div')
@@ -162,24 +108,14 @@
     .map((label) => ({ label, fieldset: byLabel.get(label) }))
     .filter((item) => Boolean(item.fieldset))
 
-  // If only one fieldset and it matches the scope, don't show tabs
-  if (orderedFieldsets.length === 1 && scope) {
-    // Single tab - no need for tabs UI
-    return
-  }
-
   const items = orderedFieldsets.map(({ label, fieldset }, index) => {
     const id = fieldset.id || `syscfg-tab-${index}`
 
     const button = document.createElement('button')
     button.type = 'button'
     button.className = 'syscfg-tab'
+    button.textContent = label
     button.dataset.target = id
-
-    const labelSpan = document.createElement('span')
-    labelSpan.className = 'syscfg-tab__label'
-    labelSpan.textContent = label
-    button.appendChild(labelSpan)
 
     fieldset.id = id
     tabs.appendChild(button)
@@ -189,10 +125,7 @@
 
   if (items.length < 2) return
 
-  const tabsContainer = items[0].fieldset.parentNode
-  if (!tabsContainer) return
-
-  tabsContainer.insertBefore(tabs, items[0].fieldset)
+  form.insertBefore(tabs, items[0].fieldset)
 
   function setActive(id) {
     items.forEach(({ fieldset, button, id: itemId }) => {

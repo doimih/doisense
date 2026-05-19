@@ -21,6 +21,11 @@ def get_google_client_id() -> str:
     return (config.google_client_id or settings.GOOGLE_CLIENT_ID or "").strip()
 
 
+def get_google_client_secret() -> str:
+    config = get_system_config()
+    return (config.google_client_secret or settings.GOOGLE_CLIENT_SECRET or "").strip()
+
+
 def get_apple_client_id() -> str:
     config = get_system_config()
     return (config.apple_client_id or settings.APPLE_CLIENT_ID or "").strip()
