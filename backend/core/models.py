@@ -55,7 +55,6 @@ class SystemConfig(models.Model):
 
     # OAuth settings
     google_client_id = models.CharField(max_length=255, blank=True)
-    apple_client_id = models.CharField(max_length=255, blank=True, default="")
     google_client_secret = models.CharField(max_length=255, blank=True)
 
     # Stripe settings
