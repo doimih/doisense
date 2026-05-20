@@ -194,13 +194,21 @@ const { toAbsolutePublicUrl } = usePublicSiteContext()
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const loadingPlan = ref<string | null>(null)
 type BillingCycle = 'monthly' | 'yearly'
+type PlanKey = 'basic' | 'premium' | 'vip'
 const billingCycle = ref<BillingCycle>('monthly')
 
-const PLAN_MONTHLY_PRICES: Record<'basic' | 'premium' | 'vip', number> = {
-  basic: 12,
-  premium: 25,
-  vip: 49,
+type PlanPricing = {
+  monthly: number
+  yearly: number
+  currency: string
 }
+
+const DEFAULT_PLAN_PRICING: Record<PlanKey, PlanPricing> = {
+  basic: { monthly: 12, yearly: 129.6, currency: 'EUR' },
+  premium: { monthly: 25, yearly: 270, currency: 'EUR' },
+  vip: { monthly: 49, yearly: 529.2, currency: 'EUR' },
+}
+const pricingPlans = ref<Record<PlanKey, PlanPricing>>({ ...DEFAULT_PLAN_PRICING })
 
 const BILLING_TEXT: Record<string, { monthly: string; yearly: string; discountBadge: string; perMonth: string; perYear: string }> = {
   ro: { monthly: 'Plată lunară', yearly: 'Plată anuală', discountBadge: '-10% anual', perMonth: '/ lună', perYear: '/ an' },
@@ -214,22 +222,105 @@ const BILLING_TEXT: Record<string, { monthly: string; yearly: string; discountBa
 
 const billingText = computed(() => BILLING_TEXT[localeCode.value] || BILLING_TEXT.en)
 
-function yearlyPrice(monthly: number): number {
-  return Number((monthly * 12 * 0.9).toFixed(2))
+type PricingApiPlan = {
+  plan_tier?: string
+  plan?: string
+  key?: string
+  id?: string
+  monthly_price?: number | string
+  monthlyPrice?: number | string
+  monthly?: number | string
+  yearly_price?: number | string
+  yearlyPrice?: number | string
+  yearly?: number | string
+  currency?: string
+}
+
+type PricingApiResponse = {
+  plans?: PricingApiPlan[]
+  [key: string]: unknown
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+function parsePricingResponse(payload: unknown): Record<PlanKey, PlanPricing> | null {
+  if (!payload || typeof payload !== 'object') return null
+
+  const source = payload as PricingApiResponse
+  const entries: PricingApiPlan[] = Array.isArray(source.plans)
+    ? source.plans
+    : (['basic', 'premium', 'vip']
+        .map((key) => {
+          const item = source[key]
+          if (!item || typeof item !== 'object') return null
+          return { key, ...(item as Record<string, unknown>) } as PricingApiPlan
+        })
+        .filter(Boolean) as PricingApiPlan[])
+
+  if (!entries.length) return null
+
+  const next: Partial<Record<PlanKey, PlanPricing>> = {}
+  for (const entry of entries) {
+    const rawKey = (entry.plan_tier || entry.plan || entry.key || entry.id || '').toLowerCase()
+    if (rawKey !== 'basic' && rawKey !== 'premium' && rawKey !== 'vip') continue
+    const monthly = toNumber(entry.monthly_price ?? entry.monthlyPrice ?? entry.monthly)
+    const yearly = toNumber(entry.yearly_price ?? entry.yearlyPrice ?? entry.yearly)
+    if (monthly === null || yearly === null) continue
+
+    next[rawKey] = {
+      monthly,
+      yearly,
+      currency: String(entry.currency || 'EUR').toUpperCase(),
+    }
+  }
+
+  if (!next.basic || !next.premium || !next.vip) return null
+  return next as Record<PlanKey, PlanPricing>
+}
+
+async function fetchPricingPlans() {
+  const endpoints = ['/pricing', '/payments/pricing']
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetchApi<unknown>(endpoint)
+      const parsed = parsePricingResponse(response)
+      if (parsed) {
+        pricingPlans.value = parsed
+        return
+      }
+    } catch {
+      // Keep defaults if pricing endpoint is unavailable.
+    }
+  }
 }
 
 function getPlanPrice(planKey: string): number {
-  const monthly = PLAN_MONTHLY_PRICES[planKey as keyof typeof PLAN_MONTHLY_PRICES] || PLAN_MONTHLY_PRICES.premium
-  return billingCycle.value === 'yearly' ? yearlyPrice(monthly) : monthly
+  const normalizedKey = (planKey || 'premium') as PlanKey
+  const plan = pricingPlans.value[normalizedKey] || pricingPlans.value.premium
+  return billingCycle.value === 'yearly' ? plan.yearly : plan.monthly
 }
 
-function formatPrice(value: number): string {
+function getPlanCurrency(planKey: string): string {
+  const normalizedKey = (planKey || 'premium') as PlanKey
+  const plan = pricingPlans.value[normalizedKey] || pricingPlans.value.premium
+  return plan.currency
+}
+
+function formatPrice(value: number, currency = 'EUR'): string {
   const hasDecimals = Math.round(value) !== value
-  return `€${hasDecimals ? value.toFixed(2) : value.toFixed(0)}`
+  const symbol = currency === 'EUR' ? '€' : `${currency} `
+  return `${symbol}${hasDecimals ? value.toFixed(2) : value.toFixed(0)}`
 }
 
 function displayPlanPrice(planKey: string): string {
-  return formatPrice(getPlanPrice(planKey))
+  return formatPrice(getPlanPrice(planKey), getPlanCurrency(planKey))
 }
 
 function displayPlanPeriod(): string {
@@ -256,6 +347,10 @@ const currentPlanKey = computed(() => {
   if (!tier || tier === 'free' || tier === 'trial') return null
   if (tier === 'premium_discounted') return 'premium'
   return tier
+})
+
+onMounted(async () => {
+  await fetchPricingPlans()
 })
 
 async function startCheckout(planKey: string, cycle: BillingCycle) {
@@ -991,8 +1086,8 @@ const pricingStructuredData = computed(() => {
         '@type': 'Offer',
         '@id': `${pricingUrl}#offer-${plan.key}`,
         url: pricingUrl,
-        priceCurrency: 'EUR',
-        price: Number(plan.price.replace(/[^\d.]/g, '')),
+        priceCurrency: getPlanCurrency(plan.key),
+        price: pricingPlans.value[plan.key].monthly,
         availability: 'https://schema.org/InStock',
         category: 'Wellbeing subscription',
         eligibleRegion: 'EU',
