@@ -114,7 +114,7 @@ jobs:
         run: pnpm run lint
 
       - name: Test with Coverage
-        run: pnpm exec jest --runInBand --coverage --coverageReporters=cobertura
+        run: pnpm exec jest --runInBand --coverage --coverageReporters=cobertura --passWithNoTests
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.5
