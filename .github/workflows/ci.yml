@@ -116,8 +116,8 @@ jobs:
       - name: Prepare Nuxt
         run: pnpm exec nuxt prepare
 
-      - name: Test with Coverage
-        run: pnpm exec jest --runInBand --coverage --coverageReporters=cobertura --passWithNoTests
+      - name: Test
+        run: pnpm exec jest --runInBand --passWithNoTests
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.5
