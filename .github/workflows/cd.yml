@@ -6,7 +6,7 @@ on:
       ref:
         description: "Git ref to deploy (branch, tag, or commit SHA)"
         required: true
-        default: "main"
+        default: "dev"
       run_migrations:
         description: "Run backend migrations after deploy"
         required: true
@@ -33,15 +33,15 @@ jobs:
           REF_TO_DEPLOY: ${{ github.event.inputs.ref }}
         run: |
           set -Eeuo pipefail
-          git fetch origin main --tags --prune
+          git fetch origin dev --tags --prune
           if git show-ref --verify --quiet "refs/remotes/origin/${REF_TO_DEPLOY}"; then
             RESOLVED_SHA="$(git rev-parse "origin/${REF_TO_DEPLOY}^{commit}")"
           else
             RESOLVED_SHA="$(git rev-parse "${REF_TO_DEPLOY}^{commit}")"
           fi
 
-          if ! git branch -r --contains "$RESOLVED_SHA" | grep -q "origin/main"; then
-            echo "Selected ref does not belong to origin/main"
+          if ! git branch -r --contains "$RESOLVED_SHA" | grep -q "origin/dev"; then
+            echo "Selected ref does not belong to origin/dev"
             exit 1
           fi
 
