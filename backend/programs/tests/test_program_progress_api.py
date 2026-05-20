@@ -125,17 +125,26 @@ def test_program_detail_exposes_days_for_accessible_program(paid_client, program
 def test_program_activate_generates_calendar_tasks(premium_client, premium_user, programs_catalog):
     program = programs_catalog["premium"]
 
-    response = premium_client.post(reverse("program-activate", args=[program.id]), {}, format="json")
+    response = premium_client.post(
+        reverse("program-activate", args=[program.id]), {}, format="json"
+    )
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["calendar_tasks_generated"] == program.duration_days
     assert response.data["activation"]["status"] == "active"
-    assert Task.objects.filter(user=premium_user, guided_program=program, source=Task.SOURCE_PROGRAM).count() == program.duration_days
+    assert (
+        Task.objects.filter(
+            user=premium_user, guided_program=program, source=Task.SOURCE_PROGRAM
+        ).count()
+        == program.duration_days
+    )
 
 
 @pytest.mark.django_db
 def test_basic_user_cannot_activate_premium_program(paid_client, programs_catalog):
-    response = paid_client.post(reverse("program-activate", args=[programs_catalog["premium"].id]), {}, format="json")
+    response = paid_client.post(
+        reverse("program-activate", args=[programs_catalog["premium"].id]), {}, format="json"
+    )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.data["required_plan"] == GuidedProgram.PLAN_ACCESS_PREMIUM
@@ -158,7 +167,9 @@ def test_complete_day_marks_task_progress_and_vip_message(vip_client, vip_user, 
     program = programs_catalog["vip"]
     vip_client.post(reverse("program-activate", args=[program.id]), {}, format="json")
 
-    response = vip_client.post(reverse("program-complete-day", args=[program.id]), {"day_number": 1}, format="json")
+    response = vip_client.post(
+        reverse("program-complete-day", args=[program.id]), {"day_number": 1}, format="json"
+    )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.data["completed_day"] == 1
@@ -166,7 +177,9 @@ def test_complete_day_marks_task_progress_and_vip_message(vip_client, vip_user, 
     assert response.data["dynamic_recommendation"] is not None
 
     activation = UserProgramProgress.objects.get(user=vip_user, program=program)
-    task = Task.objects.get(user=vip_user, guided_program=program, program_day=1, source=Task.SOURCE_PROGRAM)
+    task = Task.objects.get(
+        user=vip_user, guided_program=program, program_day=1, source=Task.SOURCE_PROGRAM
+    )
     scheduled_day = activation.start_date + datetime.timedelta(days=0)
     progress_entry = TaskProgress.objects.get(task=task, progress_date=scheduled_day)
     assert progress_entry.is_completed is True
@@ -185,15 +198,21 @@ def test_program_reflection_roundtrip(premium_client, premium_user, programs_cat
     assert create_response.status_code == status.HTTP_201_CREATED
     assert "ziua 1" in create_response.data["ai_feedback"].lower()
 
-    fetch_response = premium_client.get(reverse("program-reflection", args=[program.id]), {"day_number": 1})
+    fetch_response = premium_client.get(
+        reverse("program-reflection", args=[program.id]), {"day_number": 1}
+    )
 
     assert fetch_response.status_code == status.HTTP_200_OK
     assert fetch_response.data["reflection_text"] == "I worked with more clarity today."
-    assert ProgramReflection.objects.filter(user=premium_user, program=program, day_number=1).exists()
+    assert ProgramReflection.objects.filter(
+        user=premium_user, program=program, day_number=1
+    ).exists()
 
 
 @pytest.mark.django_db
-def test_program_progress_endpoint_returns_activation_state(premium_client, premium_user, programs_catalog):
+def test_program_progress_endpoint_returns_activation_state(
+    premium_client, premium_user, programs_catalog
+):
     program = programs_catalog["premium"]
     progress = UserProgramProgress.objects.create(
         user=premium_user,

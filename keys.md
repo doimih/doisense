@@ -22,10 +22,19 @@ python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 Pui valoarea in Dockploy la:
 - doisense-app
 
-5. Pentru STRIPE_SECRET_KEY si STRIPE_WEBHOOK_SECRET:
+5. Pentru STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET si Stripe Price IDs:
 - le iei din Stripe Dashboard
 - le pui in Dockploy la:
   - doisense-app
+- setezi si variabilele de planuri:
+  - STRIPE_PRICE_ID_BASIC
+  - STRIPE_PRICE_ID_PREMIUM
+  - STRIPE_PRICE_ID_VIP
+  - STRIPE_PRICE_ID_BASIC_YEARLY
+  - STRIPE_PRICE_ID_PREMIUM_YEARLY
+  - STRIPE_PRICE_ID_VIP_YEARLY
+- pentru productie setezi explicit:
+  - ALLOW_DB_STRIPE_SECRETS=false
 
 6. Pentru OPENAI_API_KEY si ANTHROPIC_API_KEY:
 - le iei din OpenAI / Anthropic

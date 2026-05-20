@@ -32,13 +32,25 @@ Acest document rezuma exact ce parole/chei trebuie actualizate pentru productie 
 - Generare recomandata:
   - `openssl rand -hex 16`
 
-## 5) STRIPE_SECRET_KEY si STRIPE_WEBHOOK_SECRET
-- Rol: cheile Stripe pentru plati si webhook.
+## 5) STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET si Price IDs
+- Rol: cheile Stripe pentru plati/webhook si maparea completa a planurilor monthly/yearly.
 - Unde se pun:
   - serviciul `doisense-app` (Environment Variables)
+- Variabile obligatorii:
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+  - `STRIPE_PRICE_ID_BASIC`
+  - `STRIPE_PRICE_ID_PREMIUM`
+  - `STRIPE_PRICE_ID_VIP`
+  - `STRIPE_PRICE_ID_BASIC_YEARLY`
+  - `STRIPE_PRICE_ID_PREMIUM_YEARLY`
+  - `STRIPE_PRICE_ID_VIP_YEARLY`
+- Variabila recomandata pentru productie (secret hardening):
+  - `ALLOW_DB_STRIPE_SECRETS=false`
 - Cum le obtii:
   - Stripe Dashboard -> Developers -> API keys (`STRIPE_SECRET_KEY`)
   - Stripe Dashboard -> Developers -> Webhooks (`STRIPE_WEBHOOK_SECRET`)
+  - Stripe Dashboard -> Products -> Prices (toate `STRIPE_PRICE_ID_*`)
 
 ## 6) OPENAI_API_KEY si ANTHROPIC_API_KEY
 - Rol: chei pentru functionalitatile AI.

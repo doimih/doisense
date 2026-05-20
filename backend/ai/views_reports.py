@@ -66,9 +66,15 @@ class ReportListView(APIView):
 
         allowed = _allowed_report_types_for_user(request.user)
         if report_type not in {"daily", "weekly", "monthly"}:
-            return Response({"detail": _report_text(request.user, "invalid_type")}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": _report_text(request.user, "invalid_type")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if report_type not in allowed:
-            return Response({"detail": _report_text(request.user, "plan_restricted")}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": _report_text(request.user, "plan_restricted")},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if report_type == "daily":
             rows = DailyReport.objects.filter(user=request.user).order_by("-date")[:limit]
@@ -101,7 +107,9 @@ class ReportListView(APIView):
                 for row in rows
             ]
         else:
-            rows = MonthlyReport.objects.filter(user=request.user).order_by("-year", "-month")[:limit]
+            rows = MonthlyReport.objects.filter(user=request.user).order_by("-year", "-month")[
+                :limit
+            ]
             items = [
                 {
                     "type": "monthly",

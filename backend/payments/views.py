@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import stripe
 from django.conf import settings
 from django.db.models import F
@@ -26,11 +27,9 @@ from core.i18n import get_user_language, translate
 from core.models import SystemErrorEvent
 from core.system_config import (
     get_stripe_price_id_for_tier,
-    get_stripe_product_id_for_tier,
     get_stripe_secret_key,
     get_stripe_webhook_secret,
     plan_tier_from_stripe_price_id,
-    plan_tier_from_stripe_product_id,
 )
 from users.models import User
 
@@ -38,7 +37,62 @@ from .models import Payment, StripeWebhookEvent
 
 
 VALID_PLAN_TIERS = {"basic", "premium", "vip"}
+VALID_BILLING_CYCLES = {"monthly", "yearly"}
 EARLY_DISCOUNT_PERCENT = 10
+
+_REDACTED_VALUE = "[REDACTED]"
+_SENSITIVE_WEBHOOK_FIELDS = {
+    "address",
+    "billing_details",
+    "card",
+    "client_secret",
+    "customer_details",
+    "email",
+    "fingerprint",
+    "hosted_invoice_url",
+    "invoice_pdf",
+    "name",
+    "payment_method",
+    "payment_method_details",
+    "phone",
+    "receipt_url",
+    "secret",
+    "shipping",
+    "token",
+}
+
+
+def _is_sensitive_webhook_key(key: str) -> bool:
+    normalized = (key or "").strip().lower()
+    if not normalized:
+        return False
+    if normalized in _SENSITIVE_WEBHOOK_FIELDS:
+        return True
+    return "secret" in normalized or "token" in normalized
+
+
+def _sanitize_webhook_payload(value):
+    if isinstance(value, dict):
+        sanitized = {}
+        for key, item in value.items():
+            if _is_sensitive_webhook_key(str(key)):
+                sanitized[key] = _REDACTED_VALUE
+            else:
+                sanitized[key] = _sanitize_webhook_payload(item)
+        return sanitized
+    if isinstance(value, list):
+        return [_sanitize_webhook_payload(item) for item in value]
+    return value
+
+
+def _build_stripe_idempotency_key(operation: str, *, user_id: int | None = None, **parts) -> str:
+    key_items = [f"op={operation}", f"user={user_id or 'anon'}"]
+    for key in sorted(parts):
+        key_items.append(f"{key}={parts[key]}")
+    base = "|".join(key_items)
+    digest = hashlib.sha256(base.encode("utf-8")).hexdigest()
+    return f"doisense:{operation}:{digest}"
+
 
 _PAYMENT_COPY = {
     "ro": {
@@ -206,9 +260,10 @@ def _register_webhook_event(event: dict):
 
     event_type = str(event.get("type") or "unknown")[:100]
     payload = event.get("data", {}).get("object", {}) if isinstance(event, dict) else {}
+    sanitized_payload = _sanitize_webhook_payload(payload)
     obj, created = StripeWebhookEvent.objects.get_or_create(
         event_id=event_id,
-        defaults={"event_type": event_type, "payload": payload},
+        defaults={"event_type": event_type, "payload": sanitized_payload},
     )
     if created:
         return obj, True
@@ -226,7 +281,9 @@ def _mark_webhook_processed(webhook_event: StripeWebhookEvent | None):
     webhook_event.last_status = StripeWebhookEvent.STATUS_PROCESSED
     webhook_event.processing_error = ""
     webhook_event.processed_at = timezone.now()
-    webhook_event.save(update_fields=["last_status", "processing_error", "processed_at", "last_received_at"])
+    webhook_event.save(
+        update_fields=["last_status", "processing_error", "processed_at", "last_received_at"]
+    )
 
 
 def _mark_webhook_failed(webhook_event: StripeWebhookEvent | None, error: str):
@@ -244,13 +301,18 @@ def _mark_webhook_failed(webhook_event: StripeWebhookEvent | None, error: str):
             status_code=500,
             error_type="WebhookProcessingError",
             message=(error or "")[:2000],
-            context={"event_id": webhook_event.event_id, "delivery_attempts": webhook_event.delivery_attempts},
+            context={
+                "event_id": webhook_event.event_id,
+                "delivery_attempts": webhook_event.delivery_attempts,
+            },
         )
     except Exception:
         return
 
 
-def _send_payment_notification_once(user: User, notification_type: str, context_key: str, sender) -> None:
+def _send_payment_notification_once(
+    user: User, notification_type: str, context_key: str, sender
+) -> None:
     if was_notification_sent(user, notification_type, context_key=context_key):
         return
 
@@ -281,11 +343,10 @@ def _price_id_to_tier(price_id: str) -> str:
 
 
 def _is_early_discount_applicable(user: User, requested_plan_tier: str) -> bool:
-    is_discount_eligible = bool(getattr(user, "early_discount_eligible", False)) and not _is_manual_vip(user)
-    return (
-        requested_plan_tier == "premium"
-        and is_discount_eligible
-    )
+    is_discount_eligible = bool(
+        getattr(user, "early_discount_eligible", False)
+    ) and not _is_manual_vip(user)
+    return requested_plan_tier == "premium" and is_discount_eligible
 
 
 def _resolve_internal_payment_plan_tier(user: User, requested_plan_tier: str) -> str:
@@ -325,9 +386,16 @@ class CreateCheckoutSessionView(APIView):
     @require_feature("payment_checkout")
     def post(self, request):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
+        billing_cycle = (request.data.get("billing_cycle") or "monthly").lower()
+        if billing_cycle not in VALID_BILLING_CYCLES:
+            billing_cycle = "monthly"
         if plan_tier not in VALID_PLAN_TIERS:
             return Response(
-                {"detail": _payment_text(request.user, "invalid_plan_tier", tiers=", ".join(sorted(VALID_PLAN_TIERS)))},
+                {
+                    "detail": _payment_text(
+                        request.user, "invalid_plan_tier", tiers=", ".join(sorted(VALID_PLAN_TIERS))
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -345,11 +413,13 @@ class CreateCheckoutSessionView(APIView):
             )
 
         stripe_secret_key = get_stripe_secret_key()
-        stripe_price_id = get_stripe_price_id_for_tier(plan_tier)
+        stripe_price_id = get_stripe_price_id_for_tier(plan_tier, billing_cycle)
 
         base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
         language = user.language or "en"
-        success_url = f"{base_url}/{language}/payment-success?plan={plan_tier}"
+        success_url = (
+            f"{base_url}/{language}/payment-success?plan={plan_tier}&cycle={billing_cycle}"
+        )
         cancel_url = f"{base_url}/{language}/pricing"
 
         if not stripe_secret_key or not stripe_price_id:
@@ -364,16 +434,19 @@ class CreateCheckoutSessionView(APIView):
                 "checkout_initiated",
                 source="backend",
                 user=user,
-                properties={"plan_tier": plan_tier},
+                properties={"plan_tier": plan_tier, "billing_cycle": billing_cycle},
             )
             return Response(
                 {
                     "url": success_url,
                     "internal_activation": True,
                     "plan_tier": plan_tier,
+                    "billing_cycle": billing_cycle,
                     "applied_plan_tier": payment_plan_tier,
                     "early_discount_applied": payment_plan_tier == "premium_discounted",
-                    "early_discount_percent": EARLY_DISCOUNT_PERCENT if payment_plan_tier == "premium_discounted" else 0,
+                    "early_discount_percent": (
+                        EARLY_DISCOUNT_PERCENT if payment_plan_tier == "premium_discounted" else 0
+                    ),
                 },
                 status=status.HTTP_200_OK,
             )
@@ -388,19 +461,34 @@ class CreateCheckoutSessionView(APIView):
                 "line_items": [{"price": stripe_price_id, "quantity": 1}],
                 "success_url": success_url,
                 "cancel_url": cancel_url,
-                "metadata": {"user_id": user.id, "plan_tier": plan_tier},
+                "metadata": {
+                    "user_id": user.id,
+                    "plan_tier": plan_tier,
+                    "billing_cycle": billing_cycle,
+                },
             }
             if customer_id:
                 session_params["customer"] = customer_id
             else:
                 session_params["customer_email"] = user.email
 
-            session = stripe.checkout.Session.create(**session_params)
+            idempotency_key = _build_stripe_idempotency_key(
+                "checkout_create",
+                user_id=user.id,
+                plan_tier=plan_tier,
+                billing_cycle=billing_cycle,
+                price_id=stripe_price_id,
+                customer_id=customer_id or "",
+            )
+            session = stripe.checkout.Session.create(
+                **session_params,
+                idempotency_key=idempotency_key,
+            )
             track_event(
                 "checkout_initiated",
                 source="backend",
                 user=user,
-                properties={"plan_tier": plan_tier},
+                properties={"plan_tier": plan_tier, "billing_cycle": billing_cycle},
             )
             return Response({"url": session.url}, status=status.HTTP_200_OK)
         except stripe.StripeError as exc:
@@ -490,9 +578,16 @@ class CreateBillingPortalSessionView(APIView):
         return_url = f"{base_url}/{language}/profile"
 
         try:
+            idempotency_key = _build_stripe_idempotency_key(
+                "billing_portal_create",
+                user_id=user.id,
+                customer_id=payment.stripe_customer_id,
+                language=language,
+            )
             session = stripe.billing_portal.Session.create(
                 customer=payment.stripe_customer_id,
                 return_url=return_url,
+                idempotency_key=idempotency_key,
             )
             return Response({"url": session.url}, status=status.HTTP_200_OK)
         except stripe.StripeError as exc:
@@ -501,6 +596,7 @@ class CreateBillingPortalSessionView(APIView):
 
 class SubscriptionStatusView(APIView):
     """Return the current user's active subscription details."""
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -518,22 +614,22 @@ class SubscriptionStatusView(APIView):
                 }
             )
 
-        payment = (
-            Payment.objects.filter(user=user)
-            .order_by("-updated_at")
-            .first()
-        )
+        payment = Payment.objects.filter(user=user).order_by("-updated_at").first()
         if not payment:
             return Response({"has_subscription": False})
 
-        return Response({
-            "has_subscription": True,
-            "status": payment.status,
-            "plan_tier": payment.plan_tier,
-            "cancel_at_period_end": payment.cancel_at_period_end,
-            "current_period_end": payment.current_period_end.isoformat() if payment.current_period_end else None,
-            "effective_tier": user.effective_plan_tier(),
-        })
+        return Response(
+            {
+                "has_subscription": True,
+                "status": payment.status,
+                "plan_tier": payment.plan_tier,
+                "cancel_at_period_end": payment.cancel_at_period_end,
+                "current_period_end": (
+                    payment.current_period_end.isoformat() if payment.current_period_end else None
+                ),
+                "effective_tier": user.effective_plan_tier(),
+            }
+        )
 
 
 class PromoStateView(APIView):
@@ -547,15 +643,23 @@ class PromoStateView(APIView):
 
 class UpgradeSubscriptionView(APIView):
     """Upgrade or downgrade an existing Stripe subscription in-place."""
+
     permission_classes = [IsAuthenticated]
     throttle_classes = [UpgradeSessionRateThrottle]
 
     @require_feature("payment_upgrade")
     def post(self, request):
         plan_tier = (request.data.get("plan_tier") or "premium").lower()
+        billing_cycle = (request.data.get("billing_cycle") or "monthly").lower()
+        if billing_cycle not in VALID_BILLING_CYCLES:
+            billing_cycle = "monthly"
         if plan_tier not in VALID_PLAN_TIERS:
             return Response(
-                {"detail": _payment_text(request.user, "invalid_plan_tier", tiers=", ".join(sorted(VALID_PLAN_TIERS)))},
+                {
+                    "detail": _payment_text(
+                        request.user, "invalid_plan_tier", tiers=", ".join(sorted(VALID_PLAN_TIERS))
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -572,7 +676,7 @@ class UpgradeSubscriptionView(APIView):
             )
 
         stripe_secret_key = get_stripe_secret_key()
-        stripe_price_id = get_stripe_price_id_for_tier(plan_tier)
+        stripe_price_id = get_stripe_price_id_for_tier(plan_tier, billing_cycle)
 
         if not stripe_secret_key or not stripe_price_id:
             # Fall back to internal activation when Stripe is not configured
@@ -587,15 +691,18 @@ class UpgradeSubscriptionView(APIView):
                 "subscription_change_requested",
                 source="backend",
                 user=user,
-                properties={"plan_tier": plan_tier},
+                properties={"plan_tier": plan_tier, "billing_cycle": billing_cycle},
             )
             return Response(
                 {
                     "upgraded": True,
                     "plan_tier": plan_tier,
+                    "billing_cycle": billing_cycle,
                     "applied_plan_tier": payment_plan_tier,
                     "early_discount_applied": payment_plan_tier == "premium_discounted",
-                    "early_discount_percent": EARLY_DISCOUNT_PERCENT if payment_plan_tier == "premium_discounted" else 0,
+                    "early_discount_percent": (
+                        EARLY_DISCOUNT_PERCENT if payment_plan_tier == "premium_discounted" else 0
+                    ),
                 }
             )
 
@@ -616,17 +723,29 @@ class UpgradeSubscriptionView(APIView):
         stripe.api_key = stripe_secret_key
         try:
             subscription = stripe.Subscription.retrieve(payment.stripe_subscription_id)
+            idempotency_key = _build_stripe_idempotency_key(
+                "subscription_change",
+                user_id=user.id,
+                subscription_id=payment.stripe_subscription_id,
+                plan_tier=plan_tier,
+                billing_cycle=billing_cycle,
+                price_id=stripe_price_id,
+            )
             stripe.Subscription.modify(
                 payment.stripe_subscription_id,
-                items=[{
-                    "id": subscription["items"]["data"][0]["id"],
-                    "price": stripe_price_id,
-                }],
+                items=[
+                    {
+                        "id": subscription["items"]["data"][0]["id"],
+                        "price": stripe_price_id,
+                    }
+                ],
                 proration_behavior="always_invoice",
+                idempotency_key=idempotency_key,
             )
             # Optimistically update locally; webhook will reconcile if needed
             _activate_plan(
-                user, plan_tier,
+                user,
+                plan_tier,
                 source="stripe",
                 customer_id=payment.stripe_customer_id,
                 subscription_id=payment.stripe_subscription_id,
@@ -635,9 +754,11 @@ class UpgradeSubscriptionView(APIView):
                 "subscription_change_requested",
                 source="backend",
                 user=user,
-                properties={"plan_tier": plan_tier},
+                properties={"plan_tier": plan_tier, "billing_cycle": billing_cycle},
             )
-            return Response({"upgraded": True, "plan_tier": plan_tier})
+            return Response(
+                {"upgraded": True, "plan_tier": plan_tier, "billing_cycle": billing_cycle}
+            )
         except stripe.StripeError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -686,13 +807,21 @@ class CancelSubscriptionView(APIView):
                 user=user,
                 properties={"plan_tier": payment.plan_tier},
             )
-            return Response({"cancel_at_period_end": True, "current_period_end": payment.current_period_end})
+            return Response(
+                {"cancel_at_period_end": True, "current_period_end": payment.current_period_end}
+            )
 
         stripe.api_key = stripe_secret_key
         try:
+            idempotency_key = _build_stripe_idempotency_key(
+                "subscription_cancel",
+                user_id=user.id,
+                subscription_id=payment.stripe_subscription_id,
+            )
             subscription = stripe.Subscription.modify(
                 payment.stripe_subscription_id,
                 cancel_at_period_end=True,
+                idempotency_key=idempotency_key,
             )
             period_end_ts = subscription.get("current_period_end")
             if period_end_ts:
@@ -707,7 +836,9 @@ class CancelSubscriptionView(APIView):
                 user=user,
                 properties={"plan_tier": payment.plan_tier},
             )
-            return Response({"cancel_at_period_end": True, "current_period_end": payment.current_period_end})
+            return Response(
+                {"cancel_at_period_end": True, "current_period_end": payment.current_period_end}
+            )
         except stripe.StripeError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -802,9 +933,7 @@ def stripe_webhook(request):
                     payment.current_period_end = datetime.datetime.fromtimestamp(
                         period_end_ts, tz=datetime.timezone.utc
                     )
-                payment.cancel_at_period_end = bool(
-                    subscription.get("cancel_at_period_end", False)
-                )
+                payment.cancel_at_period_end = bool(subscription.get("cancel_at_period_end", False))
                 payment.save(
                     update_fields=[
                         "status",
@@ -903,7 +1032,11 @@ def stripe_webhook(request):
                 except stripe.StripeError:
                     sub_id = None
 
-                payment = Payment.objects.filter(stripe_subscription_id=sub_id).first() if sub_id else None
+                payment = (
+                    Payment.objects.filter(stripe_subscription_id=sub_id).first()
+                    if sub_id
+                    else None
+                )
                 if payment:
                     payment.status = "cancelled"
                     payment.cancel_at_period_end = False

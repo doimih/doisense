@@ -1,4 +1,4 @@
-import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -31,13 +31,18 @@ def _public_path(*segments: str, trailing_slash: bool = True) -> str:
 def _perm(permission_codename: str):
     return lambda request: request.user.has_perm(permission_codename)
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / ".env")
 
 PUBLIC_PATH_PREFIX = _normalize_public_path_prefix(env("PUBLIC_PATH_PREFIX", default=""))
 DEFAULT_FRONTEND_BASE_URL = env(
     "DEFAULT_FRONTEND_BASE_URL",
-    default=f"https://www.doisense.eu{PUBLIC_PATH_PREFIX}" if PUBLIC_PATH_PREFIX else "https://www.doisense.eu",
+    default=(
+        f"https://www.doisense.eu{PUBLIC_PATH_PREFIX}"
+        if PUBLIC_PATH_PREFIX
+        else "https://www.doisense.eu"
+    ),
 )
 ADMIN_SITE_URL = env("ADMIN_SITE_URL", default=DEFAULT_FRONTEND_BASE_URL)
 FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default=DEFAULT_FRONTEND_BASE_URL)
@@ -150,7 +155,9 @@ UNFOLD = {
                     {
                         "title": "Program Days",
                         "icon": "calendar_month",
-                        "link": lambda request: reverse("admin:programs_guidedprogramday_changelist"),
+                        "link": lambda request: reverse(
+                            "admin:programs_guidedprogramday_changelist"
+                        ),
                         "permission": _perm("programs.view_guidedprogramday"),
                     },
                     {
@@ -192,7 +199,9 @@ UNFOLD = {
                     {
                         "title": "Task Scheduler",
                         "icon": "schedule",
-                        "link": lambda request: reverse("admin:core_platformscheduledjob_changelist"),
+                        "link": lambda request: reverse(
+                            "admin:core_platformscheduledjob_changelist"
+                        ),
                         "permission": _perm("core.view_platformscheduledjob"),
                     },
                     {
@@ -228,7 +237,9 @@ UNFOLD = {
                     {
                         "title": "Log backup",
                         "icon": "receipt_long",
-                        "link": lambda request: reverse("admin:core_backupverificationlog_changelist"),
+                        "link": lambda request: reverse(
+                            "admin:core_backupverificationlog_changelist"
+                        ),
                         "permission": _perm("core.view_backupverificationlog"),
                     },
                 ],
@@ -252,7 +263,9 @@ UNFOLD = {
                     {
                         "title": "Monthly Targets",
                         "icon": "flag",
-                        "link": lambda request: reverse("admin:ai_aibudgetmonthlytarget_changelist"),
+                        "link": lambda request: reverse(
+                            "admin:ai_aibudgetmonthlytarget_changelist"
+                        ),
                         "permission": _perm("ai.view_aibudgetmonthlytarget"),
                     },
                     {
@@ -403,13 +416,17 @@ UNFOLD = {
                     {
                         "title": "Stripe Webhooks",
                         "icon": "sync_problem",
-                        "link": lambda request: reverse("admin:payments_stripewebhookevent_changelist"),
+                        "link": lambda request: reverse(
+                            "admin:payments_stripewebhookevent_changelist"
+                        ),
                         "permission": _perm("payments.view_stripewebhookevent"),
                     },
                     {
                         "title": "Notification Delivery",
                         "icon": "mail",
-                        "link": lambda request: reverse("admin:core_notificationdelivery_changelist"),
+                        "link": lambda request: reverse(
+                            "admin:core_notificationdelivery_changelist"
+                        ),
                         "permission": _perm("core.view_notificationdelivery"),
                     },
                     {
@@ -439,7 +456,9 @@ UNFOLD = {
                     {
                         "title": "Backup Restore Requests",
                         "icon": "restore",
-                        "link": lambda request: reverse("admin:core_backuprestorerequest_changelist"),
+                        "link": lambda request: reverse(
+                            "admin:core_backuprestorerequest_changelist"
+                        ),
                         "permission": _perm("core.view_backuprestorerequest"),
                     },
                 ],
@@ -448,9 +467,7 @@ UNFOLD = {
     },
 }
 
-ADMIN_WYSIWYG_TOOLBAR_MODE = env(
-    "ADMIN_WYSIWYG_TOOLBAR_MODE", default="complete"
-).strip().lower()
+ADMIN_WYSIWYG_TOOLBAR_MODE = env("ADMIN_WYSIWYG_TOOLBAR_MODE", default="complete").strip().lower()
 if ADMIN_WYSIWYG_TOOLBAR_MODE not in {"simple", "complete"}:
     ADMIN_WYSIWYG_TOOLBAR_MODE = "complete"
 
@@ -613,9 +630,7 @@ SITE_ID = 1
 AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "users.authentication.CookieJWTAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("users.authentication.CookieJWTAuthentication",),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_THROTTLE_RATES": {
         "auth_register": "20/hour",
@@ -628,8 +643,6 @@ REST_FRAMEWORK = {
     },
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
 }
-
-from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
@@ -658,9 +671,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
 SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000 if not DEBUG else 0)
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
-    "SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG
-)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG)
 SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
 
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
@@ -669,11 +680,17 @@ CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
 # Stripe
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+ALLOW_DB_STRIPE_SECRETS = env.bool("ALLOW_DB_STRIPE_SECRETS", default=DEBUG)
 STRIPE_PRODUCT_ID_BASIC = env("STRIPE_PRODUCT_ID_BASIC", default="")
 STRIPE_PRODUCT_ID_PREMIUM = env("STRIPE_PRODUCT_ID_PREMIUM", default="")
 STRIPE_PRODUCT_ID_VIP = env("STRIPE_PRODUCT_ID_VIP", default="")
 # Deprecated: kept for backward compatibility
 STRIPE_PRICE_ID_PREMIUM = env("STRIPE_PRICE_ID_PREMIUM", default="")
+STRIPE_PRICE_ID_BASIC = env("STRIPE_PRICE_ID_BASIC", default="")
+STRIPE_PRICE_ID_VIP = env("STRIPE_PRICE_ID_VIP", default="")
+STRIPE_PRICE_ID_BASIC_YEARLY = env("STRIPE_PRICE_ID_BASIC_YEARLY", default="")
+STRIPE_PRICE_ID_PREMIUM_YEARLY = env("STRIPE_PRICE_ID_PREMIUM_YEARLY", default="")
+STRIPE_PRICE_ID_VIP_YEARLY = env("STRIPE_PRICE_ID_VIP_YEARLY", default="")
 
 # AI
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
@@ -690,4 +707,3 @@ SUPPORTED_LANGUAGES = ["ro", "en", "de", "fr", "it", "es", "pl"]
 # Social login
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")
 GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET", default="")
-APPLE_CLIENT_ID = env("APPLE_CLIENT_ID", default="")

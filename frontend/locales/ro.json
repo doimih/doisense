@@ -35,8 +35,7 @@
     "lastName": "Nume",
     "googleNotConfigured": "Login-ul cu Google nu este configurat.",
     "googleLoginFailed": "Nu am putut finaliza login-ul cu Google.",
-    "appleNotConfigured": "Login-ul cu Apple nu este configurat.",
-    "appleLoginFailed": "Nu am putut finaliza login-ul cu Apple.",
+
     "loginFailed": "Datele de logare sunt eronate.",
     "registerSuccess": "Cont creat. Verifica emailul pentru activare.",
     "registerFailed": "Nu am putut crea contul. Verifica datele si incearca din nou.",

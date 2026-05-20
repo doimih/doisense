@@ -47,7 +47,9 @@ class Command(BaseCommand):
             if user.early_discount_eligible != expected:
                 User.objects.filter(pk=user.pk).update(early_discount_eligible=expected)
                 updated += 1
-        self.stdout.write(self.style.SUCCESS(f"Normalized early discount flags for {updated} user(s)."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Normalized early discount flags for {updated} user(s).")
+        )
 
     def _build_report(self):
         manual_users = list(User.objects.filter(vip_manual_override=True).order_by("id"))
@@ -105,7 +107,8 @@ class Command(BaseCommand):
                     "manual_vip": user.manual_vip,
                     "has_paid_access": user.has_paid_access(),
                     "trial_notifications_blocked": "trial_notifications_sent" not in user_conflicts,
-                    "upsell_notifications_blocked": "upsell_notifications_sent" not in user_conflicts,
+                    "upsell_notifications_blocked": "upsell_notifications_sent"
+                    not in user_conflicts,
                     "subscription_logic_bypassed": user.effective_plan_tier() == User.PLAN_VIP,
                     "discount_logic_bypassed": True,
                     "payment_status": getattr(payment, "status", None),
@@ -114,9 +117,13 @@ class Command(BaseCommand):
             )
 
             for problem in user_problems:
-                detected_problems.append({"user_id": user.id, "email": user.email, "problem": problem})
+                detected_problems.append(
+                    {"user_id": user.id, "email": user.email, "problem": problem}
+                )
             for conflict in user_conflicts:
-                detected_conflicts.append({"user_id": user.id, "email": user.email, "conflict": conflict})
+                detected_conflicts.append(
+                    {"user_id": user.id, "email": user.email, "conflict": conflict}
+                )
 
         possible_missing_manual_vip = []
         vip_candidates = User.objects.filter(
@@ -127,7 +134,9 @@ class Command(BaseCommand):
         ).order_by("id")
         for user in vip_candidates:
             payment = Payment.objects.filter(user=user).order_by("-updated_at").first()
-            active_vip_subscription = bool(payment and payment.status == "active" and payment.plan_tier == User.PLAN_VIP)
+            active_vip_subscription = bool(
+                payment and payment.status == "active" and payment.plan_tier == User.PLAN_VIP
+            )
             if not active_vip_subscription:
                 possible_missing_manual_vip.append(
                     {
@@ -149,7 +158,9 @@ class Command(BaseCommand):
         }
 
     def _write_human_report(self, report):
-        self.stdout.write(self.style.SUCCESS(f"Manual VIP users audited: {report['manual_vip_count']}"))
+        self.stdout.write(
+            self.style.SUCCESS(f"Manual VIP users audited: {report['manual_vip_count']}")
+        )
 
         self.stdout.write("Validated manual VIP users:")
         if report["validated_manual_vip_users"]:

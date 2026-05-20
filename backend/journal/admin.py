@@ -23,7 +23,9 @@ class JournalQuestionAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk and isinstance(self.instance.tags, list):
-            self.fields["tags"].initial = ", ".join(str(item) for item in self.instance.tags if item)
+            self.fields["tags"].initial = ", ".join(
+                str(item) for item in self.instance.tags if item
+            )
 
     def clean_tags(self):
         raw_value = (self.cleaned_data.get("tags") or "").strip()
@@ -50,7 +52,7 @@ class JournalQuestionAdminForm(forms.ModelForm):
 @admin.register(JournalQuestion)
 class JournalQuestionAdmin(admin.ModelAdmin):
     form = JournalQuestionAdminForm
-    change_form_template = "admin/two_column_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
     list_display = ("id", "text", "category", "language", "active", "delete_link")
     list_filter = ("language", "active")
     actions_on_top = True

@@ -8,13 +8,16 @@ Usage:
   python manage.py ai_update_profiles --user-id=42
   python manage.py ai_update_profiles --limit=10
 """
+
 from django.core.management.base import BaseCommand
 
 from ai.profile_updater import run_profile_updates_for_all_users, update_profile_from_ai
 
 
 class Command(BaseCommand):
-    help = "Scan user texts in DB, run AI to structure info and update user profiles (any language)."
+    help = (
+        "Scan user texts in DB, run AI to structure info and update user profiles (any language)."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -48,7 +51,9 @@ class Command(BaseCommand):
             if ok:
                 self.stdout.write(self.style.SUCCESS(f"Profile update done for user {user_id}."))
             else:
-                self.stdout.write(self.style.WARNING(f"Profile update skipped or failed for user {user_id}."))
+                self.stdout.write(
+                    self.style.WARNING(f"Profile update skipped or failed for user {user_id}.")
+                )
             return
 
         stats = run_profile_updates_for_all_users(dry_run=dry_run, limit=limit)

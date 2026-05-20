@@ -93,14 +93,33 @@
           <p>{{ text.upgradeTo }}</p>
           <div class="profile-tags">
             <button
+              type="button"
+              class="profile-tag"
+              :class="billingCycle === 'monthly' ? 'profile-btn-primary' : ''"
+              @click="billingCycle = 'monthly'"
+            >
+              {{ billingText.monthly }}
+            </button>
+            <button
+              type="button"
+              class="profile-tag"
+              :class="billingCycle === 'yearly' ? 'profile-btn-primary' : ''"
+              @click="billingCycle = 'yearly'"
+            >
+              {{ billingText.yearly }}
+            </button>
+            <span class="profile-tag">{{ billingText.discountBadge }}</span>
+          </div>
+          <div class="profile-tags">
+            <button
               v-for="plan in upgradePlans"
               :key="plan.key"
               type="button"
               class="profile-tag"
-              :disabled="checkoutLoading === plan.key"
-              @click="createCheckout(plan.key)"
+              :disabled="isCheckoutLoading(plan.key)"
+              @click="createCheckout(plan.key, billingCycle)"
             >
-              {{ checkoutLoading === plan.key ? $t('common.loading') : plan.label }}
+              {{ isCheckoutLoading(plan.key) ? $t('common.loading') : plan.label }}
             </button>
           </div>
         </div>
@@ -484,6 +503,9 @@ const { fetchApi } = useApi()
 const { locale } = useI18n()
 const localePath = useLocalePath()
 const checkoutLoading = ref<string | null>(null)
+type BillingCycle = 'monthly' | 'yearly'
+type PlanKey = 'basic' | 'premium' | 'vip'
+const billingCycle = ref<BillingCycle>('monthly')
 const saveLoading = ref(false)
 const cardLoading = ref(false)
 const billingPortalLoading = ref(false)
@@ -540,17 +562,155 @@ const planTierLabel = computed(() => {
   return PLAN_TIER_LABELS[localeCode.value]?.[tier] ?? tier.toUpperCase()
 })
 
-const UPGRADE_PLAN_LABELS: Record<string, { key: string; label: string }[]> = {
-  ro: [{ key: 'basic', label: 'BASIC – €12/lună' }, { key: 'premium', label: 'PREMIUM – €25/lună' }, { key: 'vip', label: 'VIP – €49/lună' }],
-  en: [{ key: 'basic', label: 'BASIC – €12/mo' }, { key: 'premium', label: 'PREMIUM – €25/mo' }, { key: 'vip', label: 'VIP – €49/mo' }],
-  de: [{ key: 'basic', label: 'BASIC – €12/Mo.' }, { key: 'premium', label: 'PREMIUM – €25/Mo.' }, { key: 'vip', label: 'VIP – €49/Mo.' }],
-  fr: [{ key: 'basic', label: 'BASIC – €12/mois' }, { key: 'premium', label: 'PREMIUM – €25/mois' }, { key: 'vip', label: 'VIP – €49/mois' }],
-  it: [{ key: 'basic', label: 'BASIC – €12/mese' }, { key: 'premium', label: 'PREMIUM – €25/mese' }, { key: 'vip', label: 'VIP – €49/mese' }],
-  es: [{ key: 'basic', label: 'BASIC – €12/mes' }, { key: 'premium', label: 'PREMIUM – €25/mes' }, { key: 'vip', label: 'VIP – €49/mes' }],
-  pl: [{ key: 'basic', label: 'BASIC – €12/mies.' }, { key: 'premium', label: 'PREMIUM – €25/mies.' }, { key: 'vip', label: 'VIP – €49/mies.' }],
+const UPGRADE_PLAN_LABELS: Record<string, { key: PlanKey; periodSuffix: string }[]> = {
+  ro: [{ key: 'basic', periodSuffix: '/lună' }, { key: 'premium', periodSuffix: '/lună' }, { key: 'vip', periodSuffix: '/lună' }],
+  en: [{ key: 'basic', periodSuffix: '/mo' }, { key: 'premium', periodSuffix: '/mo' }, { key: 'vip', periodSuffix: '/mo' }],
+  de: [{ key: 'basic', periodSuffix: '/Mo.' }, { key: 'premium', periodSuffix: '/Mo.' }, { key: 'vip', periodSuffix: '/Mo.' }],
+  fr: [{ key: 'basic', periodSuffix: '/mois' }, { key: 'premium', periodSuffix: '/mois' }, { key: 'vip', periodSuffix: '/mois' }],
+  it: [{ key: 'basic', periodSuffix: '/mese' }, { key: 'premium', periodSuffix: '/mese' }, { key: 'vip', periodSuffix: '/mese' }],
+  es: [{ key: 'basic', periodSuffix: '/mes' }, { key: 'premium', periodSuffix: '/mes' }, { key: 'vip', periodSuffix: '/mes' }],
+  pl: [{ key: 'basic', periodSuffix: '/mies.' }, { key: 'premium', periodSuffix: '/mies.' }, { key: 'vip', periodSuffix: '/mies.' }],
 }
 
-const upgradePlans = computed(() => UPGRADE_PLAN_LABELS[localeCode.value] || UPGRADE_PLAN_LABELS.en)
+const BILLING_TEXT: Record<string, { monthly: string; yearly: string; discountBadge: string; yearlySuffix: string }> = {
+  ro: { monthly: 'Lunar', yearly: 'Anual', discountBadge: '-10% anual', yearlySuffix: '/an' },
+  en: { monthly: 'Monthly', yearly: 'Yearly', discountBadge: '-10% yearly', yearlySuffix: '/yr' },
+  de: { monthly: 'Monatlich', yearly: 'Jährlich', discountBadge: '-10% jährlich', yearlySuffix: '/Jahr' },
+  fr: { monthly: 'Mensuel', yearly: 'Annuel', discountBadge: '-10% annuel', yearlySuffix: '/an' },
+  it: { monthly: 'Mensile', yearly: 'Annuale', discountBadge: '-10% annuale', yearlySuffix: '/anno' },
+  es: { monthly: 'Mensual', yearly: 'Anual', discountBadge: '-10% anual', yearlySuffix: '/año' },
+  pl: { monthly: 'Miesięcznie', yearly: 'Rocznie', discountBadge: '-10% rocznie', yearlySuffix: '/rok' },
+}
+
+type PlanPricing = {
+  monthly: number
+  yearly: number
+  currency: string
+}
+
+const DEFAULT_PLAN_PRICING: Record<PlanKey, PlanPricing> = {
+  basic: { monthly: 12, yearly: 129.6, currency: 'EUR' },
+  premium: { monthly: 25, yearly: 270, currency: 'EUR' },
+  vip: { monthly: 49, yearly: 529.2, currency: 'EUR' },
+}
+const pricingPlans = ref<Record<PlanKey, PlanPricing>>({ ...DEFAULT_PLAN_PRICING })
+
+const billingText = computed(() => BILLING_TEXT[localeCode.value] || BILLING_TEXT.en)
+
+type PricingApiPlan = {
+  plan_tier?: string
+  plan?: string
+  key?: string
+  id?: string
+  monthly_price?: number | string
+  monthlyPrice?: number | string
+  monthly?: number | string
+  yearly_price?: number | string
+  yearlyPrice?: number | string
+  yearly?: number | string
+  currency?: string
+}
+
+type PricingApiResponse = {
+  plans?: PricingApiPlan[]
+  [key: string]: unknown
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+function parsePricingResponse(payload: unknown): Record<PlanKey, PlanPricing> | null {
+  if (!payload || typeof payload !== 'object') return null
+
+  const source = payload as PricingApiResponse
+  const entries: PricingApiPlan[] = Array.isArray(source.plans)
+    ? source.plans
+    : (['basic', 'premium', 'vip']
+        .map((key) => {
+          const item = source[key]
+          if (!item || typeof item !== 'object') return null
+          return { key, ...(item as Record<string, unknown>) } as PricingApiPlan
+        })
+        .filter(Boolean) as PricingApiPlan[])
+
+  if (!entries.length) return null
+
+  const next: Partial<Record<PlanKey, PlanPricing>> = {}
+  for (const entry of entries) {
+    const rawKey = (entry.plan_tier || entry.plan || entry.key || entry.id || '').toLowerCase()
+    if (rawKey !== 'basic' && rawKey !== 'premium' && rawKey !== 'vip') continue
+    const monthly = toNumber(entry.monthly_price ?? entry.monthlyPrice ?? entry.monthly)
+    const yearly = toNumber(entry.yearly_price ?? entry.yearlyPrice ?? entry.yearly)
+    if (monthly === null || yearly === null) continue
+
+    next[rawKey] = {
+      monthly,
+      yearly,
+      currency: String(entry.currency || 'EUR').toUpperCase(),
+    }
+  }
+
+  if (!next.basic || !next.premium || !next.vip) return null
+  return next as Record<PlanKey, PlanPricing>
+}
+
+async function fetchPricingPlans() {
+  const endpoints = ['/pricing', '/payments/pricing']
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetchApi<unknown>(endpoint)
+      const parsed = parsePricingResponse(response)
+      if (parsed) {
+        pricingPlans.value = parsed
+        return
+      }
+    } catch {
+      // Keep defaults if pricing endpoint is unavailable.
+    }
+  }
+}
+
+function getPlanPrice(planKey: PlanKey): number {
+  const plan = pricingPlans.value[planKey] || pricingPlans.value.premium
+  return billingCycle.value === 'yearly' ? plan.yearly : plan.monthly
+}
+
+function getPlanCurrency(planKey: PlanKey): string {
+  const plan = pricingPlans.value[planKey] || pricingPlans.value.premium
+  return plan.currency
+}
+
+function formatPrice(value: number, currency = 'EUR'): string {
+  const hasDecimals = Math.round(value) !== value
+  const symbol = currency === 'EUR' ? '€' : `${currency} `
+  return `${symbol}${hasDecimals ? value.toFixed(2) : value.toFixed(0)}`
+}
+
+function checkoutLoadingKey(planKey: string, cycle: BillingCycle): string {
+  return `${planKey}:${cycle}`
+}
+
+function isCheckoutLoading(planKey: string): boolean {
+  return checkoutLoading.value === checkoutLoadingKey(planKey, billingCycle.value)
+}
+
+const upgradePlans = computed(() => {
+  const labels = UPGRADE_PLAN_LABELS[localeCode.value] || UPGRADE_PLAN_LABELS.en
+  return labels.map((plan) => {
+    const value = getPlanPrice(plan.key)
+    const suffix = billingCycle.value === 'yearly' ? billingText.value.yearlySuffix : plan.periodSuffix
+    return {
+      key: plan.key,
+      label: `${plan.key.toUpperCase()} - ${formatPrice(value, getPlanCurrency(plan.key))}${suffix}`,
+    }
+  })
+})
 
 const profileCopy: Record<string, {
   membershipPremium: string
@@ -864,7 +1024,7 @@ watch(
 )
 
 onMounted(async () => {
-  await loadSavedCard()
+  await Promise.all([loadSavedCard(), fetchPricingPlans()])
 })
 
 async function loadSavedCard() {
@@ -912,12 +1072,12 @@ async function saveProfile() {
   }
 }
 
-async function createCheckout(planKey = 'premium') {
-  checkoutLoading.value = planKey
+async function createCheckout(planKey = 'premium', cycle: BillingCycle = billingCycle.value) {
+  checkoutLoading.value = checkoutLoadingKey(planKey, cycle)
   try {
     const res = await fetchApi<{ url: string }>('/payments/create-checkout-session', {
       method: 'POST',
-      body: { plan_tier: planKey },
+      body: { plan_tier: planKey, billing_cycle: cycle },
     })
     if (res?.url) window.location.href = res.url
   } finally {

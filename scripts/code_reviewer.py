@@ -35,8 +35,10 @@ def main():
     prompt = PROMPT_TEMPLATE.format(content=content[:15000])
     # Use Django app for AI call
     import django
+
     django.setup()
     from ai.router import complete
+
     reply = complete(prompt, system=None, user_id=None)
     print(reply)
 

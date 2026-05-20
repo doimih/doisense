@@ -32,7 +32,9 @@ class GuidedProgram(models.Model):
     description = models.TextField(blank=True)
     category = models.CharField(max_length=16, choices=CATEGORY_CHOICES, default=CATEGORY_WELLNESS)
     duration_days = models.PositiveIntegerField(default=7)
-    plan_access = models.CharField(max_length=16, choices=PLAN_ACCESS_CHOICES, default=PLAN_ACCESS_BASIC)
+    plan_access = models.CharField(
+        max_length=16, choices=PLAN_ACCESS_CHOICES, default=PLAN_ACCESS_BASIC
+    )
     language = models.CharField(max_length=2, validators=[validate_language])
     active = models.BooleanField(default=True)
     is_premium = models.BooleanField(default=False)
@@ -68,13 +70,13 @@ class GuidedProgramDay(models.Model):
         (TASK_TYPE_JOURNALING, "Journaling"),
     ]
 
-    program = models.ForeignKey(
-        GuidedProgram, on_delete=models.CASCADE, related_name="days"
-    )
+    program = models.ForeignKey(GuidedProgram, on_delete=models.CASCADE, related_name="days")
     day_number = models.PositiveIntegerField()
     title = models.CharField(max_length=200)
     content = models.TextField()
-    task_type = models.CharField(max_length=16, choices=TASK_TYPE_CHOICES, default=TASK_TYPE_CHECKIN)
+    task_type = models.CharField(
+        max_length=16, choices=TASK_TYPE_CHOICES, default=TASK_TYPE_CHECKIN
+    )
     estimated_time_minutes = models.PositiveIntegerField(default=10)
     question = models.TextField(blank=True)
     ai_prompt = models.TextField(blank=True)
@@ -94,9 +96,7 @@ class UserProgramProgress(models.Model):
         on_delete=models.CASCADE,
         related_name="program_progress",
     )
-    program = models.ForeignKey(
-        GuidedProgram, on_delete=models.CASCADE, related_name="progress"
-    )
+    program = models.ForeignKey(GuidedProgram, on_delete=models.CASCADE, related_name="progress")
     current_day = models.PositiveIntegerField(default=1)
     start_date = models.DateField(default=timezone.localdate)
     completed_days = models.JSONField(default=list)
@@ -174,7 +174,15 @@ class UserProgramProgress(models.Model):
         self.current_day = max(self.current_day, self.program.duration_days)
         self.is_paused = False
         self.paused_at = None
-        self.save(update_fields=["completed_at", "current_day", "is_paused", "paused_at", "last_active_at"])
+        self.save(
+            update_fields=[
+                "completed_at",
+                "current_day",
+                "is_paused",
+                "paused_at",
+                "last_active_at",
+            ]
+        )
 
     def pause(self) -> None:
         if self.is_paused:

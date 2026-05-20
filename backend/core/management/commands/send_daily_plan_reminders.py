@@ -18,21 +18,21 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--skip-free',
-            action='store_true',
-            help='Skip free tier users',
+            "--skip-free",
+            action="store_true",
+            help="Skip free tier users",
         )
         parser.add_argument(
-            '--min-conversations',
+            "--min-conversations",
             type=int,
             default=1,
-            help='Minimum past conversations to trigger reminder (default: 1)',
+            help="Minimum past conversations to trigger reminder (default: 1)",
         )
 
     def handle(self, *args, **options):
-        skip_free = options['skip_free']
-        min_conversations = options['min_conversations']
-        
+        skip_free = options["skip_free"]
+        min_conversations = options["min_conversations"]
+
         # Filter active paid users
         query = User.objects.filter(is_active=True)
         if skip_free:
@@ -46,9 +46,9 @@ class Command(BaseCommand):
                     User.PLAN_VIP,
                 ]
             )
-        
+
         from ai.models import Conversation
-        
+
         sent_count = 0
         for user in query:
             # Only remind users who have already used the platform
@@ -58,18 +58,14 @@ class Command(BaseCommand):
 
             if was_notification_sent(user, "daily_plan_reminder"):
                 continue
-            
+
             try:
                 send_daily_plan_reminder(user)
                 record_notification_delivery(user, "daily_plan_reminder")
                 sent_count += 1
             except Exception as e:
                 self.stderr.write(
-                    self.style.ERROR(
-                        f"Failed to send planning reminder to {user.email}: {str(e)}"
-                    )
+                    self.style.ERROR(f"Failed to send planning reminder to {user.email}: {str(e)}")
                 )
-        
-        self.stdout.write(
-            self.style.SUCCESS(f"Sent {sent_count} daily planning reminder(s).")
-        )
+
+        self.stdout.write(self.style.SUCCESS(f"Sent {sent_count} daily planning reminder(s)."))

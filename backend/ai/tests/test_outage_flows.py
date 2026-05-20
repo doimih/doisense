@@ -16,9 +16,9 @@ Tests cover:
 
 All tests use monkeypatch to inject controlled failures without calling real APIs.
 """
+
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 
 import pytest
@@ -32,8 +32,10 @@ from users.models import User
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_premium_user(db):
     import datetime
+
     u = User.objects.create_user(
         email=f"outage_{timezone.now().timestamp()}@test.com",
         password="pass",
@@ -50,6 +52,7 @@ def _make_premium_user(db):
 def _make_client(user):
     from rest_framework.test import APIClient
     from rest_framework_simplejwt.tokens import RefreshToken
+
     client = APIClient()
     refresh = RefreshToken.for_user(user)
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
@@ -75,6 +78,7 @@ def _anthropic_error_stream(*args, **kwargs) -> Iterator[str]:
 # ---------------------------------------------------------------------------
 # Chat sync outage tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db
 def test_chat_sync_openai_down_falls_back_to_anthropic(db, monkeypatch):
@@ -176,6 +180,7 @@ def test_chat_sync_quota_exceeded_returns_403_with_cta_url(db, monkeypatch):
 # Chat stream outage tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db
 def test_chat_stream_with_successful_provider_returns_sse(db, monkeypatch):
     """Stream endpoint yields SSE tokens when provider succeeds."""
@@ -192,7 +197,7 @@ def test_chat_stream_with_successful_provider_returns_sse(db, monkeypatch):
     )
 
     response = client.post(
-            reverse("chat-send-stream"),
+        reverse("chat-send-stream"),
         {"message": "Hi"},
         format="json",
         HTTP_ACCEPT="*/*",
@@ -221,7 +226,7 @@ def test_chat_stream_all_streams_fail_sync_fallback_used(db, monkeypatch):
     monkeypatch.setattr("ai.views_chat.complete", fake_sync)
 
     response = client.post(
-            reverse("chat-send-stream"),
+        reverse("chat-send-stream"),
         {"message": "Hi"},
         format="json",
         HTTP_ACCEPT="*/*",
@@ -238,6 +243,7 @@ def test_chat_stream_all_streams_fail_sync_fallback_used(db, monkeypatch):
 # ---------------------------------------------------------------------------
 # Translator outage test
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db
 def test_translator_primary_provider_down_returns_error_status(db, monkeypatch):
@@ -289,6 +295,7 @@ def test_translator_returns_fallback_status_on_error_prefix(db, monkeypatch):
 # Support AI outage test
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db
 def test_support_ai_provider_down_returns_support_unavailable(db, monkeypatch):
     """When the support LLM call raises, the support_unavailable message is returned."""
@@ -301,12 +308,13 @@ def test_support_ai_provider_down_returns_support_unavailable(db, monkeypatch):
     monkeypatch.setattr("ai.views_support.complete", raise_exc)
 
     response = client.post(
-            reverse("support-ask"),
+        reverse("support-ask"),
         {"message": "I need help with my subscription"},
         format="json",
     )
 
     assert response.status_code == 200
-    assert "unavailable" in response.data.get("reply", "").lower() or len(response.data.get("reply", "")) > 0
-
-
+    assert (
+        "unavailable" in response.data.get("reply", "").lower()
+        or len(response.data.get("reply", "")) > 0
+    )

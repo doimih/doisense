@@ -1,8 +1,6 @@
 from django.conf import settings
 from django.db import models
 
-from core.validators import validate_language
-
 
 class UserProfile(models.Model):
     user = models.OneToOneField(

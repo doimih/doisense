@@ -98,5 +98,3 @@ def suggest_improved_prompt(prompt: Prompt) -> dict:
             "Long-term maintenance gets harder when structure varies across prompts.",
         ],
     }
-
-

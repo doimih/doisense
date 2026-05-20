@@ -47,7 +47,9 @@ def extract_form_changes(form):
     return before_data, after_data
 
 
-def log_admin_change(*, actor, action: str, target_obj, before_data=None, after_data=None, reason: str = ""):
+def log_admin_change(
+    *, actor, action: str, target_obj, before_data=None, after_data=None, reason: str = ""
+):
     if not actor or not getattr(actor, "is_authenticated", False):
         return
     AdminAuditLog.objects.create(

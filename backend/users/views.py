@@ -17,11 +17,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
-import jwt
+
 from core.analytics import track_event
 from core.email_templates import render_basic_email_html
 from core.i18n import get_request_language, get_user_language, translate
-from core.system_config import get_apple_client_id, get_google_client_id, get_system_config
+from core.system_config import get_google_client_id, get_system_config
 
 from .models import User
 from .serializers import (
@@ -321,7 +321,9 @@ def _set_auth_cookies(response: Response, refresh_token: str, access_token: str)
 
 def _clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(getattr(settings, "JWT_ACCESS_COOKIE_NAME", "doisense_access"), path="/")
-    response.delete_cookie(getattr(settings, "JWT_REFRESH_COOKIE_NAME", "doisense_refresh"), path="/")
+    response.delete_cookie(
+        getattr(settings, "JWT_REFRESH_COOKIE_NAME", "doisense_refresh"), path="/"
+    )
 
 
 def _send_activation_email(user) -> None:
@@ -441,7 +443,9 @@ class ActivateAccountView(APIView):
             user=user,
             properties={"auth_method": "email"},
         )
-        return Response({"detail": _auth_text(language, "account_activated")}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": _auth_text(language, "account_activated")}, status=status.HTTP_200_OK
+        )
 
 
 class LoginView(APIView):
@@ -554,7 +558,14 @@ class MeView(APIView):
         return Response(UserSerializer(request.user).data)
 
     def patch(self, request):
-        allowed_fields = {"first_name", "last_name", "phone_contact", "language", "tax_region", "onboarding_completed"}
+        allowed_fields = {
+            "first_name",
+            "last_name",
+            "phone_contact",
+            "language",
+            "tax_region",
+            "onboarding_completed",
+        }
         payload = {key: value for key, value in request.data.items() if key in allowed_fields}
         onboarding_completed = payload.pop("onboarding_completed", None)
 
@@ -586,8 +597,12 @@ class MeView(APIView):
         conversations = Conversation.objects.filter(user=user)
         for conversation in conversations:
             if user.email:
-                conversation.user_message = conversation.user_message.replace(user.email, "[redacted]")
-                conversation.ai_response = conversation.ai_response.replace(user.email, "[redacted]")
+                conversation.user_message = conversation.user_message.replace(
+                    user.email, "[redacted]"
+                )
+                conversation.ai_response = conversation.ai_response.replace(
+                    user.email, "[redacted]"
+                )
             conversation.user = None
             conversation.save(update_fields=["user", "user_message", "ai_response"])
 
@@ -677,7 +692,9 @@ class MeExportView(APIView):
                     "energy_level": checkin.energy_level,
                     "created_at": checkin.created_at,
                 }
-                for checkin in UserWellbeingCheckin.objects.filter(user=user).order_by("-created_at")
+                for checkin in UserWellbeingCheckin.objects.filter(user=user).order_by(
+                    "-created_at"
+                )
             ],
         }
         response = JsonResponse(payload)
@@ -711,7 +728,9 @@ class ChangePasswordView(APIView):
 
         request.user.set_password(serializer.validated_data["new_password"])
         request.user.save(update_fields=["password"])
-        return Response({"detail": _auth_text(language, "password_updated")}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": _auth_text(language, "password_updated")}, status=status.HTTP_200_OK
+        )
 
 
 class SocialLoginView(APIView):
@@ -730,21 +749,6 @@ class SocialLoginView(APIView):
             google_client_id,
         )
 
-    @staticmethod
-    def _verify_apple_token(raw_token: str):
-        apple_client_id = get_apple_client_id()
-        if not apple_client_id:
-            raise ValueError("Apple login is not configured")
-        jwk_client = jwt.PyJWKClient("https://appleid.apple.com/auth/keys")
-        signing_key = jwk_client.get_signing_key_from_jwt(raw_token)
-        return jwt.decode(
-            raw_token,
-            signing_key.key,
-            algorithms=["RS256"],
-            audience=apple_client_id,
-            issuer="https://appleid.apple.com",
-        )
-
     def post(self, request):
         language = get_request_language(request, default="en")
         serializer = SocialLoginSerializer(data=request.data)
@@ -755,10 +759,12 @@ class SocialLoginView(APIView):
         language = serializer.validated_data["language"]
 
         try:
-            if provider == "google":
-                claims = self._verify_google_token(raw_token)
-            else:
-                claims = self._verify_apple_token(raw_token)
+            if provider != "google":
+                return Response(
+                    {"detail": _auth_text(language, "invalid_social_token")},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            claims = self._verify_google_token(raw_token)
         except Exception:
             return Response(
                 {"detail": _auth_text(language, "invalid_social_token")},
@@ -855,7 +861,9 @@ class PasswordRecoveryRequestView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             language = get_user_language(user, default=get_user_language(None, default="ro"))
-            base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+            base_url = getattr(
+                settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense"
+            )
             reset_url = f"{base_url}/{language}/auth/recover?uid={uid}&token={token}"
 
             from_email = (
@@ -933,8 +941,13 @@ class PasswordResetConfirmView(APIView):
             validate_password(new_password, user)
         except ValidationError as exc:
             _ = exc
-            return Response({"detail": _auth_text(language, "invalid_password")}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": _auth_text(language, "invalid_password")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user.set_password(new_password)
         user.save(update_fields=["password"])
-        return Response({"detail": _auth_text(language, "password_updated")}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": _auth_text(language, "password_updated")}, status=status.HTTP_200_OK
+        )

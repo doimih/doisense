@@ -22,8 +22,14 @@ class SystemErrorLoggingMiddleware(MiddlewareMixin):
         if any(path.startswith(prefix) for prefix in self._SKIP_PREFIXES):
             return None
 
-        component = "api" if path.startswith("/api/") else "admin" if "/admin/" in path else "backend"
-        user = request.user if getattr(request, "user", None) and request.user.is_authenticated else None
+        component = (
+            "api" if path.startswith("/api/") else "admin" if "/admin/" in path else "backend"
+        )
+        user = (
+            request.user
+            if getattr(request, "user", None) and request.user.is_authenticated
+            else None
+        )
 
         query = request.GET.dict() if hasattr(request, "GET") else {}
         context = {
@@ -88,7 +94,7 @@ class QAIPAllowlistMiddleware(MiddlewareMixin):
         return False
 
     def process_request(self, request):
-        path = (request.path or "")
+        path = request.path or ""
         if not path.startswith("/api/"):
             return None
 

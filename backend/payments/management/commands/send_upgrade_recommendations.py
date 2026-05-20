@@ -22,52 +22,52 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--min-journal-entries',
+            "--min-journal-entries",
             type=int,
             default=5,
-            help='Min journal entries to suggest premium (default: 5)',
+            help="Min journal entries to suggest premium (default: 5)",
         )
         parser.add_argument(
-            '--min-conversations',
+            "--min-conversations",
             type=int,
             default=3,
-            help='Min conversations to suggest premium (default: 3)',
+            help="Min conversations to suggest premium (default: 3)",
         )
         parser.add_argument(
-            '--days-active',
+            "--days-active",
             type=int,
             default=3,
-            help='Days of activity to qualify (default: 3)',
+            help="Days of activity to qualify (default: 3)",
         )
 
     def handle(self, *args, **options):
-        min_journal = options['min_journal_entries']
-        min_conv = options['min_conversations']
-        days_active = options['days_active']
+        min_journal = options["min_journal_entries"]
+        min_conv = options["min_conversations"]
+        days_active = options["days_active"]
         now = timezone.now()
         cutoff_date = now - timedelta(days=days_active)
-        
+
         # Find BASIC/TRIAL users with good engagement
         trial_basic_users = User.objects.filter(
             plan_tier__in=[User.PLAN_TRIAL, User.PLAN_BASIC],
             is_active=True,
             vip_manual_override=False,
         )
-        
+
         sent_count = 0
         for user in trial_basic_users:
             journal_count = JournalEntry.objects.filter(user=user).count()
             conv_count = Conversation.objects.filter(user=user).count()
-            
+
             # Check recent activity
             recent_activity = Conversation.objects.filter(
                 user=user,
                 created_at__gte=cutoff_date,
             ).exists()
-            
+
             if not recent_activity:
                 continue
-            
+
             reason = None
             if journal_count >= min_journal:
                 reason = "journal_limit"
@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 context_key=reason,
             ):
                 continue
-            
+
             try:
                 send_upgrade_recommendation(user, reason)
                 record_notification_delivery(
@@ -99,7 +99,5 @@ class Command(BaseCommand):
                         f"Failed to send upgrade recommendation to {user.email}: {str(e)}"
                     )
                 )
-        
-        self.stdout.write(
-            self.style.SUCCESS(f"Sent {sent_count} upgrade recommendation(s).")
-        )
+
+        self.stdout.write(self.style.SUCCESS(f"Sent {sent_count} upgrade recommendation(s)."))

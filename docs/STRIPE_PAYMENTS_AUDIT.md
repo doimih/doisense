@@ -194,12 +194,10 @@ else:
     return obj, False  # Don't process
 ```
 **Impactul**: Dacă o request se pierde și Stripe retry-ează, nu se va reprocess.  
-**Recomandare**: 
-```python
-# Re-process failed webhooks after N attempts
-if obj.last_status == "failed" and obj.delivery_attempts < 3:
-    return obj, True
-```
+**Recomandare**:
+- Nu re-rulați orbește același webhook event în handler-ul live.
+- Folosiți reconciliation operațional targetat prin `sync_subscriptions --failed-webhooks-only` pentru a repara starea locală din Stripe source-of-truth.
+- Dacă este necesar, folosiți și retry țintit pe `--subscription-id` sau `--payment-id`.
 
 #### Problem 12: Lipsă timeout handling pe Stripe API calls
 **Severitate**: JOASĂ  
@@ -238,9 +236,37 @@ except Exception:
 #### Problem 15: Fără schedule pentru sync command
 **Severitate**: MEDIE  
 **Descriere**: `manage.py sync_subscriptions` trebuie executat manual.  
-**Recomandare**: 
-- Schedule-ati cu Celery/APScheduler să ruleze zilnic
-- Și-o integrare posibilă în `PlatformScheduledJob` model
+**Status implementare (2026-05-19)**:
+- Adăugat task recurent în scheduler intern:
+  - `code`: `sync_subscriptions_reconciliation`
+  - `command`: `sync_subscriptions`
+  - `schedule`: hourly, minute `15`
+
+### Operational Runbook (standardizat)
+
+1. Reconciliation recurent (automat)
+- Se execută prin `PlatformScheduledJob` folosind task-ul `sync_subscriptions_reconciliation`.
+
+2. Retry după webhook failures (manual, țintit)
+- Reconcile doar subscriptions afectate de webhook events cu `last_status=failed`:
+```bash
+python manage.py sync_subscriptions --failed-webhooks-only --failed-webhooks-limit 200
+```
+
+3. Retry țintit pe un subscription specific
+```bash
+python manage.py sync_subscriptions --subscription-id sub_xxx
+```
+
+4. Retry țintit pe un payment local
+```bash
+python manage.py sync_subscriptions --payment-id 123
+```
+
+5. Verificare impact fără write (dry run)
+```bash
+python manage.py sync_subscriptions --failed-webhooks-only --dry-run
+```
 
 ---
 

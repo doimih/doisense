@@ -64,7 +64,7 @@ def log_ai_request_event(
         events = cache.get(_EVENTS_CACHE_KEY) or []
         events.append(event)
         if len(events) > _events_limit():
-            events = events[-_events_limit():]
+            events = events[-_events_limit() :]
         cache.set(_EVENTS_CACHE_KEY, events, timeout=_events_cache_ttl_seconds())
     except Exception:
         # Monitoring must never break production request flow.
@@ -140,9 +140,7 @@ def detect_anomalies(hours: int = 24) -> list[dict]:
         latency_ms = int(event.get("latency_ms", 0))
         response_length = int(event.get("response_length", 0))
         status = event.get("status", "ok")
-        occurred_at = datetime.fromtimestamp(
-            float(event.get("timestamp", 0)), tz=dt_timezone.utc
-        )
+        occurred_at = datetime.fromtimestamp(float(event.get("timestamp", 0)), tz=dt_timezone.utc)
 
         if status == "ok" and latency_ms > spike_threshold:
             anomalies.append(
@@ -192,7 +190,9 @@ def fetch_recent_prompt_audits_and_modifications(limit: int = 10) -> dict:
     )
 
     recent_prompt_edits = list(
-        PromptVersion.objects.select_related("prompt").order_by("-updated_at", "-version_number")[:limit]
+        PromptVersion.objects.select_related("prompt").order_by("-updated_at", "-version_number")[
+            :limit
+        ]
     )
 
     return {
@@ -206,10 +206,13 @@ def _fetch_recent_error_logs(limit: int = 15) -> list[dict]:
     event_errors = [
         {
             "source": "ai_request",
-            "created_at": datetime.fromtimestamp(float(event.get("timestamp", 0)), tz=dt_timezone.utc),
+            "created_at": datetime.fromtimestamp(
+                float(event.get("timestamp", 0)), tz=dt_timezone.utc
+            ),
             "provider": event.get("provider", "unknown"),
             "model": event.get("model", "unknown"),
-            "error_type": event.get("error_type") or ("Timeout" if event.get("timeout") else "RequestError"),
+            "error_type": event.get("error_type")
+            or ("Timeout" if event.get("timeout") else "RequestError"),
             "message": event.get("error_message") or "AI request failed.",
         }
         for event in events
@@ -227,11 +230,12 @@ def _fetch_recent_error_logs(limit: int = 15) -> list[dict]:
         }
         for error in SystemErrorEvent.objects.filter(
             Q(component__istartswith="ai") | Q(component__istartswith="ai_core")
-        )
-        .order_by("-created_at")[:limit]
+        ).order_by("-created_at")[:limit]
     ]
 
-    combined = sorted(event_errors + system_errors, key=lambda item: item["created_at"], reverse=True)
+    combined = sorted(
+        event_errors + system_errors, key=lambda item: item["created_at"], reverse=True
+    )
     return combined[:limit]
 
 
@@ -248,11 +252,7 @@ def _orchestrator_health() -> dict:
 
 
 def _cache_status() -> dict:
-    backend_name = (
-        settings.CACHES.get("default", {})
-        .get("BACKEND", "unknown")
-        .rsplit(".", 1)[-1]
-    )
+    backend_name = settings.CACHES.get("default", {}).get("BACKEND", "unknown").rsplit(".", 1)[-1]
     return {
         "backend": backend_name,
         "events_cached": len(cache.get(_EVENTS_CACHE_KEY) or []),

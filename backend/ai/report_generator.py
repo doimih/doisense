@@ -5,7 +5,6 @@ from datetime import date, datetime, timedelta
 from typing import Any
 
 from django.contrib.auth import get_user_model
-from django.db.models import Count
 from django.utils import timezone
 
 from ai.models import Conversation, DailyReport, MonthlyReport, WeeklyReport
@@ -69,7 +68,7 @@ def _collect_user_signals(user_id: int, start: datetime, end: datetime) -> dict[
 
     emotion_counter: Counter[str] = Counter()
     for row in entries:
-        for emo in (row.get("emotions") or []):
+        for emo in row.get("emotions") or []:
             val = str(emo).strip().lower()
             if val:
                 emotion_counter[val] += 1
@@ -127,7 +126,11 @@ def _fallback_daily(signals: dict[str, Any]) -> dict[str, Any]:
 
 def _fallback_weekly(signals: dict[str, Any]) -> dict[str, Any]:
     trends = [
-        f"Top emotions: {', '.join(signals['top_emotions'])}" if signals["top_emotions"] else "No strong emotion trend detected.",
+        (
+            f"Top emotions: {', '.join(signals['top_emotions'])}"
+            if signals["top_emotions"]
+            else "No strong emotion trend detected."
+        ),
         f"Journaling frequency: {signals['journal_count']} entries this week.",
     ]
     return {
@@ -151,7 +154,11 @@ def _fallback_monthly(signals: dict[str, Any]) -> dict[str, Any]:
             f"{signals['conversation_count']} AI conversations."
         ),
         "trends": [
-            f"Top emotions this month: {', '.join(signals['top_emotions'])}" if signals["top_emotions"] else "No dominant emotion pattern.",
+            (
+                f"Top emotions this month: {', '.join(signals['top_emotions'])}"
+                if signals["top_emotions"]
+                else "No dominant emotion pattern."
+            ),
         ],
         "insights": "Consistency and emotional awareness can improve with regular reflection.",
         "recommendations": [
@@ -161,12 +168,16 @@ def _fallback_monthly(signals: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _build_ai_report(user, report_type: str, signals: dict[str, Any], max_tokens: int = 700) -> dict[str, Any] | None:
+def _build_ai_report(
+    user, report_type: str, signals: dict[str, Any], max_tokens: int = 700
+) -> dict[str, Any] | None:
     if signals["journal_count"] == 0 and signals["conversation_count"] == 0:
         return None
 
     if report_type == "daily":
-        schema = '{"summary":"...","highlights":["..."],"challenges":["..."],"recommendations":["..."]}'
+        schema = (
+            '{"summary":"...","highlights":["..."],"challenges":["..."],"recommendations":["..."]}'
+        )
         goal = "Generate a concise daily wellbeing report"
     elif report_type == "weekly":
         schema = '{"summary":"...","trends":["..."],"progress":"...","recommendations":["..."]}'
@@ -203,9 +214,17 @@ def generate_daily_report_for_user(user, target_day: date | None = None) -> bool
         date=day,
         defaults={
             "summary": str(parsed.get("summary") or "").strip(),
-            "highlights": parsed.get("highlights") if isinstance(parsed.get("highlights"), list) else [],
-            "challenges": parsed.get("challenges") if isinstance(parsed.get("challenges"), list) else [],
-            "recommendations": parsed.get("recommendations") if isinstance(parsed.get("recommendations"), list) else [],
+            "highlights": (
+                parsed.get("highlights") if isinstance(parsed.get("highlights"), list) else []
+            ),
+            "challenges": (
+                parsed.get("challenges") if isinstance(parsed.get("challenges"), list) else []
+            ),
+            "recommendations": (
+                parsed.get("recommendations")
+                if isinstance(parsed.get("recommendations"), list)
+                else []
+            ),
         },
     )
     return True
@@ -224,7 +243,11 @@ def generate_weekly_report_for_user(user, target_day: date | None = None) -> boo
             "summary": str(parsed.get("summary") or "").strip(),
             "trends": parsed.get("trends") if isinstance(parsed.get("trends"), list) else [],
             "progress": str(parsed.get("progress") or "").strip(),
-            "recommendations": parsed.get("recommendations") if isinstance(parsed.get("recommendations"), list) else [],
+            "recommendations": (
+                parsed.get("recommendations")
+                if isinstance(parsed.get("recommendations"), list)
+                else []
+            ),
         },
     )
     return True
@@ -244,7 +267,11 @@ def generate_monthly_report_for_user(user, target_day: date | None = None) -> bo
             "summary": str(parsed.get("summary") or "").strip(),
             "trends": parsed.get("trends") if isinstance(parsed.get("trends"), list) else [],
             "insights": str(parsed.get("insights") or "").strip(),
-            "recommendations": parsed.get("recommendations") if isinstance(parsed.get("recommendations"), list) else [],
+            "recommendations": (
+                parsed.get("recommendations")
+                if isinstance(parsed.get("recommendations"), list)
+                else []
+            ),
         },
     )
     return True
@@ -259,7 +286,9 @@ def _iter_eligible_users(allowed_tiers: set[str], user_id: int | None = None):
             yield user
 
 
-def run_daily_reports_for_all_users(target_day: date | None = None, user_id: int | None = None) -> ReportStats:
+def run_daily_reports_for_all_users(
+    target_day: date | None = None, user_id: int | None = None
+) -> ReportStats:
     stats = ReportStats()
     for user in _iter_eligible_users(DAILY_ALLOWED_TIERS, user_id=user_id):
         stats.processed += 1
@@ -271,7 +300,9 @@ def run_daily_reports_for_all_users(target_day: date | None = None, user_id: int
     return stats
 
 
-def run_weekly_reports_for_all_users(target_day: date | None = None, user_id: int | None = None) -> ReportStats:
+def run_weekly_reports_for_all_users(
+    target_day: date | None = None, user_id: int | None = None
+) -> ReportStats:
     stats = ReportStats()
     for user in _iter_eligible_users(WEEKLY_ALLOWED_TIERS, user_id=user_id):
         stats.processed += 1
@@ -283,7 +314,9 @@ def run_weekly_reports_for_all_users(target_day: date | None = None, user_id: in
     return stats
 
 
-def run_monthly_reports_for_all_users(target_day: date | None = None, user_id: int | None = None) -> ReportStats:
+def run_monthly_reports_for_all_users(
+    target_day: date | None = None, user_id: int | None = None
+) -> ReportStats:
     stats = ReportStats()
     for user in _iter_eligible_users(MONTHLY_ALLOWED_TIERS, user_id=user_id):
         stats.processed += 1

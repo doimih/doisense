@@ -7,7 +7,7 @@ from .models import Payment, StripeWebhookEvent
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    change_form_template = "admin/two_column_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
     list_display = (
         "user",
         "status",

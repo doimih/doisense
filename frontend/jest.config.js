@@ -3,6 +3,7 @@ export default {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^~/(.*)$': '<rootDir>/$1',
+    '^@vue/test-utils$': '<rootDir>/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js',
   },
   testMatch: ['**/tests/**/*.spec.[jt]s', '**/__tests__/**/*.spec.[jt]s'],
   transform: {

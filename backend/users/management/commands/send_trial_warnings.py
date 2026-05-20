@@ -19,22 +19,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         now = timezone.now()
-        
+
         # Find users in trial who still have access
         trial_users = User.objects.filter(
             plan_tier=User.PLAN_TRIAL,
             trial_ends_at__isnull=False,
             vip_manual_override=False,
         )
-        
+
         sent_count = 0
         for user in trial_users:
             if user.trial_ends_at <= now:
                 # Trial already expired
                 continue
-            
+
             days_left = (user.trial_ends_at.date() - now.date()).days
-            
+
             # Send warnings on days 5, 6, and 7
             if days_left in (5, 6, 7):
                 context_key = f"day_{days_left}"
@@ -56,11 +56,7 @@ class Command(BaseCommand):
                     sent_count += 1
                 except Exception as e:
                     self.stderr.write(
-                        self.style.ERROR(
-                            f"Failed to send trial warning to {user.email}: {str(e)}"
-                        )
+                        self.style.ERROR(f"Failed to send trial warning to {user.email}: {str(e)}")
                     )
-        
-        self.stdout.write(
-            self.style.SUCCESS(f"Sent {sent_count} trial expiration warning(s).")
-        )
+
+        self.stdout.write(self.style.SUCCESS(f"Sent {sent_count} trial expiration warning(s)."))

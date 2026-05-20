@@ -35,8 +35,7 @@
     "lastName": "Nom",
     "googleNotConfigured": "La connexion Google n'est pas configuree.",
     "googleLoginFailed": "La connexion Google n'a pas pu etre finalisee.",
-    "appleNotConfigured": "La connexion Apple n'est pas configuree.",
-    "appleLoginFailed": "La connexion Apple n'a pas pu etre finalisee.",
+
     "loginFailed": "Identifiants invalides.",
     "registerSuccess": "Compte cree. Verifiez votre email pour l'activation.",
     "registerFailed": "Impossible de creer le compte. Verifiez vos donnees et reessayez.",

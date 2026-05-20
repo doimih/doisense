@@ -17,6 +17,30 @@
     </header>
 
     <div class="mx-auto max-w-7xl space-y-0 px-4 py-10 sm:px-6 lg:px-8">
+    <section class="mt-8 mb-6 flex items-center justify-center">
+      <div class="inline-flex items-center rounded-full border border-[#d4e4e0] bg-[#fafbfa] p-1">
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="billingCycle === 'monthly' ? 'bg-[#2c3e35] text-white' : 'text-[#42524b] hover:bg-[#edf3ef]'"
+          @click="billingCycle = 'monthly'"
+        >
+          {{ billingText.monthly }}
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="billingCycle === 'yearly' ? 'bg-[#2c3e35] text-white' : 'text-[#42524b] hover:bg-[#edf3ef]'"
+          @click="billingCycle = 'yearly'"
+        >
+          {{ billingText.yearly }}
+        </button>
+      </div>
+      <span class="ml-3 inline-flex rounded-full border border-[#a8d5ba] bg-[#e8f1ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#4f8f75]">
+        {{ billingText.discountBadge }}
+      </span>
+    </section>
+
     <section class="mt-[100px] mb-[100px] grid gap-6 lg:grid-cols-3">
       <article
         v-for="plan in text.plans"
@@ -48,8 +72,8 @@
         <p class="mt-3 text-sm leading-6 text-[#5a6b63]">{{ plan.description }}</p>
 
         <div class="mt-5 flex items-end gap-2 border-b border-[#d4e4e0] pb-5">
-          <p class="text-5xl font-bold tracking-tight text-[#2c3e35]">{{ plan.price }}</p>
-          <p class="pb-1 text-sm font-medium text-[#5a6b63]">{{ plan.period }}</p>
+          <p class="text-5xl font-bold tracking-tight text-[#2c3e35]">{{ displayPlanPrice(plan.key) }}</p>
+          <p class="pb-1 text-sm font-medium text-[#5a6b63]">{{ displayPlanPeriod() }}</p>
         </div>
 
         <ul class="mt-5 space-y-2.5 text-sm leading-6 text-[#5a6b63]">
@@ -69,7 +93,7 @@
         <button
           v-if="isLoggedIn"
           type="button"
-          :disabled="loadingPlan === plan.key || currentPlanKey === plan.key"
+          :disabled="isPlanLoading(plan.key) || currentPlanKey === plan.key"
           :class="[
             'mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition disabled:opacity-60',
             currentPlanKey === plan.key
@@ -82,7 +106,7 @@
           ]"
           @click="handlePlanAction(plan.key)"
         >
-          {{ loadingPlan === plan.key ? loadingText : (currentPlanKey === plan.key ? text.currentPlan : plan.action) }}
+          {{ isPlanLoading(plan.key) ? loadingText : (currentPlanKey === plan.key ? text.currentPlan : plan.action) }}
         </button>
         <NuxtLink
           v-else
@@ -169,6 +193,148 @@ const { toAbsolutePublicUrl } = usePublicSiteContext()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const loadingPlan = ref<string | null>(null)
+type BillingCycle = 'monthly' | 'yearly'
+type PlanKey = 'basic' | 'premium' | 'vip'
+const billingCycle = ref<BillingCycle>('monthly')
+
+type PlanPricing = {
+  monthly: number
+  yearly: number
+  currency: string
+}
+
+const DEFAULT_PLAN_PRICING: Record<PlanKey, PlanPricing> = {
+  basic: { monthly: 12, yearly: 129.6, currency: 'EUR' },
+  premium: { monthly: 25, yearly: 270, currency: 'EUR' },
+  vip: { monthly: 49, yearly: 529.2, currency: 'EUR' },
+}
+const pricingPlans = ref<Record<PlanKey, PlanPricing>>({ ...DEFAULT_PLAN_PRICING })
+
+const BILLING_TEXT: Record<string, { monthly: string; yearly: string; discountBadge: string; perMonth: string; perYear: string }> = {
+  ro: { monthly: 'Plată lunară', yearly: 'Plată anuală', discountBadge: '-10% anual', perMonth: '/ lună', perYear: '/ an' },
+  en: { monthly: 'Monthly billing', yearly: 'Yearly billing', discountBadge: '-10% yearly', perMonth: '/ month', perYear: '/ year' },
+  de: { monthly: 'Monatlich', yearly: 'Jährlich', discountBadge: '-10% jährlich', perMonth: '/ Monat', perYear: '/ Jahr' },
+  fr: { monthly: 'Mensuel', yearly: 'Annuel', discountBadge: '-10% annuel', perMonth: '/ mois', perYear: '/ an' },
+  it: { monthly: 'Mensile', yearly: 'Annuale', discountBadge: '-10% annuale', perMonth: '/ mese', perYear: '/ anno' },
+  es: { monthly: 'Mensual', yearly: 'Anual', discountBadge: '-10% anual', perMonth: '/ mes', perYear: '/ año' },
+  pl: { monthly: 'Miesięcznie', yearly: 'Rocznie', discountBadge: '-10% rocznie', perMonth: '/ miesiąc', perYear: '/ rok' },
+}
+
+const billingText = computed(() => BILLING_TEXT[localeCode.value] || BILLING_TEXT.en)
+
+type PricingApiPlan = {
+  plan_tier?: string
+  plan?: string
+  key?: string
+  id?: string
+  monthly_price?: number | string
+  monthlyPrice?: number | string
+  monthly?: number | string
+  yearly_price?: number | string
+  yearlyPrice?: number | string
+  yearly?: number | string
+  currency?: string
+}
+
+type PricingApiResponse = {
+  plans?: PricingApiPlan[]
+  [key: string]: unknown
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+function parsePricingResponse(payload: unknown): Record<PlanKey, PlanPricing> | null {
+  if (!payload || typeof payload !== 'object') return null
+
+  const source = payload as PricingApiResponse
+  const entries: PricingApiPlan[] = Array.isArray(source.plans)
+    ? source.plans
+    : (['basic', 'premium', 'vip']
+        .map((key) => {
+          const item = source[key]
+          if (!item || typeof item !== 'object') return null
+          return { key, ...(item as Record<string, unknown>) } as PricingApiPlan
+        })
+        .filter(Boolean) as PricingApiPlan[])
+
+  if (!entries.length) return null
+
+  const next: Partial<Record<PlanKey, PlanPricing>> = {}
+  for (const entry of entries) {
+    const rawKey = (entry.plan_tier || entry.plan || entry.key || entry.id || '').toLowerCase()
+    if (rawKey !== 'basic' && rawKey !== 'premium' && rawKey !== 'vip') continue
+    const monthly = toNumber(entry.monthly_price ?? entry.monthlyPrice ?? entry.monthly)
+    const yearly = toNumber(entry.yearly_price ?? entry.yearlyPrice ?? entry.yearly)
+    if (monthly === null || yearly === null) continue
+
+    next[rawKey] = {
+      monthly,
+      yearly,
+      currency: String(entry.currency || 'EUR').toUpperCase(),
+    }
+  }
+
+  if (!next.basic || !next.premium || !next.vip) return null
+  return next as Record<PlanKey, PlanPricing>
+}
+
+async function fetchPricingPlans() {
+  const endpoints = ['/pricing', '/payments/pricing']
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetchApi<unknown>(endpoint)
+      const parsed = parsePricingResponse(response)
+      if (parsed) {
+        pricingPlans.value = parsed
+        return
+      }
+    } catch {
+      // Keep defaults if pricing endpoint is unavailable.
+    }
+  }
+}
+
+function getPlanPrice(planKey: string): number {
+  const normalizedKey = (planKey || 'premium') as PlanKey
+  const plan = pricingPlans.value[normalizedKey] || pricingPlans.value.premium
+  return billingCycle.value === 'yearly' ? plan.yearly : plan.monthly
+}
+
+function getPlanCurrency(planKey: string): string {
+  const normalizedKey = (planKey || 'premium') as PlanKey
+  const plan = pricingPlans.value[normalizedKey] || pricingPlans.value.premium
+  return plan.currency
+}
+
+function formatPrice(value: number, currency = 'EUR'): string {
+  const hasDecimals = Math.round(value) !== value
+  const symbol = currency === 'EUR' ? '€' : `${currency} `
+  return `${symbol}${hasDecimals ? value.toFixed(2) : value.toFixed(0)}`
+}
+
+function displayPlanPrice(planKey: string): string {
+  return formatPrice(getPlanPrice(planKey), getPlanCurrency(planKey))
+}
+
+function displayPlanPeriod(): string {
+  return billingCycle.value === 'yearly' ? billingText.value.perYear : billingText.value.perMonth
+}
+
+function loadingKey(planKey: string, cycle: BillingCycle): string {
+  return `${planKey}:${cycle}`
+}
+
+function isPlanLoading(planKey: string): boolean {
+  return loadingPlan.value === loadingKey(planKey, billingCycle.value)
+}
+
 const loadingText = computed(() => {
   const code = localeCode.value
   const labels: Record<string, string> = { ro: 'Se procesează...', en: 'Processing...', de: 'Verarbeitung...', fr: 'En cours...', it: 'In elaborazione...', es: 'Procesando...', pl: 'Przetwarzanie...' }
@@ -183,12 +349,16 @@ const currentPlanKey = computed(() => {
   return tier
 })
 
-async function startCheckout(planKey: string) {
-  loadingPlan.value = planKey
+onMounted(async () => {
+  await fetchPricingPlans()
+})
+
+async function startCheckout(planKey: string, cycle: BillingCycle) {
+  loadingPlan.value = loadingKey(planKey, cycle)
   try {
     const res = await fetchApi<{ url: string }>('/payments/create-checkout-session', {
       method: 'POST',
-      body: { plan_tier: planKey },
+      body: { plan_tier: planKey, billing_cycle: cycle },
     })
     if (res?.url) window.location.href = res.url
   } finally {
@@ -196,12 +366,12 @@ async function startCheckout(planKey: string) {
   }
 }
 
-async function upgradeSubscription(planKey: string) {
-  loadingPlan.value = planKey
+async function upgradeSubscription(planKey: string, cycle: BillingCycle) {
+  loadingPlan.value = loadingKey(planKey, cycle)
   try {
     await fetchApi('/payments/upgrade', {
       method: 'POST',
-      body: { plan_tier: planKey },
+      body: { plan_tier: planKey, billing_cycle: cycle },
     })
     const updated = await fetchApi<Record<string, unknown>>('/me')
     if (updated && authStore.user) {
@@ -215,9 +385,9 @@ async function upgradeSubscription(planKey: string) {
 async function handlePlanAction(planKey: string) {
   if (planKey === currentPlanKey.value) return
   if (currentPlanKey.value) {
-    await upgradeSubscription(planKey)
+    await upgradeSubscription(planKey, billingCycle.value)
   } else {
-    await startCheckout(planKey)
+    await startCheckout(planKey, billingCycle.value)
   }
 }
 
@@ -916,8 +1086,8 @@ const pricingStructuredData = computed(() => {
         '@type': 'Offer',
         '@id': `${pricingUrl}#offer-${plan.key}`,
         url: pricingUrl,
-        priceCurrency: 'EUR',
-        price: Number(plan.price.replace(/[^\d.]/g, '')),
+        priceCurrency: getPlanCurrency(plan.key),
+        price: pricingPlans.value[plan.key].monthly,
         availability: 'https://schema.org/InStock',
         category: 'Wellbeing subscription',
         eligibleRegion: 'EU',

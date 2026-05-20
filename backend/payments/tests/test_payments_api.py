@@ -31,6 +31,20 @@ def test_checkout_session_falls_back_to_internal_activation(authenticated_client
 
 
 @pytest.mark.django_db
+def test_checkout_session_accepts_yearly_billing_cycle(authenticated_client, user):
+    response = authenticated_client.post(
+        reverse("create-checkout-session"),
+        {"plan_tier": "premium", "billing_cycle": "yearly"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["internal_activation"] is True
+    assert response.data["plan_tier"] == "premium"
+    assert response.data["billing_cycle"] == "yearly"
+
+
+@pytest.mark.django_db
 def test_checkout_session_applies_early_discount_for_premium(authenticated_client, user):
     user.early_discount_eligible = True
     user.vip_manual_override = False

@@ -60,7 +60,6 @@ class SystemConfigAdminForm(forms.ModelForm):
         masked_fields = [
             "email_host_password",
             "google_client_id",
-            "apple_client_id",
             "stripe_secret_key",
             "stripe_webhook_secret",
             "stripe_price_id_premium",
@@ -109,9 +108,7 @@ class SystemConfigAdminForm(forms.ModelForm):
                 entries.append(value)
 
         if invalid_entries:
-            raise forms.ValidationError(
-                "Invalid IP/CIDR entries: " + ", ".join(invalid_entries)
-            )
+            raise forms.ValidationError("Invalid IP/CIDR entries: " + ", ".join(invalid_entries))
 
         return "\n".join(entries)
 
@@ -119,7 +116,7 @@ class SystemConfigAdminForm(forms.ModelForm):
 @admin.register(SystemConfig)
 class SystemConfigAdmin(ModelAdmin):
     form = SystemConfigAdminForm
-    change_form_template = "admin/core/settings_change_form.html"
+    change_form_template = "admin/core/systemconfig/change_form.html"
 
     fieldsets = (
         (
@@ -166,13 +163,8 @@ class SystemConfigAdmin(ModelAdmin):
         ),
         (
             "QA Access",
-            {
-                "fields": (
-                    "qa_allowed_source_ips",
-                )
-            },
+            {"fields": ("qa_allowed_source_ips",)},
         ),
-
     )
 
     def get_urls(self):
@@ -217,7 +209,7 @@ class SystemConfigAdmin(ModelAdmin):
 
     def storage_settings_view(self, request):
         url = reverse("admin:core_systemconfig_changelist")
-        return HttpResponseRedirect(f"{url}?tab=Storage")
+        return HttpResponseRedirect(f"{url}?tab=Storage&scope=storage")
 
     def _validate_backup_storage_config(self, config):
         missing_fields = []
@@ -239,9 +231,7 @@ class SystemConfigAdmin(ModelAdmin):
             aws_secret_access_key=config.backup_secret_access_key,
             region_name=config.backup_region or None,
             config=Config(
-                s3={
-                    "addressing_style": "path" if config.backup_force_path_style else "auto"
-                }
+                s3={"addressing_style": "path" if config.backup_force_path_style else "auto"}
             ),
         )
 
@@ -278,7 +268,9 @@ class SystemConfigAdmin(ModelAdmin):
 
                     detected = imghdr.what(uploaded)
                     if detected not in _MEDIA_LIBRARY_ALLOWED_TYPES:
-                        errors.append(f"{uploaded.name}: file content does not match an allowed image type.")
+                        errors.append(
+                            f"{uploaded.name}: file content does not match an allowed image type."
+                        )
                         continue
 
                     uploaded.seek(0)
@@ -296,10 +288,14 @@ class SystemConfigAdmin(ModelAdmin):
                     uploaded_names.append(os.path.basename(dest))
 
                 if uploaded_names:
-                    success = f"Uploaded {len(uploaded_names)} image(s): {', '.join(uploaded_names)}"
+                    success = (
+                        f"Uploaded {len(uploaded_names)} image(s): {', '.join(uploaded_names)}"
+                    )
 
             if is_ajax:
-                status_code = 201 if uploaded_names and not errors else (207 if uploaded_names else 400)
+                status_code = (
+                    201 if uploaded_names and not errors else (207 if uploaded_names else 400)
+                )
                 return JsonResponse(
                     {
                         "uploaded": uploaded_names,
@@ -615,7 +611,7 @@ class BackupRestoreRequestAdmin(ModelAdmin):
 
 @admin.register(PlatformScheduledJob)
 class PlatformScheduledJobAdmin(ModelAdmin):
-    change_form_template = "admin/two_column_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
     list_display = (
         "label",
         "command_name",
@@ -628,7 +624,14 @@ class PlatformScheduledJobAdmin(ModelAdmin):
     list_filter = ("enabled", "schedule_type", "last_run_status")
     search_fields = ("label", "command_name", "code")
     ordering = ("label",)
-    readonly_fields = ("code", "command_name", "last_run_at", "last_run_status", "last_error", "last_duration_ms")
+    readonly_fields = (
+        "code",
+        "command_name",
+        "last_run_at",
+        "last_run_status",
+        "last_error",
+        "last_duration_ms",
+    )
     actions = ["run_selected_jobs_now"]
 
     fieldsets = (
@@ -711,7 +714,15 @@ class AnalyticsEventAdmin(ModelAdmin):
     list_filter = ("event_name", "source")
     search_fields = ("event_name", "user__email", "session_id")
     ordering = ("-created_at",)
-    readonly_fields = ("event_name", "source", "schema_version", "user", "session_id", "properties", "created_at")
+    readonly_fields = (
+        "event_name",
+        "source",
+        "schema_version",
+        "user",
+        "session_id",
+        "properties",
+        "created_at",
+    )
 
     def has_add_permission(self, request):
         return False
@@ -723,7 +734,14 @@ class UserQuotaUsageAdmin(ModelAdmin):
     list_filter = ("metric_key", "period_type", "period_start")
     search_fields = ("user__email", "metric_key")
     ordering = ("-updated_at",)
-    readonly_fields = ("user", "metric_key", "period_type", "period_start", "created_at", "updated_at")
+    readonly_fields = (
+        "user",
+        "metric_key",
+        "period_type",
+        "period_start",
+        "created_at",
+        "updated_at",
+    )
 
     def has_add_permission(self, request):
         return False
@@ -799,11 +817,10 @@ class BackupConfigAdmin(ModelAdmin):
 
 
 class SingletonProxyConfigAdmin(ModelAdmin):
-    change_form_template = "admin/core/settings_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
 
     _masked_fields = (
         "google_client_id",
-        "apple_client_id",
         "stripe_secret_key",
         "stripe_webhook_secret",
         "stripe_price_id_premium",
@@ -855,28 +872,19 @@ class OAuthConfigAdmin(SingletonProxyConfigAdmin):
     fieldsets = (
         (
             "OAuth",
-            {
-                "fields": (
-                    "google_client_id",
-                    "google_client_secret",
-                    "apple_client_id",
-                )
-            },
+            {"fields": ("google_client_id",)},
         ),
     )
 
 
 @admin.register(StripeConfig)
 class StripeConfigAdmin(SingletonProxyConfigAdmin):
+    readonly_fields = ("stripe_keys_env_only_notice",)
+
     fieldsets = (
         (
-            "API Keys",
-            {
-                "fields": (
-                    "stripe_secret_key",
-                    "stripe_webhook_secret",
-                )
-            },
+            "API Keys (Environment only)",
+            {"fields": ("stripe_keys_env_only_notice",)},
         ),
         (
             "Price IDs (Legacy - for subscriptions)",
@@ -899,6 +907,13 @@ class StripeConfigAdmin(SingletonProxyConfigAdmin):
             },
         ),
     )
+
+    @admin.display(description="Secret management")
+    def stripe_keys_env_only_notice(self, obj):
+        return (
+            "Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET via environment variables. "
+            "Database values are disabled in production."
+        )
 
 
 @admin.register(AIConfig)
@@ -1015,4 +1030,3 @@ class BackupVerificationLogAdmin(ModelAdmin):
 
     def has_add_permission(self, request):
         return False
-

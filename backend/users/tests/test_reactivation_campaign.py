@@ -24,16 +24,22 @@ def test_reactivation_campaign_sends_once_per_segment(user):
     )
 
     call_command("send_reactivation_campaign")
-    assert NotificationDelivery.objects.filter(
-        user=user,
-        notification_type="reactivation_campaign",
-        context_key="reactivation:inactive_14d",
-    ).count() == 1
+    assert (
+        NotificationDelivery.objects.filter(
+            user=user,
+            notification_type="reactivation_campaign",
+            context_key="reactivation:inactive_14d",
+        ).count()
+        == 1
+    )
 
     # Running again should keep dedupe for the same segment.
     call_command("send_reactivation_campaign")
-    assert NotificationDelivery.objects.filter(
-        user=user,
-        notification_type="reactivation_campaign",
-        context_key="reactivation:inactive_14d",
-    ).count() == 1
+    assert (
+        NotificationDelivery.objects.filter(
+            user=user,
+            notification_type="reactivation_campaign",
+            context_key="reactivation:inactive_14d",
+        ).count()
+        == 1
+    )

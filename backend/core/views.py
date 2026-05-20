@@ -12,7 +12,6 @@ from urllib.request import urlopen, Request
 from urllib.parse import urlencode
 from pathlib import Path
 import imghdr
-import re
 import json
 import smtplib
 from django.core.validators import validate_email
@@ -44,7 +43,11 @@ from .models import (
     UserNotificationPreference,
     UserWellbeingCheckin,
 )
-from .serializers import AnalyticsTrackSerializer, CMSPageSerializer, WellbeingCheckinCreateSerializer
+from .serializers import (
+    AnalyticsTrackSerializer,
+    CMSPageSerializer,
+    WellbeingCheckinCreateSerializer,
+)
 
 
 def public_cache_response(data, *, max_age: int = 300):
@@ -73,7 +76,9 @@ class HealthCheckView(APIView):
         except Exception:
             cache_ok = False
 
-        status_code = status.HTTP_200_OK if db_ok and cache_ok else status.HTTP_503_SERVICE_UNAVAILABLE
+        status_code = (
+            status.HTTP_200_OK if db_ok and cache_ok else status.HTTP_503_SERVICE_UNAVAILABLE
+        )
         if status_code != status.HTTP_200_OK:
             SystemErrorEvent.objects.create(
                 severity=SystemErrorEvent.SEVERITY_HIGH,
@@ -211,7 +216,9 @@ class CMSMenuLinksView(APIView):
 
     def get(self, request):
         language = (request.query_params.get("language") or "ro").strip()
-        pages = CMSPage.objects.filter(is_published=True, language=language).order_by("menu_order", "slug")
+        pages = CMSPage.objects.filter(is_published=True, language=language).order_by(
+            "menu_order", "slug"
+        )
 
         header = [
             {"slug": p.slug, "title": p.title, "path": f"/cms/{p.slug}"}
@@ -256,11 +263,15 @@ class GeoLanguageView(APIView):
 
     def _get_country(self, request):
         header_country = (
-            request.META.get("HTTP_CF_IPCOUNTRY")
-            or request.META.get("HTTP_X_COUNTRY_CODE")
-            or request.META.get("HTTP_X_APPENGINE_COUNTRY")
-            or ""
-        ).strip().upper()
+            (
+                request.META.get("HTTP_CF_IPCOUNTRY")
+                or request.META.get("HTTP_X_COUNTRY_CODE")
+                or request.META.get("HTTP_X_APPENGINE_COUNTRY")
+                or ""
+            )
+            .strip()
+            .upper()
+        )
         if len(header_country) == 2:
             return header_country
 
@@ -427,9 +438,7 @@ class WellbeingSummaryView(APIView):
 
         checkins = UserWellbeingCheckin.objects.filter(user=user)
         mood_items = list(
-            checkins.exclude(mood="")
-            .order_by("created_at")
-            .values("created_at", "mood")[:180]
+            checkins.exclude(mood="").order_by("created_at").values("created_at", "mood")[:180]
         )
         energy_items = list(
             checkins.filter(energy_level__isnull=False)
@@ -456,8 +465,7 @@ class WellbeingSummaryView(APIView):
             energy_items = [{"created_at": user.created_at, "energy_level": latest_energy}]
 
         activity_dates = set(
-            d.date() if hasattr(d, "date") else d
-            for d in checkins.dates("created_at", "day")
+            d.date() if hasattr(d, "date") else d for d in checkins.dates("created_at", "day")
         )
         activity_dates.update(
             d.date() if hasattr(d, "date") else d
@@ -575,7 +583,9 @@ class SupportTicketListCreateView(APIView):
         }
 
     @classmethod
-    def _serialize_ticket(cls, row: SupportTicket, *, include_messages: bool = False, include_internal: bool = False):
+    def _serialize_ticket(
+        cls, row: SupportTicket, *, include_messages: bool = False, include_internal: bool = False
+    ):
         payload = {
             "id": row.id,
             "user_id": row.user_id,
@@ -585,7 +595,9 @@ class SupportTicketListCreateView(APIView):
             "priority": row.priority,
             "status": row.status,
             "assigned_to_id": row.assigned_to_id,
-            "assigned_to_email": getattr(row.assigned_to, "email", "") if row.assigned_to_id else "",
+            "assigned_to_email": (
+                getattr(row.assigned_to, "email", "") if row.assigned_to_id else ""
+            ),
             "first_response_due_at": row.first_response_due_at,
             "resolution_due_at": row.resolution_due_at,
             "first_responded_at": row.first_responded_at,
@@ -601,12 +613,12 @@ class SupportTicketListCreateView(APIView):
         return payload
 
     def get(self, request):
-        tickets = SupportTicket.objects.filter(user=request.user).select_related("user", "assigned_to").order_by("-created_at")[:100]
-        return Response(
-            {
-                "items": [self._serialize_ticket(row) for row in tickets]
-            }
+        tickets = (
+            SupportTicket.objects.filter(user=request.user)
+            .select_related("user", "assigned_to")
+            .order_by("-created_at")[:100]
         )
+        return Response({"items": [self._serialize_ticket(row) for row in tickets]})
 
     def post(self, request):
         subject = str(request.data.get("subject") or "").strip()
@@ -638,7 +650,9 @@ class SupportTicketListCreateView(APIView):
             user=request.user,
             properties={},
         )
-        return Response(self._serialize_ticket(ticket, include_messages=True), status=status.HTTP_201_CREATED)
+        return Response(
+            self._serialize_ticket(ticket, include_messages=True), status=status.HTTP_201_CREATED
+        )
 
 
 class SupportTicketDetailView(APIView):
@@ -660,7 +674,11 @@ class SupportTicketDetailView(APIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
         include_internal = self._is_staff_user(request.user)
-        return Response(SupportTicketListCreateView._serialize_ticket(ticket, include_messages=True, include_internal=include_internal))
+        return Response(
+            SupportTicketListCreateView._serialize_ticket(
+                ticket, include_messages=True, include_internal=include_internal
+            )
+        )
 
     def post(self, request, ticket_id: int):
         ticket = self._get_ticket_for_request(request, ticket_id)
@@ -673,7 +691,9 @@ class SupportTicketDetailView(APIView):
 
         is_staff = self._is_staff_user(request.user)
         is_internal = bool(request.data.get("is_internal", False)) if is_staff else False
-        sender_role = SupportTicketMessage.SENDER_ADMIN if is_staff else SupportTicketMessage.SENDER_USER
+        sender_role = (
+            SupportTicketMessage.SENDER_ADMIN if is_staff else SupportTicketMessage.SENDER_USER
+        )
 
         reply = SupportTicketMessage.objects.create(
             ticket=ticket,
@@ -732,7 +752,9 @@ class SupportTicketDetailView(APIView):
             {
                 "ok": True,
                 "reply": SupportTicketListCreateView._serialize_message(reply),
-                "ticket": SupportTicketListCreateView._serialize_ticket(ticket, include_messages=True, include_internal=include_internal),
+                "ticket": SupportTicketListCreateView._serialize_ticket(
+                    ticket, include_messages=True, include_internal=include_internal
+                ),
             },
             status=status.HTTP_201_CREATED,
         )
@@ -750,10 +772,7 @@ class SupportTicketAdminListView(APIView):
         if status_filter in {choice[0] for choice in SupportTicket.STATUS_CHOICES}:
             qs = qs.filter(status=status_filter)
 
-        items = [
-            SupportTicketListCreateView._serialize_ticket(row)
-            for row in qs[:200]
-        ]
+        items = [SupportTicketListCreateView._serialize_ticket(row) for row in qs[:200]]
         return Response({"items": items})
 
 
@@ -792,7 +811,9 @@ class BackupRestoreRequestView(APIView):
         confirmation = str(request.data.get("confirmation") or "").strip()
 
         if not restore_point:
-            return Response({"detail": "restore_point is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "restore_point is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
         if confirmation != "CONFIRM_RESTORE":
             return Response(
                 {"detail": "Invalid confirmation token. Use CONFIRM_RESTORE."},
@@ -832,13 +853,21 @@ class AnalyticsFunnelView(APIView):
         now = timezone.now()
         start = now - timedelta(days=30)
         counts = {
-            "onboarding_started": AnalyticsEvent.objects.filter(event_name="onboarding_started", created_at__gte=start).count(),
-            "onboarding_completed": AnalyticsEvent.objects.filter(event_name="onboarding_completed", created_at__gte=start).count(),
-            "checkout_initiated": AnalyticsEvent.objects.filter(event_name="checkout_initiated", created_at__gte=start).count(),
+            "onboarding_started": AnalyticsEvent.objects.filter(
+                event_name="onboarding_started", created_at__gte=start
+            ).count(),
+            "onboarding_completed": AnalyticsEvent.objects.filter(
+                event_name="onboarding_completed", created_at__gte=start
+            ).count(),
+            "checkout_initiated": AnalyticsEvent.objects.filter(
+                event_name="checkout_initiated", created_at__gte=start
+            ).count(),
             "subscription_change_requested": AnalyticsEvent.objects.filter(
                 event_name="subscription_change_requested", created_at__gte=start
             ).count(),
-            "program_completed": AnalyticsEvent.objects.filter(event_name="program_completed", created_at__gte=start).count(),
+            "program_completed": AnalyticsEvent.objects.filter(
+                event_name="program_completed", created_at__gte=start
+            ).count(),
         }
         return Response({"period_days": 30, "funnel": counts})
 
@@ -853,7 +882,9 @@ class AnalyticsCohortRetentionView(APIView):
         today = timezone.localdate()
         start_date = today - timedelta(days=30)
         cohort_rows = (
-            AnalyticsEvent.objects.filter(event_name="onboarding_completed", created_at__date__gte=start_date)
+            AnalyticsEvent.objects.filter(
+                event_name="onboarding_completed", created_at__date__gte=start_date
+            )
             .values("created_at__date")
             .annotate(total=Count("id"))
             .order_by("created_at__date")
@@ -942,7 +973,9 @@ class SettingsImageLibraryView(APIView):
                     "name": item.name,
                     "url": f"{settings.MEDIA_URL}{self.FOLDER}/{item.name}",
                     "size": stat.st_size,
-                    "updated_at": timezone.datetime.fromtimestamp(stat.st_mtime, tz=dt_timezone.utc),
+                    "updated_at": timezone.datetime.fromtimestamp(
+                        stat.st_mtime, tz=dt_timezone.utc
+                    ),
                 }
             )
 
@@ -957,7 +990,10 @@ class SettingsImageLibraryView(APIView):
             return Response({"detail": "Missing image file."}, status=status.HTTP_400_BAD_REQUEST)
 
         if upload.size > self.MAX_UPLOAD_SIZE:
-            return Response({"detail": "File too large. Max allowed is 8MB."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "File too large. Max allowed is 8MB."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         image_type = imghdr.what(upload)
         if image_type not in self.ALLOWED_TYPES:
@@ -970,7 +1006,9 @@ class SettingsImageLibraryView(APIView):
         try:
             webp_file, stem = convert_uploaded_image_to_webp(upload)
         except ValueError:
-            return Response({"detail": "Failed to process image."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Failed to process image."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         path = default_storage.save(
             f"{self.FOLDER}/{stem}.webp",
@@ -1012,7 +1050,9 @@ class ContactSubmitView(APIView):
         recaptcha_token = str(request.data.get("recaptcha_token") or "").strip()
 
         if not full_name:
-            return Response({"detail": "Full name is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Full name is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
         if not email:
             return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
         if not subject:
@@ -1023,7 +1063,9 @@ class ContactSubmitView(APIView):
         try:
             validate_email(email)
         except ValidationError:
-            return Response({"detail": "Invalid email address."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Invalid email address."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         config = SystemConfig.get_solo()
         if config.recaptcha_enabled:
@@ -1033,7 +1075,9 @@ class ContactSubmitView(APIView):
                     status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
             if not recaptcha_token:
-                return Response({"detail": "reCAPTCHA token is required."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "reCAPTCHA token is required."}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             ok, score = self._verify_recaptcha(config.recaptcha_secret_key, recaptcha_token)
             min_score = float(config.recaptcha_min_score or 0.5)
@@ -1151,7 +1195,9 @@ class QAIPAllowlistView(APIView):
 
         ips_raw = request.data.get("ips", [])
         if not isinstance(ips_raw, list):
-            return Response({"detail": "Field 'ips' must be a list."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Field 'ips' must be a list."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         validated = []
         errors = []

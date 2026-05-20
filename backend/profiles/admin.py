@@ -6,7 +6,7 @@ from .models import UserProfile
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    change_form_template = "admin/two_column_change_form.html"
+    change_form_template = "admin/tabbed_change_form.html"
     list_display = (
         "user",
         "preferred_tone",
@@ -37,10 +37,11 @@ class UserProfileAdmin(admin.ModelAdmin):
             "Keywords",
             {
                 "fields": ("keywords",),
-                "description": "Use JSON format, for example: {\"goal\": \"focus\"}.",
+                "description": 'Use JSON format, for example: {"goal": "focus"}.',
             },
         ),
     )
+
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "sensitivities":
             kwargs["widget"] = forms.Textarea(attrs={"rows": 4})

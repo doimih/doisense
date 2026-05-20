@@ -35,8 +35,7 @@
     "lastName": "Nachname",
     "googleNotConfigured": "Google-Login ist nicht konfiguriert.",
     "googleLoginFailed": "Google-Login konnte nicht abgeschlossen werden.",
-    "appleNotConfigured": "Apple-Login ist nicht konfiguriert.",
-    "appleLoginFailed": "Apple-Login konnte nicht abgeschlossen werden.",
+
     "loginFailed": "Ungültige Anmeldedaten.",
     "registerSuccess": "Konto erstellt. Bitte prüfe deine E-Mails zur Aktivierung.",
     "registerFailed": "Konto konnte nicht erstellt werden. Bitte prüfe deine Daten und versuche es erneut.",

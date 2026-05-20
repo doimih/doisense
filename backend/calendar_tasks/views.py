@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
 
-from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -122,12 +120,17 @@ class CalendarTasksListView(APIView):
             today = timezone.localdate()
             range_start, range_end = month_range(today.year, today.month)
 
-        include_inactive = request.query_params.get("include_inactive") == "1" and plan_ctx.has("task_history")
+        include_inactive = request.query_params.get("include_inactive") == "1" and plan_ctx.has(
+            "task_history"
+        )
         qs = Task.objects.filter(user=request.user)
         if not include_inactive:
             qs = qs.filter(is_active=True)
 
-        tasks = [build_task_payload(task, include_stats=plan_ctx.has("advanced_stats")) for task in qs.order_by("-created_at")[:300]]
+        tasks = [
+            build_task_payload(task, include_stats=plan_ctx.has("advanced_stats"))
+            for task in qs.order_by("-created_at")[:300]
+        ]
         markers = build_month_markers(request.user, range_start, range_end)
 
         return Response(
@@ -239,12 +242,19 @@ class CalendarTaskProgressView(APIView):
         if not plan_ctx.has("task_history"):
             from_day = timezone.localdate() - timezone.timedelta(days=14)
         else:
-            from_day = parse_iso_date(request.query_params.get("from"), fallback=timezone.localdate() - timezone.timedelta(days=180))
+            from_day = parse_iso_date(
+                request.query_params.get("from"),
+                fallback=timezone.localdate() - timezone.timedelta(days=180),
+            )
 
         to_day = parse_iso_date(request.query_params.get("to"), fallback=timezone.localdate())
-        qs = TaskProgress.objects.filter(task=task, progress_date__gte=from_day, progress_date__lte=to_day).order_by("-progress_date")
+        qs = TaskProgress.objects.filter(
+            task=task, progress_date__gte=from_day, progress_date__lte=to_day
+        ).order_by("-progress_date")
         data = TaskProgressSerializer(qs, many=True).data
-        return Response({"items": data, "range": {"from": from_day.isoformat(), "to": to_day.isoformat()}})
+        return Response(
+            {"items": data, "range": {"from": from_day.isoformat(), "to": to_day.isoformat()}}
+        )
 
 
 class CalendarStatsView(APIView):
@@ -281,17 +291,22 @@ class _VipAiBaseView(APIView):
 
         context = (request.data.get("context") or "").strip()
         if not context:
-            return Response({"detail": "Campul context este obligatoriu."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Campul context este obligatoriu."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         system = (
             "Esti un coach de productivitate pentru platforma Doisense. "
             "Raspunzi in limba romana, clar, practic si actionabil. "
             "Nu oferi sfaturi medicale."
         )
-        prompt = f"{self.prompt_header}\n\nContext utilizator:\n{context}\n\nGenereaza raspuns concret, in puncte." 
+        prompt = f"{self.prompt_header}\n\nContext utilizator:\n{context}\n\nGenereaza raspuns concret, in puncte."
         reply = complete(prompt=prompt, system=system, user_id=request.user.id, max_tokens=700)
         if reply.startswith("["):
-            return Response({"detail": "Serviciul AI este temporar indisponibil."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response(
+                {"detail": "Serviciul AI este temporar indisponibil."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         return Response({"result": reply.strip()})
 
@@ -308,7 +323,9 @@ class VipAiRoutineBuilderView(_VipAiBaseView):
 
 class VipAiDailyCheckinView(_VipAiBaseView):
     capability = "ai_daily_checkin"
-    prompt_header = "Realizeaza un check-in zilnic ghidat cu 6 intrebari si un mini-plan pentru restul zilei."
+    prompt_header = (
+        "Realizeaza un check-in zilnic ghidat cu 6 intrebari si un mini-plan pentru restul zilei."
+    )
 
 
 class VipAiProgressInsightsView(_VipAiBaseView):
@@ -318,4 +335,6 @@ class VipAiProgressInsightsView(_VipAiBaseView):
 
 class VipAiHabitOptimizationView(_VipAiBaseView):
     capability = "ai_habit_optimization"
-    prompt_header = "Optimizeaza obiceiurile existente: ce pastrezi, ce elimini, ce ajustezi si de ce."
+    prompt_header = (
+        "Optimizeaza obiceiurile existente: ce pastrezi, ce elimini, ce ajustezi si de ce."
+    )

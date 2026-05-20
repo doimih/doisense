@@ -227,21 +227,21 @@ class PromptAdmin(ModelAdmin):
         return format_html(
             '<div style="display:flex; gap:12px; flex-wrap:wrap; padding:4px 0;">'
             '<a href="{}" style="display:inline-flex; align-items:center; gap:6px; '
-            'padding:10px 20px; background:#7c3aed; color:#fff; border-radius:8px; '
-            'font-weight:600; font-size:14px; text-decoration:none; '
+            "padding:10px 20px; background:#7c3aed; color:#fff; border-radius:8px; "
+            "font-weight:600; font-size:14px; text-decoration:none; "
             'box-shadow:0 1px 3px rgba(0,0,0,.2);">'
-            '🔍 Audit Prompt</a>'
+            "🔍 Audit Prompt</a>"
             '<a href="{}" style="display:inline-flex; align-items:center; gap:6px; '
-            'padding:10px 20px; background:#059669; color:#fff; border-radius:8px; '
-            'font-weight:600; font-size:14px; text-decoration:none; '
+            "padding:10px 20px; background:#059669; color:#fff; border-radius:8px; "
+            "font-weight:600; font-size:14px; text-decoration:none; "
             'box-shadow:0 1px 3px rgba(0,0,0,.2);">'
-            '✨ Improve Prompt</a>'
+            "✨ Improve Prompt</a>"
             '<a href="{}" style="display:inline-flex; align-items:center; gap:6px; '
-            'padding:10px 20px; background:#0f766e; color:#fff; border-radius:8px; '
-            'font-weight:600; font-size:14px; text-decoration:none; '
+            "padding:10px 20px; background:#0f766e; color:#fff; border-radius:8px; "
+            "font-weight:600; font-size:14px; text-decoration:none; "
             'box-shadow:0 1px 3px rgba(0,0,0,.2);">'
-            '📊 AI Health Dashboard</a>'
-            '</div>',
+            "📊 AI Health Dashboard</a>"
+            "</div>",
             audit_url,
             improve_url,
             dashboard_url,
@@ -297,7 +297,9 @@ class PromptAdmin(ModelAdmin):
 
                 previous_content = prompt.content
                 prompt.content = improved_prompt
-                prompt._updated_by = request.user.get_username() or request.user.email or str(request.user.pk)
+                prompt._updated_by = (
+                    request.user.get_username() or request.user.email or str(request.user.pk)
+                )
                 prompt._change_reason = "Applied AI Brain prompt improvement"
                 prompt.save()
                 log_admin_change(
@@ -360,9 +362,9 @@ class PromptAdmin(ModelAdmin):
                 "",
                 (
                     '<div style="padding:10px; border:1px solid var(--border-color, #ddd); border-radius:8px;">'
-                    '<strong>v{}</strong> - {}<br>'
+                    "<strong>v{}</strong> - {}<br>"
                     '<span style="color:var(--body-quiet-color, #666);">{}</span>'
-                    '</div>'
+                    "</div>"
                 ),
                 (
                     (
@@ -420,5 +422,3 @@ class PromptVersionAdmin(ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         return None
-
-

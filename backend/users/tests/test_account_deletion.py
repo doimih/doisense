@@ -7,7 +7,9 @@ from journal.models import JournalEntry
 
 
 @pytest.mark.django_db
-def test_delete_account_anonymizes_user_and_preserves_content(authenticated_client, user, journal_question):
+def test_delete_account_anonymizes_user_and_preserves_content(
+    authenticated_client, user, journal_question
+):
     user.vip_manual_override = True
     user.early_discount_eligible = True
     user.plan_tier = "trial"

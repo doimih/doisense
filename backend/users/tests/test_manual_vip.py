@@ -47,7 +47,11 @@ def test_send_trial_warnings_skips_manual_vip_users():
     with patch("core.notifications.send_trial_expiration_warning") as mock_send:
         call_command("send_trial_warnings", stdout=out)
 
-    assert user not in [call[0][0] for call in mock_send.call_args_list] if mock_send.call_args_list else True
+    assert (
+        user not in [call[0][0] for call in mock_send.call_args_list]
+        if mock_send.call_args_list
+        else True
+    )
 
 
 @pytest.mark.django_db

@@ -9,7 +9,7 @@ from core.feature_access import require_feature
 from core.i18n import get_user_language, translate
 from core.quota import check_and_consume
 
-from .models import JournalQuestion, JournalEntry
+from .models import JournalQuestion
 from .serializers import JournalQuestionSerializer, JournalEntrySerializer
 
 
@@ -28,6 +28,8 @@ _JOURNAL_COPY = {
 
 def _journal_text(user, key: str) -> str:
     return translate(_JOURNAL_COPY, get_user_language(user)).get(key, _JOURNAL_COPY["en"][key])
+
+
 DEFAULT_RO_QUESTIONS = [
     {
         "text": "Ce emotie a fost cea mai prezenta azi si ce anume a declansat-o?",
@@ -138,7 +140,9 @@ class JournalEntriesView(APIView):
     def post(self, request):
         allowed, remaining, limit = check_and_consume(request.user, "journal_entries", amount=1)
         if not allowed:
-            base_url = getattr(settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense")
+            base_url = getattr(
+                settings, "FRONTEND_BASE_URL", "https://projects.doimih.net/doisense"
+            )
             language = request.user.language or "en"
             return Response(
                 {

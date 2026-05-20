@@ -64,7 +64,9 @@ def _send_notification_email(user, payload: dict, *, action_url: str | None = No
     message.send()
 
 
-def was_notification_sent(user, notification_type: str, *, date=None, context_key: str = "") -> bool:
+def was_notification_sent(
+    user, notification_type: str, *, date=None, context_key: str = ""
+) -> bool:
     sent_for_date = date or timezone.localdate()
     return NotificationDelivery.objects.filter(
         user=user,
@@ -174,7 +176,9 @@ def send_daily_plan_reminder(user) -> None:
         url=f"{frontend_base}/{language}/chat?module=coaching",
     )
 
-    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/chat?module=coaching")
+    _send_notification_email(
+        user, payload, action_url=f"{frontend_base}/{language}/chat?module=coaching"
+    )
 
 
 def send_wellbeing_checkin_reminder(user) -> None:
@@ -227,7 +231,9 @@ def send_goal_reminder(user, goals: list[str], days_since_focus: int) -> None:
         url=f"{frontend_base}/{language}/chat?module=coaching",
     )
 
-    _send_notification_email(user, payload, action_url=f"{frontend_base}/{language}/chat?module=coaching")
+    _send_notification_email(
+        user, payload, action_url=f"{frontend_base}/{language}/chat?module=coaching"
+    )
 
 
 def send_payment_failed_notification(user) -> None:

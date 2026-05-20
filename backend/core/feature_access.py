@@ -57,7 +57,9 @@ def is_feature_allowed(user, feature_key: str):
     return allowed, tier, required, "tier_allowed" if allowed else "tier_blocked"
 
 
-def log_feature_access(user, feature_key: str, granted: bool, required_tiers, user_tier: str, reason: str, context=None):
+def log_feature_access(
+    user, feature_key: str, granted: bool, required_tiers, user_tier: str, reason: str, context=None
+):
     FeatureAccessLog.objects.create(
         user=user if getattr(user, "is_authenticated", False) else None,
         feature_key=feature_key,

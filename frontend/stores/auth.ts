@@ -85,7 +85,7 @@ export const useAuthStore = defineStore('auth', {
       await this.trackFrontendEvent('user_activated', { auth_method: 'email' })
     },
     async loginWithSocial(
-      provider: 'google' | 'apple',
+      provider: 'google',
       idToken: string,
       language: string,
       legalConsent = { acceptedTerms: false, acceptedPrivacy: false, acceptedAiUsage: false },
