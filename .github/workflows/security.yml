@@ -140,7 +140,7 @@ jobs:
 
       - name: Truffelhog Secret Scan (Pull Request)
         if: github.event_name == 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.94.1
+        uses: trufflesecurity/trufflehog@v3.95.3
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha }}
@@ -149,7 +149,7 @@ jobs:
 
       - name: Truffelhog Secret Scan (Push/Schedule)
         if: github.event_name != 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.94.1
+        uses: trufflesecurity/trufflehog@v3.95.3
         with:
           path: ./
           extra_args: --debug --only-verified
