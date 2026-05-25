@@ -22,7 +22,7 @@
     "@nuxtjs/i18n": "^10.2.3",
     "@pinia/nuxt": "^0.5.1",
     "nuxt": "3.21.1",
-    "nuxt-studio": "1.4.0",
+    "nuxt-studio": "1.7.0",
     "pinia": "^2.2.4",
     "vue": "^3.5.11",
     "vue-router": "^4.4.5"
