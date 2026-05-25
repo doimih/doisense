@@ -21,6 +21,6 @@ pytest-cov==7.1.0
 pytest-django==4.12.0
 black==24.10.0
 ruff==0.1.15
-google-auth==2.49.0
+google-auth==2.53.0
 boto3>=1.35,<2
 PyJWT[crypto]==2.11.0
